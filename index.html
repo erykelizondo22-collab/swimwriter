@@ -3,44 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Swim Engine</title>
+    <title>Swim Engine Pro</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print { .no-print { display: none; } body { background: white; color: black; padding: 0; } .print-card { border: 1px solid #ddd; margin-bottom: 5px; page-break-inside: avoid; } }
+    </style>
 </head>
 <body class="bg-[#0f172a] text-slate-200 p-4 font-sans antialiased">
-    <div id="app" class="max-w-md mx-auto">
-        <div class="flex justify-between items-end mb-6">
+    <div id="app" class="max-w-xl mx-auto">
+        
+        <div class="flex justify-between items-start mb-6">
             <div>
-                <h1 class="text-xl font-black text-blue-500 tracking-tighter">SWIM ENGINE</h1>
-                <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Pompano Performance</p>
+                <h1 class="text-xl font-black text-blue-500 tracking-tighter uppercase">Swim Engine</h1>
+                <div class="mt-2 no-print">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase block">Start Time</label>
+                    <input type="time" v-model="startTime" class="bg-[#1e293b] border border-slate-700 rounded-lg p-1 text-sm text-blue-300 outline-none">
+                </div>
             </div>
             <div class="text-right">
                 <div class="text-3xl font-mono font-bold text-emerald-400">{{ totalYds }}<span class="text-xs ml-1 text-slate-500">yds</span></div>
-                <div class="text-xs text-slate-400 font-medium">{{ totalMins }} min session</div>
+                <div class="text-xs font-bold text-slate-400 uppercase">Ends at: <span class="text-blue-400">{{ practiceEndTime }}</span></div>
             </div>
         </div>
 
-        <textarea v-model="input" 
-            class="w-full h-72 bg-[#1e293b] border border-slate-700 p-4 rounded-2xl font-mono text-sm mb-4 focus:ring-2 focus:ring-blue-500 outline-none shadow-xl"
-            placeholder="4 x 100 on 1:30&#10;8 x 50 on :50 @ EN2"></textarea>
+        <div class="no-print">
+            <textarea v-model="input" 
+                class="w-full h-64 bg-[#1e293b] border border-slate-700 p-4 rounded-2xl font-mono text-sm mb-4 focus:ring-2 focus:ring-blue-500 outline-none shadow-xl"
+                placeholder="Example: 10x100 @ 1:30"></textarea>
+            
+            <button @click="window.print()" class="w-full mb-8 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-widest transition-all shadow-lg">
+                Print Workout Timeline
+            </button>
+        </div>
 
-        <div class="space-y-3 mb-24">
-            <div v-for="set in parsedSets" class="bg-[#1e293b]/50 p-4 rounded-xl flex justify-between items-center border border-slate-800 shadow-sm">
-                <div>
-                    <div class="font-bold text-blue-400 text-lg">{{ set.qty }} x {{ set.dist }}</div>
-                    <div class="text-xs font-bold text-slate-500">Interval: {{ set.interval }}</div>
+        <div class="space-y-2 mb-20">
+            <h3 class="text-[10px] text-slate-500 font-bold uppercase tracking-widest ml-1 no-print text-center mb-4 italic">Estimated Timeline</h3>
+            
+            <div v-for="set in timeline" class="print-card bg-[#1e293b]/50 p-4 rounded-xl flex justify-between items-center border border-slate-800">
+                <div class="flex items-center gap-4">
+                    <div class="text-xs font-mono text-slate-500 border-r border-slate-700 pr-3">
+                        {{ set.start }}
+                    </div>
+                    <div>
+                        <div class="font-bold text-blue-400 text-lg print:text-black">{{ set.qty }} x {{ set.dist }}</div>
+                        <div class="text-[10px] font-bold text-slate-500 uppercase">Interval: {{ set.interval }}</div>
+                    </div>
                 </div>
                 <div class="text-right">
-                    <div class="text-sm font-mono font-bold text-slate-300">{{ set.lineYds }}y</div>
-                    <div class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">{{ set.lineTime }} mins total</div>
+                    <div class="text-sm font-mono font-bold text-slate-300 print:text-black">{{ set.lineYds }}y</div>
+                    <div class="text-[10px] font-black text-emerald-500 uppercase">{{ set.duration }}m</div>
                 </div>
             </div>
-        </div>
-
-        <div class="fixed bottom-6 left-4 right-4 max-w-md mx-auto">
-            <button @click="copyToClipboard" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl active:scale-95 transition-all">
-                Copy Workout
-            </button>
         </div>
     </div>
 
@@ -48,31 +62,62 @@
         const { createApp, ref, computed } = Vue
         createApp({
             setup() {
-                const input = ref("4 x 100 on 1:30\n8 x 50 on :50");
-                const parsedSets = computed(() => {
+                const input = ref("10x100 @ 1:30\n8x50 @ :50\n1x500 @ 8:00");
+                const startTime = ref("05:30"); // Default morning practice
+
+                const timeline = computed(() => {
+                    let currentTimeInSeconds = timeToSeconds(startTime.value);
+                    
                     return input.value.split('\n').filter(l => l.includes('x')).map(line => {
                         const qty = parseInt(line.match(/(\d+)\s*x/)?.[1] || 0);
                         const dist = parseInt(line.match(/x\s*(\d+)/)?.[1] || 0);
-                        const intMatch = line.match(/on\s*(\d*:?\d+)/)?.[1] || "0";
-                        let sec = 0;
+                        const intMatch = line.match(/[@|on]\s*(\d*:?\d+)/)?.[1] || "0";
+                        
+                        let secPerRep = 0;
                         if (intMatch.includes(':')) {
                             const [m, s] = intMatch.split(':').map(Number);
-                            sec = (m * 60) + s;
-                        } else { sec = parseInt(intMatch) || 0; }
+                            secPerRep = (m * 60) + s;
+                        } else { secPerRep = parseInt(intMatch) || 0; }
+
+                        const durationSeconds = qty * secPerRep;
+                        const startClock = secondsToTime(currentTimeInSeconds);
+                        
+                        // Update current time for the NEXT set
+                        currentTimeInSeconds += durationSeconds;
+
                         return {
+                            start: startClock,
                             qty, dist, interval: intMatch,
                             lineYds: qty * dist,
-                            lineTime: Math.round((qty * sec) / 60)
+                            duration: Math.floor(durationSeconds / 60)
                         }
                     });
                 });
-                const totalYds = computed(() => parsedSets.value.reduce((a, s) => a + s.lineYds, 0));
-                const totalMins = computed(() => parsedSets.value.reduce((a, s) => a + s.lineTime, 0));
-                const copyToClipboard = () => {
-                    navigator.clipboard.writeText(input.value);
-                    alert("Workout copied to clipboard!");
-                };
-                return { input, parsedSets, totalYds, totalMins, copyToClipboard }
+
+                const totalYds = computed(() => timeline.value.reduce((a, s) => a + s.lineYds, 0));
+                const practiceEndTime = computed(() => {
+                    if (timeline.value.length === 0) return startTime.value;
+                    const lastSet = timeline.value[timeline.value.length - 1];
+                    let endSec = timeToSeconds(lastSet.start) + (lastSet.duration * 60);
+                    return secondsToTime(endSec);
+                });
+
+                // Helper: HH:MM to Seconds
+                function timeToSeconds(timeStr) {
+                    const [h, m] = timeStr.split(':').map(Number);
+                    return (h * 3600) + (m * 60);
+                }
+
+                // Helper: Seconds to HH:MM (12hr format)
+                function secondsToTime(totalSec) {
+                    let h = Math.floor(totalSec / 3600);
+                    let m = Math.floor((totalSec % 3600) / 60);
+                    const ampm = h >= 12 ? 'PM' : 'AM';
+                    h = h % 12 || 12;
+                    return `${h}:${m.toString().padStart(2, '0')} ${ampm}`;
+                }
+
+                return { input, startTime, timeline, totalYds, practiceEndTime }
             }
         }).mount('#app')
     </script>
