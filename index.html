@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Swim Engine Pro | Custom Edition</title>
+    <title>Swim Engine Pro | Elite Edition</title>
     
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        /* Prevents the '{{ brackets }}' from showing while the app loads */
+        /* Hidden state for app loading */
         [v-cloak] { display: none !important; }
         
-        /* Interactive Tab Styling */
+        /* Interactive UI Elements */
         .tab-active { 
             border-bottom: 4px solid #3b82f6; 
             color: #3b82f6; 
             font-weight: 900;
         }
 
-        /* Professional PDF Sheet Layout */
+        /* Professional PDF Sheet Formatting */
         @media print {
             .no-print { display: none !important; }
             body { 
@@ -41,7 +41,7 @@
                 padding: 0 !important; 
                 page-break-inside: avoid; 
             }
-            .text-emerald-400, .text-blue-500, .text-slate-200, .text-blue-400 { 
+            .text-emerald-400, .text-blue-500, .text-slate-200, .text-blue-400, .text-slate-400 { 
                 color: black !important; 
             }
             .bg-[#1e293b], .bg-[#0f172a] { 
@@ -49,6 +49,12 @@
             }
             .border-slate-800 { 
                 border-color: #ddd !important; 
+            }
+            .stats-grid {
+                display: grid !important;
+                grid-template-cols: repeat(4, 1fr) !important;
+                gap: 10px !important;
+                margin-top: 30px !important;
             }
         }
         .print-header { display: none; }
@@ -73,7 +79,7 @@
         <div class="print-header">
             <div class="flex justify-between items-end">
                 <div>
-                    <h1 class="text-4xl font-bold uppercase tracking-tighter">{{ workoutName || 'Daily Training' }}</h1>
+                    <h1 class="text-4xl font-bold uppercase tracking-tighter">{{ workoutName || 'Daily Session' }}</h1>
                     <p class="text-sm font-bold mt-1 text-slate-700">
                         {{ todayDate }} — {{ activeTeamName }} | {{ activeGroupName }} — 25 Yards
                     </p>
@@ -128,10 +134,10 @@
 
             <textarea v-model="input" 
                 class="w-full h-80 bg-[#1e293b] border border-slate-700 p-7 rounded-[2.5rem] font-mono text-sm mb-8 outline-none no-print shadow-inner leading-relaxed focus:border-blue-500 transition-colors" 
-                placeholder="4x100 @ 1:45&#10;6x50 @ 1:00&#10;&#10;3x&#10;  10x100&#10;  1:00 rest"></textarea>
+                placeholder="Warmup:&#10;400 Free&#10;300 Kick&#10;&#10;3x&#10;  100 Scull @ 2:00"></textarea>
             
             <div class="grid grid-cols-2 gap-5 no-print mb-12">
-                <button @click="saveWorkout" class="bg-blue-600 hover:bg-blue-500 p-6 rounded-3xl font-black text-[12px] uppercase tracking-[0.2em] transition-all shadow-2xl active:scale-95">Save Workout</button>
+                <button @click="saveWorkout" class="bg-blue-600 hover:bg-blue-500 p-6 rounded-3xl font-black text-[12px] uppercase tracking-[0.2em] transition-all shadow-2xl active:scale-95">Save Session</button>
                 <button @click="triggerPrint" class="bg-emerald-600 hover:bg-emerald-500 p-6 rounded-3xl font-black text-[12px] uppercase tracking-[0.2em] transition-all shadow-2xl active:scale-95">Print / PDF</button>
             </div>
 
@@ -140,7 +146,6 @@
                     
                     <div v-if="block.isRound" class="flex justify-between items-center border-b border-slate-800/50 mb-5 pb-4">
                         <span class="text-[12px] font-black text-emerald-500 uppercase tracking-[0.2em] flex items-center gap-3">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             {{ block.rounds }} ROUNDS
                         </span>
                         <span class="text-[11px] text-slate-500 font-mono uppercase tracking-widest">
@@ -148,18 +153,22 @@
                         </span>
                     </div>
                     
-                    <div v-for="(item, idx) in block.items" :key="idx" class="flex justify-between items-center py-3.5 border-b border-slate-800/20 last:border-0 group">
+                    <div v-for="(item, idx) in block.items" :key="idx" class="flex justify-between items-center py-3.5 border-b border-slate-800/20 last:border-0">
                         <div class="flex items-center gap-6">
                             <div class="text-lg">
                                 <div v-if="item.isRest" class="italic text-blue-400 font-black tracking-widest uppercase text-sm">
                                     REST: {{ item.displayTime }}
                                 </div>
-                                <div v-else class="flex items-baseline gap-4">
-                                    <span class="font-black text-slate-100 text-xl tracking-tighter">{{ item.qty }} x {{ item.dist }}</span>
-                                    <span class="text-slate-500 text-[12px] font-black uppercase" :class="{'text-emerald-500': item.isDefault}">
-                                        @ {{ item.displayInterval }}
-                                    </span>
-                                    <span class="text-[10px] text-blue-500 font-black italic tracking-widest">({{ item.setDuration }}m)</span>
+                                <div v-else class="flex flex-col">
+                                    <div class="flex items-baseline gap-4">
+                                        <span class="font-black text-slate-100 text-xl tracking-tighter">{{ item.qty }} x {{ item.dist }}</span>
+                                        <span class="text-slate-500 text-[12px] font-black uppercase" :class="{'text-emerald-500': item.isDefault}">
+                                            @ {{ item.displayInterval }}
+                                        </span>
+                                    </div>
+                                    <div class="text-[10px] text-blue-500 font-black uppercase tracking-widest mt-1 opacity-70">
+                                        {{ item.note }} <span class="ml-1 italic font-normal text-slate-400">({{ item.setDuration }}m)</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -171,324 +180,35 @@
                             </span>
                         </div>
                     </div>
+                </div>
+            </div>
 
+            <div class="mt-12 border-t-2 border-slate-800 pt-10 stats-grid">
+                <h3 class="text-xs font-black uppercase tracking-[0.4em] text-slate-500 mb-6 no-print">Session Volume Analytics</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                    <div v-for="(yds, cat) in categoryTotals" :key="cat" class="bg-[#1e293b]/60 p-5 rounded-2xl border border-slate-800/50">
+                        <div class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">{{ cat }}</div>
+                        <div class="text-xl font-mono font-black text-slate-100">{{ yds }}y</div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div v-if="view === 'teams'" class="space-y-6">
             <div class="bg-[#1e293b] p-8 rounded-[2.5rem] border border-slate-800/50 shadow-2xl mb-8">
-                <h2 class="font-black uppercase text-blue-500 mb-6 tracking-[0.2em] text-sm">Create New Team</h2>
+                <h2 class="font-black uppercase text-blue-500 mb-6 tracking-widest text-sm">Add Team Identity</h2>
                 <div class="flex gap-3">
                     <input v-model="newTeamName" @keyup.enter="addTeam" 
                         class="flex-1 bg-[#0f172a] border border-slate-700 rounded-2xl p-4 text-sm text-white outline-none focus:border-blue-500" 
                         placeholder="Team Name (e.g. SOFLO)">
-                    <button @click="addTeam" class="bg-emerald-600 px-8 rounded-2xl font-black text-xs uppercase shadow-lg active:scale-95 transition-transform">Add</button>
+                    <button @click="addTeam" class="bg-emerald-600 px-8 rounded-2xl font-black text-xs uppercase shadow-lg">Add</button>
                 </div>
             </div>
             <div v-for="(t, idx) in teams" :key="t.id" class="bg-[#1e293b] p-6 rounded-3xl border border-slate-800 flex justify-between items-center group">
                 <span class="font-black uppercase tracking-widest text-slate-200 text-sm">{{ t.name }}</span>
-                <button @click="deleteTeam(idx)" v-if="teams.length > 1" class="text-red-500 font-black px-5 py-3 bg-red-900/10 hover:bg-red-900/30 rounded-xl text-[10px] uppercase transition-colors">Delete</button>
+                <button @click="deleteTeam(idx)" v-if="teams.length > 1" class="text-red-500 font-black px-5 py-3 bg-red-900/10 hover:bg-red-900/30 rounded-xl text-[10px] uppercase">Delete</button>
             </div>
         </div>
 
         <div v-if="view === 'groups'" class="space-y-6">
-            <div class="bg-[#1e293b] p-8 rounded-[2.5rem] border border-slate-800/50 shadow-2xl mb-8">
-                <h2 class="font-black uppercase text-emerald-500 mb-6 tracking-[0.2em] text-sm">Manage Groups</h2>
-                <div class="flex gap-3">
-                    <input v-model="newGroupName" @keyup.enter="addGroup" 
-                        class="flex-1 bg-[#0f172a] border border-slate-700 rounded-2xl p-4 text-sm text-white outline-none focus:border-emerald-500" 
-                        placeholder="Group Name (e.g. Bronze)">
-                    <button @click="addGroup" class="bg-emerald-600 px-8 rounded-2xl font-black text-xs uppercase shadow-lg active:scale-95 transition-transform">Add</button>
-                </div>
-            </div>
-            <div v-for="(g, idx) in groups" :key="g.id" class="bg-[#1e293b] p-6 rounded-3xl border border-slate-800 flex justify-between items-center">
-                <span class="font-black uppercase tracking-widest text-slate-200 text-sm">{{ g.name }}</span>
-                <button @click="deleteGroup(idx)" v-if="groups.length > 1" class="text-red-500 font-black px-5 py-3 bg-red-900/10 hover:bg-red-900/30 rounded-xl text-[10px] uppercase transition-colors">Delete</button>
-            </div>
-        </div>
-
-        <div v-if="view === 'history'" class="space-y-5 no-print">
-            <div v-for="(w, idx) in history" :key="idx" class="bg-[#1e293b] p-7 rounded-[2rem] border border-slate-800 flex justify-between items-center transition-all hover:border-slate-600 active:scale-[0.98]">
-                <div class="max-w-[65%]">
-                    <div class="font-black text-blue-400 text-lg uppercase tracking-tighter truncate">{{ w.name || 'Untitled Session' }}</div>
-                    <div class="text-[10px] text-slate-500 font-black mt-2 tracking-widest uppercase">
-                        {{ w.date }} • {{ w.yardage }}y • {{ w.group }}
-                    </div>
-                </div>
-                <div class="flex gap-3">
-                    <button @click="loadWorkout(w)" class="bg-blue-600 px-6 py-3 rounded-2xl text-[10px] font-black uppercase shadow-lg">Load</button>
-                    <button @click="deleteWorkout(idx)" class="bg-red-900/20 text-red-500 px-5 py-3 rounded-2xl text-[10px] font-black uppercase border border-red-900/20">X</button>
-                </div>
-            </div>
-            <div v-if="history.length === 0" class="text-center py-24 text-slate-600 font-black uppercase text-sm tracking-[0.4em]">Empty History</div>
-        </div>
-
-    </div>
-
-    <script>
-        const { createApp, ref, computed, onMounted, watch } = Vue;
-
-        createApp({
-            setup() {
-                // Application State
-                const view = ref('editor');
-                const workoutName = ref('');
-                const history = ref([]);
-                const input = ref("4x100 @ 1:45\n6x50 @ 1:00\n\n3x\n  10x100\n  1:00 rest");
-                const startTime = ref("17:45");
-                const baseInterval = ref("1:45");
-                
-                // Teams & Groups State
-                const teams = ref([{ id: 1, name: 'SOFLO' }]);
-                const activeTeamId = ref(1);
-                const groups = ref([{ id: 1, name: 'Senior' }]);
-                const activeGroupId = ref(1);
-                const newTeamName = ref('');
-                const newGroupName = ref('');
-
-                // Date Calculation
-                const todayDate = new Date().toLocaleDateString('en-US', { 
-                    weekday: 'short', 
-                    month: 'short', 
-                    day: '2-digit', 
-                    year: '2-digit' 
-                });
-
-                // Computed Display Values
-                const activeTeamName = computed(() => teams.value.find(t => t.id === activeTeamId.value)?.name || 'Team');
-                const activeGroupName = computed(() => groups.value.find(g => g.id === activeGroupId.value)?.name || 'Group');
-
-                const customIntervals = computed(() => {
-                    const times = [];
-                    for (let s = 45; s <= 360; s += 5) {
-                        const m = Math.floor(s / 60);
-                        const sc = s % 60;
-                        times.push(`${m}:${sc.toString().padStart(2, '0')}`);
-                    }
-                    return times;
-                });
-
-                // Engine Logic: Core Parser
-                const parsedTimeline = computed(() => {
-                    try {
-                        let clockSeconds = timeToSeconds(startTime.value || "17:45");
-                        let runningYdsAccumulator = 0;
-                        const baseSec100 = parseInterval(baseInterval.value);
-                        const rawLines = input.value.split('\n');
-                        const processedBlocks = [];
-
-                        for (let i = 0; i < rawLines.length; i++) {
-                            const currentLine = rawLines[i].trim();
-                            if (!currentLine) continue;
-
-                            // Round Detection (e.g., '3x')
-                            const roundMatch = currentLine.match(/^(\d+)\s*x$/i);
-                            if (roundMatch) {
-                                const roundsCount = parseInt(roundMatch[1]);
-                                const subLines = [];
-                                let nextLineIndex = i + 1;
-                                
-                                while (nextLineIndex < rawLines.length && 
-                                       rawLines[nextLineIndex].trim() !== "" && 
-                                       !rawLines[nextLineIndex].trim().match(/^(\d+)\s*x$/i)) {
-                                    subLines.push(rawLines[nextLineIndex].trim());
-                                    nextLineIndex++;
-                                }
-                                i = nextLineIndex - 1;
-
-                                let blockYardage = 0;
-                                let blockSecondsTotal = 0;
-                                const itemsPerRound = [];
-
-                                for (let r = 0; r < roundsCount; r++) {
-                                    subLines.forEach(subLineText => {
-                                        const parsedItem = parseLine(subLineText, baseSec100);
-                                        if (parsedItem) {
-                                            clockSeconds += parsedItem.duration;
-                                            if (!parsedItem.isRest) runningYdsAccumulator += parsedItem.yds;
-                                            
-                                            itemsPerRound.push({ 
-                                                ...parsedItem, 
-                                                endTime: secondsToTime(clockSeconds), 
-                                                runningYds: runningYdsAccumulator,
-                                                setDuration: Math.round(parsedItem.duration / 60)
-                                            });
-                                            
-                                            if (r === 0) {
-                                                if (!parsedItem.isRest) blockYardage += parsedItem.yds;
-                                                blockSecondsTotal += parsedItem.duration;
-                                            }
-                                        }
-                                    });
-                                }
-                                processedBlocks.push({ 
-                                    id: i, 
-                                    isRound: true, 
-                                    rounds: roundsCount, 
-                                    items: itemsPerRound, 
-                                    blockYds: blockYardage * roundsCount, 
-                                    blockMins: Math.floor((blockSecondsTotal * roundsCount) / 60) 
-                                });
-                            } else {
-                                // Standalone Set Detection
-                                const standaloneItem = parseLine(currentLine, baseSec100);
-                                if (standaloneItem) {
-                                    clockSeconds += standaloneItem.duration;
-                                    if (!standaloneItem.isRest) runningYdsAccumulator += standaloneItem.yds;
-                                    
-                                    processedBlocks.push({ 
-                                        id: i, 
-                                        isRound: false, 
-                                        items: [{ 
-                                            ...standaloneItem, 
-                                            endTime: secondsToTime(clockSeconds), 
-                                            runningYds: runningYdsAccumulator,
-                                            setDuration: Math.round(standaloneItem.duration / 60)
-                                        }], 
-                                        blockYds: standaloneItem.yds || 0 
-                                    });
-                                }
-                            }
-                        }
-                        return processedBlocks;
-                    } catch (err) {
-                        console.error("Parser Error:", err);
-                        return [];
-                    }
-                });
-
-                // Global Totals
-                const totalYds = computed(() => parsedTimeline.value.reduce((acc, curr) => acc + (curr.blockYds || 0), 0));
-
-                const practiceEndTime = computed(() => {
-                    if (parsedTimeline.value.length === 0) return secondsToTime(timeToSeconds(startTime.value || "17:45"));
-                    const lastBlock = parsedTimeline.value[parsedTimeline.value.length - 1];
-                    const lastItem = lastBlock.items[lastBlock.items.length - 1];
-                    return lastItem.endTime;
-                });
-
-                // Parsing Helpers
-                function parseLine(string, b100) {
-                    // Rest Period Detection
-                    const restOnlyMatch = string.match(/^(\d*:?\d+)$/);
-                    if (restOnlyMatch) {
-                        return { isRest: true, duration: parseInterval(restOnlyMatch[1]), displayTime: restOnlyMatch[1] };
-                    }
-                    
-                    // Quantity and Distance Detection
-                    const qMatch = string.match(/(\d+)\s*x/);
-                    const dMatch = string.match(/x\s*(\d+)/);
-                    if (!qMatch || !dMatch) return null;
-                    
-                    const quantity = parseInt(qMatch[1]);
-                    const distance = parseInt(dMatch[1]);
-                    
-                    // Interval Detection (@ or on)
-                    const overMatch = string.match(/[@|on]\s*(\d*:?\d+)/);
-                    const finalSecs = overMatch ? parseInterval(overMatch[1]) : (distance / 100) * b100;
-                    
-                    return { 
-                        isRest: false, 
-                        isDefault: !overMatch, 
-                        qty: quantity, 
-                        dist: distance, 
-                        yds: quantity * distance, 
-                        duration: quantity * finalSecs, 
-                        displayInterval: secondsToIntervalFormat(finalSecs) 
-                    };
-                }
-
-                // Utility Functions
-                function parseInterval(val) {
-                    if (val.includes(':')) {
-                        const [m, s] = val.split(':').map(Number);
-                        return (m * 60) + (s || 0);
-                    }
-                    return parseInt(val) || 0;
-                }
-
-                function secondsToIntervalFormat(totalSecs) {
-                    const m = Math.floor(totalSecs / 60);
-                    const s = Math.round(totalSecs % 60);
-                    return `${m}:${s.toString().padStart(2, '0')}`;
-                }
-
-                function timeToSeconds(timeStr) {
-                    if (!timeStr) return 0;
-                    const [h, m] = timeStr.split(':').map(Number);
-                    return (h * 3600) + (m * 60);
-                }
-
-                function secondsToTime(totalSecs) {
-                    let h = Math.floor(totalSecs / 3600) % 24;
-                    let m = Math.floor((totalSecs % 3600) / 60);
-                    const period = h >= 12 ? 'pm' : 'am';
-                    h = h % 12 || 12;
-                    return `${h}:${m.toString().padStart(2, '0')} ${period}`;
-                }
-
-                // Management Functions
-                const addTeam = () => { if (newTeamName.value.trim()) { teams.value.push({ id: Date.now(), name: newTeamName.value.trim() }); newTeamName.value = ''; } };
-                const deleteTeam = (i) => { if(teams.value.length > 1) teams.value.splice(i, 1); };
-                
-                const addGroup = () => { if (newGroupName.value.trim()) { groups.value.push({ id: Date.now(), name: newGroupName.value.trim() }); newGroupName.value = ''; } };
-                const deleteGroup = (i) => { if(groups.value.length > 1) groups.value.splice(i, 1); };
-
-                const saveWorkout = () => {
-                    const session = { 
-                        name: workoutName.value || 'New Session', 
-                        yardage: totalYds.value, 
-                        date: todayDate, 
-                        content: input.value,
-                        team: activeTeamName.value,
-                        group: activeGroupName.value
-                    };
-                    history.value.unshift(session);
-                    localStorage.setItem('swimHistory', JSON.stringify(history.value));
-                    alert("Session Saved Successfully!");
-                };
-
-                const loadWorkout = (item) => { 
-                    workoutName.value = item.name; 
-                    input.value = item.content || ""; 
-                    view.value = 'editor'; 
-                };
-
-                const deleteWorkout = (i) => {
-                    if(confirm("Confirm deletion of this workout?")) {
-                        history.value.splice(i, 1);
-                        localStorage.setItem('swimHistory', JSON.stringify(history.value));
-                    }
-                };
-
-                function triggerPrint() { window.print(); }
-
-                // Lifecycle Hooks
-                onMounted(() => {
-                    const savedH = localStorage.getItem('swimHistory');
-                    if (savedH) history.value = JSON.parse(savedH);
-                    
-                    const savedT = localStorage.getItem('swimTeams');
-                    if (savedT) teams.value = JSON.parse(savedT);
-                    
-                    const savedG = localStorage.getItem('swimGroups');
-                    if (savedG) groups.value = JSON.parse(savedG);
-                });
-
-                // Persistence Watchers
-                watch(teams, (newVal) => localStorage.setItem('swimTeams', JSON.stringify(newVal)), { deep: true });
-                watch(groups, (newVal) => localStorage.setItem('swimGroups', JSON.stringify(newVal)), { deep: true });
-
-                return { 
-                    view, workoutName, input, startTime, baseInterval, history, 
-                    customIntervals, parsedTimeline, totalYds, practiceEndTime, 
-                    saveWorkout, loadWorkout, deleteWorkout, todayDate, triggerPrint,
-                    teams, activeTeamId, activeTeamName, newTeamName, addTeam, deleteTeam,
-                    groups, activeGroupId, activeGroupName, newGroupName, addGroup, deleteGroup
-                };
-            }
-        }).mount('#app');
-    </script>
-</body>
-</html>
+            <div class="bg-[#1e293
