@@ -4,23 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Swim Engine Pro | SOFLO</title>
-    
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-
     <style>
         [v-cloak] { display: none !important; }
         .tab-active { border-bottom: 4px solid #3b82f6; color: #3b82f6; }
         
-        /* Commit Swimming PDF Styles */
+        /* Commit Style PDF Print Logic */
         @media print {
             .no-print { display: none !important; }
-            body { background: white !important; color: black !important; padding: 0; font-family: 'Helvetica', 'Arial', sans-serif; }
+            body { background: white !important; color: black !important; padding: 0; font-family: sans-serif; }
             .print-header { display: block !important; border-bottom: 2px solid black; margin-bottom: 20px; padding-bottom: 10px; }
             .set-block { border: none !important; background: transparent !important; margin-bottom: 15px !important; padding: 0 !important; page-break-inside: avoid; }
             .text-emerald-400, .text-blue-500, .text-slate-200, .text-blue-400 { color: black !important; }
             .bg-[#1e293b], .bg-[#0f172a] { background: transparent !important; }
-            .border-slate-800 { border-color: #eee !important; }
         }
         .print-header { display: none; }
     </style>
@@ -31,20 +28,20 @@
         
         <nav class="flex justify-between items-center mb-6 no-print border-b border-slate-800 pb-2">
             <div class="flex space-x-6 text-[11px] font-black uppercase tracking-widest">
-                <button @click="view = 'editor'" :class="{'tab-active': view === 'editor'}" class="pb-2 transition-all">Editor</button>
-                <button @click="view = 'history'" :class="{'tab-active': view === 'history'}" class="pb-2 transition-all">Workouts</button>
+                <button @click="view = 'editor'" :class="{'tab-active': view === 'editor'}" class="pb-2">Editor</button>
+                <button @click="view = 'history'" :class="{'tab-active': view === 'history'}" class="pb-2">Workouts</button>
             </div>
-            <div class="text-[10px] font-bold text-slate-500 uppercase italic tracking-widest">SOFLO PRO ENGINE</div>
+            <div class="text-[10px] font-bold text-slate-500 uppercase italic">SOFLO PRO</div>
         </nav>
 
         <div class="print-header">
             <div class="flex justify-between items-end">
                 <div>
-                    <h1 class="text-3xl font-bold uppercase tracking-tighter">{{ workoutName || 'Daily Training' }}</h1>
+                    <h1 class="text-3xl font-bold uppercase">{{ workoutName || 'Daily Training' }}</h1>
                     <p class="text-sm font-medium">{{ todayDate }} — 25 Yards</p>
                 </div>
                 <div class="text-right text-sm">
-                    <p class="uppercase font-bold">100 Base: {{ baseInterval }}</p>
+                    <p class="font-bold">100 Base: {{ baseInterval }}</p>
                     <p class="text-xl font-black">{{ totalYds }} YARDS</p>
                 </div>
             </div>
@@ -53,96 +50,80 @@
         <div v-if="view === 'editor'">
             <div class="bg-[#1e293b] p-6 rounded-[2rem] mb-6 border border-slate-700/50 shadow-2xl no-print">
                 <div class="flex justify-between items-start mb-6">
-                    <input v-model="workoutName" class="bg-transparent text-2xl font-black text-blue-500 outline-none w-full uppercase tracking-tighter" placeholder="SESSION NAME">
+                    <input v-model="workoutName" class="bg-transparent text-2xl font-black text-blue-500 outline-none w-full uppercase" placeholder="SESSION NAME">
                     <div class="text-right shrink-0 leading-none">
                         <div class="text-3xl font-mono font-black text-emerald-400">{{ totalYds }}y</div>
-                        <div class="text-[10px] font-black text-blue-400 uppercase mt-2 italic">Finish: {{ practiceEndTime }}</div>
+                        <div class="text-[10px] font-black text-blue-400 uppercase mt-2 italic">Ends: {{ practiceEndTime }}</div>
                     </div>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-6">
                     <div class="flex flex-col">
-                        <label class="text-[9px] font-black text-slate-500 uppercase mb-2 tracking-widest">Start Time</label>
-                        <input type="time" v-model="startTime" class="w-full bg-[#0f172a] border border-slate-700 rounded-2xl p-3 text-sm text-blue-300 outline-none font-bold">
+                        <label class="text-[9px] font-black text-slate-500 uppercase mb-2">Start Clock</label>
+                        <input type="time" v-model="startTime" class="w-full bg-[#0f172a] border border-slate-700 rounded-2xl p-3 text-sm text-blue-300 outline-none">
                     </div>
-                    <div class="flex flex-col text-center">
-                        <label class="text-[9px] font-black text-emerald-600 uppercase mb-2 tracking-widest">Base Interval (100y)</label>
-                        <select v-model="baseInterval" class="w-full bg-[#0f172a] border border-slate-700 rounded-2xl p-3 text-sm text-emerald-400 outline-none text-center font-bold appearance-none">
+                    <div class="flex flex-col">
+                        <label class="text-[9px] font-black text-emerald-600 uppercase mb-2 text-center">Base Pace (100y)</label>
+                        <select v-model="baseInterval" class="w-full bg-[#0f172a] border border-slate-700 rounded-2xl p-3 text-sm text-emerald-400 outline-none text-center appearance-none">
                             <option v-for="t in customIntervals" :key="t" :value="t">{{ t }}</option>
                         </select>
                     </div>
                 </div>
             </div>
 
-            <textarea v-model="input" class="w-full h-72 bg-[#1e293b] border border-slate-700 p-6 rounded-[2rem] font-mono text-sm mb-6 outline-none no-print shadow-inner leading-relaxed focus:border-blue-500 transition-colors" 
-                placeholder="Type your sets here...&#10;3x&#10;  10x100 @ 1:30&#10;  1:00 rest"></textarea>
+            <textarea v-model="input" class="w-full h-72 bg-[#1e293b] border border-slate-700 p-6 rounded-[2rem] font-mono text-sm mb-6 outline-none no-print shadow-inner" 
+                placeholder="3x&#10;  10x100 @ 1:30&#10;  1:00 rest"></textarea>
             
             <div class="grid grid-cols-2 gap-4 no-print mb-10">
-                <button @click="saveWorkout" class="bg-blue-600 hover:bg-blue-500 p-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-xl active:scale-95">Save Session</button>
-                <button @click="window.print()" class="bg-emerald-600 hover:bg-emerald-500 p-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-xl active:scale-95">Print / PDF</button>
+                <button @click="saveWorkout" class="bg-blue-600 p-5 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl">Save</button>
+                <button @click="triggerPrint" class="bg-emerald-600 p-5 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl">Print PDF</button>
             </div>
 
             <div class="space-y-6">
-                <div v-for="block in parsedTimeline" :key="block.id" class="set-block bg-[#1e293b]/40 p-6 rounded-3xl border border-slate-800/50 backdrop-blur-sm">
-                    
-                    <div v-if="block.isRound" class="text-[11px] font-black text-emerald-500 uppercase mb-4 border-b border-slate-800/50 pb-3 flex justify-between tracking-[0.15em]">
-                        <span class="bg-emerald-500/10 px-2 py-1 rounded-md">{{ block.rounds }} ROUNDS</span>
+                <div v-for="block in parsedTimeline" :key="block.id" class="set-block bg-[#1e293b]/40 p-6 rounded-3xl border border-slate-800/50">
+                    <div v-if="block.isRound" class="text-[11px] font-black text-emerald-500 uppercase mb-4 border-b border-slate-800/50 pb-3 flex justify-between tracking-widest">
+                        <span>{{ block.rounds }} ROUNDS</span>
                         <span class="text-slate-500 font-mono">{{ block.blockYds }}y — {{ block.blockMins }}m</span>
                     </div>
                     
-                    <div v-for="(item, idx) in block.items" :key="idx" class="flex justify-between items-center py-2.5 border-b border-slate-800/30 last:border-0">
+                    <div v-for="(item, idx) in block.items" :key="idx" class="flex justify-between items-center py-2 border-b border-slate-800/30 last:border-0">
                         <div class="flex items-center gap-5">
-                            <div class="text-[10px] font-mono text-slate-500 w-14 text-center no-print border-r border-slate-800 pr-3 italic">
-                                {{ item.startTime }}
-                            </div>
-                            <div class="text-base">
-                                <div v-if="item.isRest" class="italic text-blue-400 font-black tracking-wide uppercase">REST: {{ item.displayTime }}</div>
+                            <div class="text-[10px] font-mono text-slate-500 w-14 text-center no-print border-r border-slate-800 pr-3">{{ item.startTime }}</div>
+                            <div>
+                                <div v-if="item.isRest" class="italic text-blue-400 font-black">REST: {{ item.displayTime }}</div>
                                 <div v-else class="flex items-baseline gap-3">
-                                    <span class="font-black text-slate-100 tracking-tight text-lg">{{ item.qty }} x {{ item.dist }}</span>
+                                    <span class="font-black text-slate-100 text-lg">{{ item.qty }} x {{ item.dist }}</span>
                                     <span class="text-slate-500 text-[11px] font-bold" :class="{'text-emerald-500': item.isDefault}">@ {{ item.displayInterval }}</span>
-                                    <span class="text-[10px] text-blue-500 font-black italic opacity-80">({{ item.setDuration }}m)</span>
+                                    <span class="text-[10px] text-blue-500 font-black italic">({{ item.setDuration }}m)</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="text-right font-mono text-[11px] font-bold text-slate-500 tracking-tighter">
+                        <div class="text-right font-mono text-[11px] font-bold text-slate-500">
                             <span v-if="!item.isRest">{{ item.runningYds }}y</span>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="mt-10 border-t-2 border-slate-800 pt-6 flex justify-between items-center uppercase font-black text-[11px] tracking-[0.2em] no-print opacity-60">
-                <div class="text-emerald-500">Vol: {{ totalYds }}y</div>
-                <div class="text-blue-400">Dur: {{ practiceEndTime }}</div>
-            </div>
         </div>
 
         <div v-if="view === 'history'" class="space-y-4 no-print">
-            <div v-for="(w, idx) in history" :key="idx" class="bg-[#1e293b] p-6 rounded-[2rem] border border-slate-800 flex justify-between items-center transition-transform active:scale-[0.98]">
+            <div v-for="(w, idx) in history" :key="idx" class="bg-[#1e293b] p-6 rounded-[2rem] border border-slate-800 flex justify-between items-center uppercase">
                 <div>
-                    <div class="font-black text-blue-400 text-sm uppercase tracking-tighter">{{ w.name || 'Untitled' }}</div>
-                    <div class="text-[10px] text-slate-500 font-bold mt-1 tracking-widest uppercase">{{ w.date }} • {{ w.yardage }}y</div>
+                    <div class="font-black text-blue-400">{{ w.name || 'Untitled' }}</div>
+                    <div class="text-[10px] text-slate-500 font-bold mt-1 tracking-widest">{{ w.date }} • {{ w.yardage }}y</div>
                 </div>
-                <div class="flex gap-3">
-                    <button @click="loadWorkout(w)" class="bg-blue-600 px-5 py-2.5 rounded-xl text-[10px] font-black shadow-lg">LOAD</button>
-                    <button @click="deleteWorkout(idx)" class="bg-red-900/20 text-red-500 px-4 py-2.5 rounded-xl text-[10px] font-black border border-red-900/30">X</button>
-                </div>
+                <button @click="loadWorkout(w)" class="bg-blue-600 px-5 py-2.5 rounded-xl text-[10px] font-black">LOAD</button>
             </div>
-            <div v-if="history.length === 0" class="text-center py-20 text-slate-600 font-black uppercase text-xs tracking-[0.3em]">History Empty</div>
         </div>
     </div>
 
     <script>
         const { createApp, ref, computed, onMounted } = Vue;
-
         createApp({
             setup() {
-                const view = ref('editor');
-                const workoutName = ref('');
-                const history = ref([]);
+                const view = ref('editor'); const workoutName = ref(''); const history = ref([]);
                 const input = ref("4x100 @ 1:45\n6x50 @ 1:00\n\n3x\n  10x100\n  1:00 rest");
-                const startTime = ref("17:45");
-                const baseInterval = ref("1:45");
+                const startTime = ref("17:45"); const baseInterval = ref("1:45");
                 const todayDate = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: '2-digit', year: '2-digit' });
 
                 const customIntervals = computed(() => {
@@ -155,46 +136,39 @@
                 });
 
                 const parsedTimeline = computed(() => {
-                    let clockSec = timeToSeconds(startTime.value || "17:45");
-                    let runningYds = 0;
-                    const bSec100 = parseInterval(baseInterval.value);
+                    let totalSecondsClock = timeToSeconds(startTime.value || "17:45");
+                    let runningYardsTotal = 0;
+                    const baseSecPer100 = parseInterval(baseInterval.value);
                     const rawLines = input.value.split('\n');
                     const blocks = [];
 
                     for (let i = 0; i < rawLines.length; i++) {
-                        const line = rawLines[i].trim();
-                        if (!line) continue;
+                        const line = rawLines[i].trim(); if (!line) continue;
                         const roundMatch = line.match(/^(\d+)\s*x$/i);
-                        
                         if (roundMatch) {
-                            const rounds = parseInt(roundMatch[1]);
-                            const rLines = []; let j = i + 1;
+                            const rounds = parseInt(roundMatch[1]); const roundLinesRaw = []; let j = i + 1;
                             while (j < rawLines.length && rawLines[j].trim() !== "" && !rawLines[j].trim().match(/^(\d+)\s*x$/i)) {
-                                rLines.push(rawLines[j].trim()); j++;
+                                roundLinesRaw.push(rawLines[j].trim()); j++;
                             }
-                            i = j - 1;
-
-                            let bYds = 0; let bSec = 0; const items = [];
+                            i = j - 1; let blockYds = 0; let blockSec = 0; const itemsList = [];
                             for (let r = 0; r < rounds; r++) {
-                                rLines.forEach(rl => {
-                                    const obj = parseLine(rl, bSec100);
+                                roundLinesRaw.forEach(rl => {
+                                    const obj = parseLine(rl, baseSecPer100);
                                     if (obj) {
-                                        const startStr = secondsToTime(clockSec);
-                                        clockSec += obj.duration;
-                                        if (!obj.isRest) runningYds += obj.yds;
-                                        items.push({ ...obj, startTime: startStr, runningYds, setDuration: Math.round(obj.duration / 60) });
-                                        if (r === 0) { if (!obj.isRest) bYds += obj.yds; bSec += obj.duration; }
+                                        const startStr = secondsToTime(totalSecondsClock); totalSecondsClock += obj.duration;
+                                        if (!obj.isRest) runningYardsTotal += obj.yds;
+                                        itemsList.push({ ...obj, startTime: startStr, runningYds: runningYardsTotal, setDuration: Math.round(obj.duration / 60) });
+                                        if (r === 0) { if (!obj.isRest) blockYds += obj.yds; blockSec += obj.duration; }
                                     }
                                 });
                             }
-                            blocks.push({ id: i, isRound: true, rounds, items, blockYds: bYds * rounds, blockMins: Math.floor((bSec * rounds) / 60) });
+                            blocks.push({ id: i, isRound: true, rounds, items: itemsList, blockYds: blockYds * rounds, blockMins: Math.floor((blockSec * rounds) / 60) });
                         } else {
-                            const obj = parseLine(line, bSec100);
+                            const obj = parseLine(line, baseSecPer100);
                             if (obj) {
-                                const startStr = secondsToTime(clockSec);
-                                clockSec += obj.duration;
-                                if (!obj.isRest) runningYds += obj.yds;
-                                blocks.push({ id: i, isRound: false, items: [{ ...obj, startTime: startStr, runningYds, setDuration: Math.round(obj.duration / 60) }], blockYds: obj.yds || 0 });
+                                const startStr = secondsToTime(totalSecondsClock); totalSecondsClock += obj.duration;
+                                if (!obj.isRest) runningYardsTotal += obj.yds;
+                                blocks.push({ id: i, isRound: false, items: [{ ...obj, startTime: startStr, runningYds: runningYardsTotal, setDuration: Math.round(obj.duration / 60) }], blockYds: obj.yds || 0 });
                             }
                         }
                     }
@@ -211,19 +185,14 @@
                 function parseLine(str, b100) {
                     const tm = str.match(/^(\d*:?\d+)$/);
                     if (tm) return { isRest: true, duration: parseInterval(tm[1]), displayTime: tm[1] };
-                    const qty = parseInt(str.match(/(\d+)\s*x/)?.[1] || 0);
-                    const dist = parseInt(str.match(/x\s*(\d+)/)?.[1] || 0);
-                    if (!qty || !dist) return null;
-                    const over = str.match(/[@|on]\s*(\d*:?\d+)/)?.[1];
+                    const qty = parseInt(str.match(/(\d+)\s*x/)?.[1] || 0); const dist = parseInt(str.match(/x\s*(\d+)/)?.[1] || 0);
+                    if (!qty || !dist) return null; const over = str.match(/[@|on]\s*(\d*:?\d+)/)?.[1];
                     const sec = over ? parseInterval(over) : (dist / 100) * b100;
                     return { isRest: false, isDefault: !over, qty, dist, yds: qty * dist, duration: qty * sec, displayInterval: secondsToIntervalFormat(sec) };
                 }
 
-                function parseInterval(s) {
-                    if (s.includes(':')) { const [m, sc] = s.split(':').map(Number); return (m * 60) + (sc || 0); }
-                    return parseInt(s) || 0;
-                }
-
+                function triggerPrint() { window.print(); }
+                function parseInterval(s) { if (s.includes(':')) { const [m, sc] = s.split(':').map(Number); return (m * 60) + (sc || 0); } return parseInt(s) || 0; }
                 function secondsToIntervalFormat(s) { const m = Math.floor(s / 60); const sc = Math.round(s % 60); return `${m}:${sc.toString().padStart(2, '0')}`; }
                 function timeToSeconds(t) { if (!t) return 0; const [h, m] = t.split(':').map(Number); return (h * 3600) + (m * 60); }
                 function secondsToTime(s) {
@@ -232,21 +201,11 @@
                     return `${h}:${m.toString().padStart(2, '0')} ${ap}`;
                 }
 
-                const saveWorkout = () => {
-                    history.value.unshift({ name: workoutName.value || 'New Session', yardage: totalYds.value, date: todayDate, content: input.value });
-                    localStorage.setItem('swimHistory', JSON.stringify(history.value));
-                    alert("Workout Saved Successfully!");
-                };
-
+                const saveWorkout = () => { history.value.unshift({ name: workoutName.value || 'New Session', yardage: totalYds.value, date: todayDate, content: input.value }); localStorage.setItem('swimHistory', JSON.stringify(history.value)); alert("Saved!"); };
                 const loadWorkout = (w) => { workoutName.value = w.name; input.value = w.content || ""; view.value = 'editor'; };
-                const deleteWorkout = (idx) => { if (confirm("Delete permanently?")) { history.value.splice(idx, 1); localStorage.setItem('swimHistory', JSON.stringify(history.value)); } };
-                
-                onMounted(() => {
-                    const saved = localStorage.getItem('swimHistory');
-                    if (saved) history.value = JSON.parse(saved);
-                });
+                onMounted(() => { const saved = localStorage.getItem('swimHistory'); if (saved) history.value = JSON.parse(saved); });
 
-                return { view, workoutName, input, startTime, baseInterval, history, customIntervals, parsedTimeline, totalYds, practiceEndTime, saveWorkout, loadWorkout, deleteWorkout, todayDate };
+                return { view, workoutName, input, startTime, baseInterval, history, customIntervals, parsedTimeline, totalYds, practiceEndTime, saveWorkout, loadWorkout, todayDate, triggerPrint };
             }
         }).mount('#app');
     </script>
