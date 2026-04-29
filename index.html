@@ -7,89 +7,110 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @media print { .no-print { display: none; } body { background: white; color: black; padding: 0; } .print-card { border: 1px solid #ddd; margin-bottom: 5px; page-break-inside: avoid; } }
+        @media print { .no-print { display: none; } body { background: white; color: black; } }
     </style>
 </head>
 <body class="bg-[#0f172a] text-slate-200 p-4 font-sans antialiased">
     <div id="app" class="max-w-xl mx-auto">
         
-        <div class="flex justify-between items-start mb-6">
-            <div>
-                <h1 class="text-xl font-black text-blue-500 tracking-tighter uppercase">Swim Engine</h1>
-                <div class="mt-2 no-print">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase block">Start Time</label>
-                    <input type="time" v-model="startTime" class="bg-[#1e293b] border border-slate-700 rounded-lg p-1 text-sm text-blue-300 outline-none">
+        <div class="bg-[#1e293b] p-4 rounded-2xl mb-6 shadow-2xl border border-slate-700">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h1 class="text-xl font-black text-blue-500 tracking-tighter uppercase leading-none">Swim Engine</h1>
+                    <p class="text-[10px] text-slate-500 uppercase font-bold mt-1">Pompano Performance</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-3xl font-mono font-bold text-emerald-400 leading-none">{{ totalYds }}<span class="text-xs ml-1 text-slate-500">yds</span></div>
+                    <div class="text-xs font-bold text-blue-400 uppercase mt-1 italic">Finish: {{ practiceEndTime }}</div>
                 </div>
             </div>
-            <div class="text-right">
-                <div class="text-3xl font-mono font-bold text-emerald-400">{{ totalYds }}<span class="text-xs ml-1 text-slate-500">yds</span></div>
-                <div class="text-xs font-bold text-slate-400 uppercase">Ends at: <span class="text-blue-400">{{ practiceEndTime }}</span></div>
+
+            <div class="grid grid-cols-2 gap-4 no-print">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Start Time</label>
+                    <input type="time" v-model="startTime" class="w-full bg-[#0f172a] border border-slate-700 rounded-lg p-2 text-sm text-blue-300 outline-none">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Base Interval (Default)</label>
+                    <select v-model="baseInterval" class="w-full bg-[#0f172a] border border-slate-700 rounded-lg p-2 text-sm text-emerald-400 outline-none">
+                        <option value="0:45">:45</option>
+                        <option value="1:00">1:00</option>
+                        <option value="1:15">1:15</option>
+                        <option value="1:20">1:20</option>
+                        <option value="1:30">1:30</option>
+                        <option value="1:45">1:45</option>
+                        <option value="2:00">2:00</option>
+                    </select>
+                </div>
             </div>
         </div>
 
         <div class="no-print">
             <textarea v-model="input" 
-                class="w-full h-64 bg-[#1e293b] border border-slate-700 p-4 rounded-2xl font-mono text-sm mb-4 focus:ring-2 focus:ring-blue-500 outline-none shadow-xl"
-                placeholder="Example: 10x100 @ 1:30"></textarea>
-            
-            <button @click="window.print()" class="w-full mb-8 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-widest transition-all shadow-lg">
-                Print Workout Timeline
-            </button>
+                class="w-full h-48 bg-[#1e293b] border border-slate-700 p-4 rounded-2xl font-mono text-sm mb-4 focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="Type '10x100' to use Base Time&#10;Type '10x100 @ 2:00' to override"></textarea>
         </div>
 
         <div class="space-y-2 mb-20">
-            <h3 class="text-[10px] text-slate-500 font-bold uppercase tracking-widest ml-1 no-print text-center mb-4 italic">Estimated Timeline</h3>
-            
-            <div v-for="set in timeline" class="print-card bg-[#1e293b]/50 p-4 rounded-xl flex justify-between items-center border border-slate-800">
+            <div v-for="set in timeline" class="bg-[#1e293b]/50 p-4 rounded-xl flex justify-between items-center border border-slate-800 transition-all">
                 <div class="flex items-center gap-4">
-                    <div class="text-xs font-mono text-slate-500 border-r border-slate-700 pr-3">
+                    <div class="text-[10px] font-mono text-slate-500 border-r border-slate-700 pr-3 w-16 text-center">
                         {{ set.start }}
                     </div>
                     <div>
-                        <div class="font-bold text-blue-400 text-lg print:text-black">{{ set.qty }} x {{ set.dist }}</div>
-                        <div class="text-[10px] font-bold text-slate-500 uppercase">Interval: {{ set.interval }}</div>
+                        <div class="font-bold text-blue-400 text-lg">{{ set.qty }} x {{ set.dist }}</div>
+                        <div class="text-[10px] font-bold uppercase" :class="set.isDefault ? 'text-emerald-500' : 'text-slate-500'">
+                            {{ set.isDefault ? 'Base:' : '@' }} {{ set.interval }}
+                        </div>
                     </div>
                 </div>
-                <div class="text-right">
-                    <div class="text-sm font-mono font-bold text-slate-300 print:text-black">{{ set.lineYds }}y</div>
-                    <div class="text-[10px] font-black text-emerald-500 uppercase">{{ set.duration }}m</div>
+                <div class="text-right font-mono">
+                    <div class="text-sm font-bold text-slate-300">{{ set.lineYds }}y</div>
+                    <div class="text-[10px] font-black text-slate-500">{{ set.duration }} min</div>
                 </div>
             </div>
         </div>
+
+        <button @click="window.print()" class="no-print fixed bottom-6 right-6 bg-blue-600 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center border-2 border-white/10 active:scale-90 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v5" />
+            </svg>
+        </button>
     </div>
 
     <script>
         const { createApp, ref, computed } = Vue
         createApp({
             setup() {
-                const input = ref("10x100 @ 1:30\n8x50 @ :50\n1x500 @ 8:00");
-                const startTime = ref("05:30"); // Default morning practice
+                const input = ref("10x100\n5x200 @ 3:00\n8x50");
+                const startTime = ref("05:30");
+                const baseInterval = ref("1:30");
 
                 const timeline = computed(() => {
-                    let currentTimeInSeconds = timeToSeconds(startTime.value);
+                    let currentTime = timeToSeconds(startTime.value);
                     
-                    return input.value.split('\n').filter(l => l.includes('x')).map(line => {
+                    return input.value.split('\n').filter(l => l.toLowerCase().includes('x')).map(line => {
                         const qty = parseInt(line.match(/(\d+)\s*x/)?.[1] || 0);
                         const dist = parseInt(line.match(/x\s*(\d+)/)?.[1] || 0);
-                        const intMatch = line.match(/[@|on]\s*(\d*:?\d+)/)?.[1] || "0";
                         
-                        let secPerRep = 0;
-                        if (intMatch.includes(':')) {
-                            const [m, s] = intMatch.split(':').map(Number);
-                            secPerRep = (m * 60) + s;
-                        } else { secPerRep = parseInt(intMatch) || 0; }
+                        // Check if line has an override interval
+                        const override = line.match(/[@|on]\s*(\d*:?\d+)/)?.[1];
+                        const intervalToUse = override || baseInterval.value;
+                        const isDefault = !override;
 
-                        const durationSeconds = qty * secPerRep;
-                        const startClock = secondsToTime(currentTimeInSeconds);
+                        const secPerRep = intervalToSeconds(intervalToUse);
+                        const durationSec = qty * secPerRep;
+                        const setStart = secondsToTime(currentTime);
                         
-                        // Update current time for the NEXT set
-                        currentTimeInSeconds += durationSeconds;
+                        currentTime += durationSec;
 
                         return {
-                            start: startClock,
-                            qty, dist, interval: intMatch,
+                            start: setStart,
+                            qty, dist,
+                            interval: intervalToUse,
+                            isDefault,
                             lineYds: qty * dist,
-                            duration: Math.floor(durationSeconds / 60)
+                            duration: Math.floor(durationSec / 60)
                         }
                     });
                 });
@@ -97,27 +118,37 @@
                 const totalYds = computed(() => timeline.value.reduce((a, s) => a + s.lineYds, 0));
                 const practiceEndTime = computed(() => {
                     if (timeline.value.length === 0) return startTime.value;
-                    const lastSet = timeline.value[timeline.value.length - 1];
-                    let endSec = timeToSeconds(lastSet.start) + (lastSet.duration * 60);
-                    return secondsToTime(endSec);
+                    const last = timeline.value[timeline.value.length - 1];
+                    return secondsToTime(timeToSeconds(last.start) + (last.duration * 60));
                 });
 
-                // Helper: HH:MM to Seconds
-                function timeToSeconds(timeStr) {
-                    const [h, m] = timeStr.split(':').map(Number);
+                function intervalToSeconds(str) {
+                    if (str.includes(':')) {
+                        const [m, s] = str.split(':').map(Number);
+                        return (m * 60) + s;
+                    }
+                    return parseInt(str) || 0;
+                }
+
+                function timeToSeconds(t) {
+                    const [h, m] = t.split(':').map(Number);
                     return (h * 3600) + (m * 60);
                 }
 
-                // Helper: Seconds to HH:MM (12hr format)
-                function secondsToTime(totalSec) {
-                    let h = Math.floor(totalSec / 3600);
-                    let m = Math.floor((totalSec % 3600) / 60);
+                function secondsToTime(s) {
+                    let h = Math.floor(s / 3600) % 24;
+                    let m = Math.floor((s % 3600) / 60);
                     const ampm = h >= 12 ? 'PM' : 'AM';
                     h = h % 12 || 12;
                     return `${h}:${m.toString().padStart(2, '0')} ${ampm}`;
                 }
 
-                return { input, startTime, timeline, totalYds, practiceEndTime }
+                return { input, startTime, baseInterval, timeline, totalYds, practiceEndTime }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
             }
         }).mount('#app')
     </script>
