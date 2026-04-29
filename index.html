@@ -3,12 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Swim Engine Pro</title>
+    <title>Swim Engine Pro | SOFLO</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        [v-cloak] { display: none; }
         .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; }
-        @media print { .no-print { display: none !important; } body { background: white !important; color: black !important; padding: 0; } }
+        
+        /* Professional PDF Styles */
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; color: black !important; padding: 0; font-family: 'Helvetica', 'Arial', sans-serif; }
+            .print-header { display: block !important; border-bottom: 2px solid black; margin-bottom: 20px; padding-bottom: 10px; }
+            .set-block { border: none !important; background: transparent !important; margin-bottom: 15px !important; padding: 0 !important; page-break-inside: avoid; }
+            .text-emerald-400, .text-blue-500, .text-slate-200, .text-blue-400 { color: black !important; }
+            .bg-[#1e293b], .bg-[#0f172a] { background: transparent !important; }
+            .border-slate-800 { border-color: #eee !important; }
+        }
+        .print-header { display: none; }
     </style>
 </head>
 
@@ -16,297 +28,35 @@
     <div id="app" class="max-w-xl mx-auto pb-24" v-cloak>
         
         <nav class="flex justify-between items-center mb-6 no-print border-b border-slate-800 pb-2">
-            <div class="flex space-x-5">
-                <button @click="view = 'editor'" :class="{'tab-active': view === 'editor'}" class="pb-2 font-black text-[10px] uppercase tracking-widest">
-                    Editor
-                </button>
-                <button @click="view = 'history'" :class="{'tab-active': view === 'history'}" class="pb-2 font-black text-[10px] uppercase tracking-widest">
-                    Workouts
-                </button>
+            <div class="flex space-x-5 text-[10px] font-black uppercase tracking-widest">
+                <button @click="view = 'editor'" :class="{'tab-active': view === 'editor'}" class="pb-2">Editor</button>
+                <button @click="view = 'history'" :class="{'tab-active': view === 'history'}" class="pb-2">Workouts</button>
             </div>
-            <div class="text-[10px] font-bold text-slate-600 uppercase italic tracking-wider">
-                SOFLO PRO ENGINE
-            </div>
+            <div class="text-[10px] font-bold text-slate-600 uppercase italic">SOFLO PRO ENGINE</div>
         </nav>
 
-        <div v-if="view === 'editor'">
-            <div class="bg-[#1e293b] p-5 rounded-3xl mb-6 border border-slate-700/50 shadow-2xl">
-                <div class="flex justify-between items-start mb-4">
-                    <input v-model="workoutName" class="bg-transparent text-xl font-black text-blue-500 outline-none w-full uppercase" placeholder="SESSION NAME">
-                    <div class="text-right shrink-0">
-                        <div class="text-2xl font-mono font-bold text-emerald-400 leading-none">
-                            {{ totalYds }}y
-                        </div>
-                        <div class="text-[10px] font-black text-blue-400 uppercase mt-1 italic tracking-tighter">
-                            Finish: {{ practiceEndTime }}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 no-print">
-                    <div class="flex flex-col">
-                        <label class="text-[8px] font-black text-slate-500 uppercase mb-1">Start Time</label>
-                        <input type="time" v-model="startTime" class="w-full bg-[#0f172a] border border-slate-700 rounded-xl p-2 text-sm text-blue-300 outline-none">
-                    </div>
-                    <div class="flex flex-col">
-                        <label class="text-[8px] font-black text-emerald-600 uppercase mb-1 text-center font-bold">100 Base Pace</label>
-                        <select v-model="baseInterval" class="w-full bg-[#0f172a] border border-slate-700 rounded-xl p-2 text-sm text-emerald-400 outline-none">
-                            <option v-for="t in customIntervals" :key="t" :value="t">{{ t }}</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <textarea v-model="input" class="w-full h-64 bg-[#1e293b] border border-slate-700 p-4 rounded-3xl font-mono text-sm mb-4 outline-none no-print shadow-inner leading-relaxed" 
-                placeholder="Type 3x then Enter..."></textarea>
-            
-            <div class="grid grid-cols-2 gap-3 no-print mb-8">
-                <button @click="saveWorkout" class="bg-blue-600 p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all shadow-lg">
-                    Save Session
-                </button>
-                <button @click="window.print()" class="bg-emerald-600 p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all shadow-lg">
-                    Print / PDF
-                </button>
-            </div>
-
-            <div class="space-y-4">
-                <div v-for="block in parsedTimeline" :key="block.id" class="bg-[#1e293b]/40 p-5 rounded-2xl border border-slate-800 shadow-sm">
-                    
-                    <div v-if="block.isRound" class="text-[10px] font-black text-emerald-500 uppercase mb-3 border-b border-slate-800/50 pb-2 flex justify-between tracking-widest">
-                        <span>{{ block.rounds }} ROUNDS</span>
-                        <span class="text-slate-400">+{{ block.blockYds }}y</span>
-                    </div>
-                    
-                    <div v-for="(item, idx) in block.items" :key="idx" class="flex justify-between items-center py-1.5 border-b border-slate-800/30 last:border-0">
-                        <div class="flex items-center gap-4">
-                            <div class="text-[9px] font-mono text-slate-500 w-14 text-center">
-                                {{ item.startTime }}
-                            </div>
-                            <div>
-                                <div v-if="item.isRest" class="text-sm font-black text-blue-400 uppercase italic">
-                                    Rest: {{ item.displayTime }}
-                                </div>
-                                <div v-else>
-                                    <div class="font-bold text-md text-slate-100 leading-none mb-1">
-                                        {{ item.qty }} x {{ item.dist }}
-                                    </div>
-                                    <div class="text-[9px] uppercase font-bold" :class="item.isDefault ? 'text-emerald-500' : 'text-slate-500'">
-                                        {{ item.isDefault ? 'Scaled:' : '@' }} {{ item.displayInterval }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div v-if="!item.isRest" class="text-right">
-                            <div class="text-[11px] font-mono font-bold text-slate-400">
-                                {{ item.yds }}y
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
-        <div v-if="view === 'history'" class="space-y-4">
-            <div v-for="(w, idx) in history" :key="idx" class="bg-[#1e293b] p-5 rounded-3xl border border-slate-800 flex justify-between items-center uppercase">
+        <div class="print-header">
+            <div class="flex justify-between items-end">
                 <div>
-                    <div class="font-black text-blue-400">{{ w.name || 'Untitled' }}</div>
-                    <div class="text-[10px] text-slate-500 font-bold mt-1 tracking-tight">
-                        {{ w.date }} • {{ w.yardage }}y
-                    </div>
+                    <h1 class="text-2xl font-bold uppercase">{{ workoutName || 'Daily Training' }}</h1>
+                    <p class="text-sm">{{ todayDate }} — 25 Yards</p>
                 </div>
-                <div class="flex gap-2">
-                    <button @click="loadWorkout(w)" class="bg-blue-600 px-4 py-2 rounded-xl text-[10px] font-black">
-                        Load
-                    </button>
-                    <button @click="deleteWorkout(idx)" class="bg-red-900/30 text-red-500 px-3 py-2 rounded-xl text-[10px] font-black">
-                        X
-                    </button>
+                <div class="text-right text-sm">
+                    <p>100 Base Pace: {{ baseInterval }}</p>
+                    <p class="font-bold">Total Volume: {{ totalYds }} Yards</p>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script>
-        const { createApp, ref, computed, onMounted } = Vue
-        
-        createApp({
-            setup() {
-                const view = ref('editor');
-                const workoutName = ref('');
-                const history = ref([]);
-                const input = ref("3x\n10x100\n1:00");
-                const startTime = ref("05:30"); 
-                const baseInterval = ref("1:30");
-
-                const customIntervals = computed(() => {
-                    const times = [];
-                    for (let s = 45; s <= 240; s += 5) {
-                        const m = Math.floor(s / 60);
-                        const sc = s % 60;
-                        times.push(`${m}:${sc.toString().padStart(2, '0')}`);
-                    }
-                    return times;
-                });
-
-                const parsedTimeline = computed(() => {
-                    let totalSecondsClock = timeToSeconds(startTime.value || "05:30");
-                    const baseSecPer100 = parseInterval(baseInterval.value);
-                    const lines = input.value.split('\n');
-                    const blocks = [];
-
-                    for (let i = 0; i < lines.length; i++) {
-                        const line = lines[i].trim();
-                        if (!line) continue;
-
-                        const roundMatch = line.match(/^(\d+)\s*x$/i);
-                        
-                        if (roundMatch) {
-                            const rounds = parseInt(roundMatch[1]);
-                            const roundLinesRaw = [];
-                            let j = i + 1;
-                            
-                            while (j < lines.length && lines[j].trim() !== "" && !lines[j].trim().match(/^(\d+)\s*x$/i)) {
-                                roundLinesRaw.push(lines[j].trim());
-                                j++;
-                            }
-                            i = j - 1; 
-
-                            let blockYds = 0;
-                            const itemsList = [];
-                            
-                            for (let r = 0; r < rounds; r++) {
-                                roundLinesRaw.forEach(rawLine => {
-                                    const itemObj = parseLine(rawLine, baseSecPer100);
-                                    if (itemObj) {
-                                        itemsList.push({ 
-                                            ...itemObj, 
-                                            startTime: secondsToTime(totalSecondsClock) 
-                                        });
-                                        totalSecondsClock += itemObj.duration;
-                                        if (r === 0 && !itemObj.isRest) blockYds += itemObj.yds;
-                                    }
-                                });
-                            }
-                            blocks.push({ 
-                                id: i, 
-                                isRound: true, 
-                                rounds, 
-                                items: itemsList, 
-                                blockYds: blockYds * rounds 
-                            });
-                        } else {
-                            const itemObj = parseLine(line, baseSecPer100);
-                            if (itemObj) {
-                                blocks.push({ 
-                                    id: i, 
-                                    isRound: false, 
-                                    items: [{ ...itemObj, startTime: secondsToTime(totalSecondsClock) }], 
-                                    blockYds: itemObj.yds || 0 
-                                });
-                                totalSecondsClock += itemObj.duration;
-                            }
-                        }
-                    }
-                    return blocks;
-                });
-
-                const totalYds = computed(() => parsedTimeline.value.reduce((a, b) => a + b.blockYds, 0));
-
-                const practiceEndTime = computed(() => {
-                    let totalSec = timeToSeconds(startTime.value || "05:30");
-                    parsedTimeline.value.forEach(b => {
-                        b.items.forEach(item => { totalSec += item.duration; });
-                    });
-                    return secondsToTime(totalSec);
-                });
-
-                function parseLine(str, baseSec100) {
-                    const timeOnlyMatch = str.match(/^(\d*:?\d+)$/);
-                    if (timeOnlyMatch) {
-                        return { 
-                            isRest: true, 
-                            duration: parseInterval(timeOnlyMatch[1]), 
-                            displayTime: timeOnlyMatch[1] 
-                        };
-                    }
-                    
-                    const qty = parseInt(str.match(/(\d+)\s*x/)?.[1] || 0);
-                    const dist = parseInt(str.match(/x\s*(\d+)/)?.[1] || 0);
-                    if (!qty || !dist) return null;
-                    
-                    const over = str.match(/[@|on]\s*(\d*:?\d+)/)?.[1];
-                    let secPerRep = over ? parseInterval(over) : (dist / 100) * baseSec100;
-                    
-                    return { 
-                        isRest: false, 
-                        isDefault: !over, 
-                        qty, dist, yds: qty * dist, 
-                        duration: qty * secPerRep, 
-                        displayInterval: secondsToIntervalFormat(secPerRep) 
-                    };
-                }
-
-                function parseInterval(s) {
-                    if (s.includes(':')) {
-                        const [m, sc] = s.split(':').map(Number);
-                        return (m * 60) + (sc || 0);
-                    }
-                    return parseInt(s) || 0;
-                }
-
-                function secondsToIntervalFormat(s) {
-                    const m = Math.floor(s / 60);
-                    const sc = Math.round(s % 60);
-                    return `${m}:${sc.toString().padStart(2, '0')}`;
-                }
-
-                function timeToSeconds(t) {
-                    if(!t) return 0;
-                    const [h, m] = t.split(':').map(Number);
-                    return (h * 3600) + (m * 60);
-                }
-
-                function secondsToTime(s) { 
-                    let h = Math.floor(s / 3600) % 24;
-                    let m = Math.floor((s % 3600) / 60);
-                    const ap = h >= 12 ? 'PM' : 'AM';
-                    h = h % 12 || 12;
-                    return `${h}:${m.toString().padStart(2, '0')} ${ap}`;
-                }
-
-                const saveWorkout = () => {
-                    history.value.unshift({ 
-                        name: workoutName.value || 'New Session', 
-                        yardage: totalYds.value, 
-                        date: new Date().toLocaleDateString() 
-                    });
-                    localStorage.setItem('swimHistory', JSON.stringify(history.value));
-                    alert("Saved!");
-                };
-
-                const loadWorkout = (w) => {
-                    workoutName.value = w.name;
-                    view.value = 'editor';
-                };
-
-                const deleteWorkout = (idx) => {
-                    history.value.splice(idx, 1);
-                    localStorage.setItem('swimHistory', JSON.stringify(history.value));
-                };
-
-                onMounted(() => {
-                    const h = localStorage.getItem('swimHistory');
-                    if (h) history.value = JSON.parse(h);
-                });
-
-                return { 
-                    view, workoutName, input, startTime, baseInterval, history, 
-                    customIntervals, parsedTimeline, totalYds, practiceEndTime, 
-                    saveWorkout, loadWorkout, deleteWorkout 
-                }
-            }
-        }).mount('#app')
-    </script>
-</body>
-</html>
+        <div v-if="view === 'editor'">
+            <div class="bg-[#1e293b] p-5 rounded-3xl mb-6 border border-slate-700/50 shadow-2xl no-print">
+                <div class="flex justify-between items-start mb-4">
+                    <input v-model="workoutName" class="bg-transparent text-xl font-black text-blue-500 outline-none w-full uppercase tracking-tighter" placeholder="SESSION NAME">
+                    <div class="text-right shrink-0 leading-none">
+                        <div class="text-2xl font-mono font-bold text-emerald-400">{{ totalYds }}y</div>
+                        <div class="text-[10px] font-black text-blue-400 uppercase mt-1 italic">Ends: {{ practiceEndTime }}</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex flex-col">
+                        <label class="text-
