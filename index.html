@@ -3,101 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Swim Engine Pro | Coach Eryk Breakdown Edition</title>
+    <title>Swim Engine Pro | Single-Page Analytics Edition</title>
     
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        /* Essential: Hide template flickering */
+        /* Essential: Block template flickering during load */
         [v-cloak] { display: none !important; }
         
-        /* High-Contrast Professional Light Theme */
+        /* High-Contrast Professional Design System */
         :root {
-            --paper-bg: #ffffff;
-            --app-bg: #f1f5f9;
+            --bg-canvas: #f8fafc;
+            --bg-sheet: #ffffff;
             --text-bold: #000000;
-            --text-muted: #64748b;
-            --soflo-blue: #2563eb;
-            --soflo-emerald: #059669;
-            --border-heavy: #000000;
+            --accent-blue: #2563eb;
+            --accent-green: #059669;
+            --border-ui: #e2e8f0;
         }
 
         body {
-            background-color: var(--app-bg);
+            background-color: var(--bg-canvas);
             color: var(--text-bold);
-            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             margin: 0;
             padding: 0;
         }
 
-        /* The Main Training Sheet Area */
+        /* The Training Sheet Architecture */
         .workout-sheet {
-            background-color: var(--paper-bg);
+            background-color: var(--bg-sheet);
             min-height: 100vh;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            transition: all 0.1s ease-in-out;
         }
 
-        /* Bunching logic: Removes gray boxes, uses clean dividers */
-        .bunch-group {
+        /* Group Bunching Logic: Efficiently packs sets under titles */
+        .session-bunch-container {
             margin-bottom: 2.5rem;
             page-break-inside: avoid;
         }
 
-        .section-header {
-            font-size: 2.2rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: -0.02em;
-            color: var(--soflo-blue);
-            border-bottom: 4px solid var(--soflo-blue);
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.5rem;
-        }
-
-        /* Round indicator bracket */
-        .round-bracket {
-            border-left: 8px solid var(--soflo-emerald);
-            padding-left: 1.5rem;
+        /* Round indicator Sidebar (Emerald Style) */
+        .round-bracket-line {
+            border-left: calc(8px * var(--fit-scale)) solid var(--accent-green);
+            padding-left: calc(1.5rem * var(--fit-scale));
             margin-left: 0.5rem;
-            background-color: rgba(5, 150, 105, 0.02);
+            background-color: rgba(5, 150, 105, 0.01);
         }
 
-        /* MASTER PRINT PROTOCOL: One-Page fit logic */
+        /* MASTER PRINT PROTOCOL: ONE-PAGE LOGIC */
         @media print {
             .no-print { display: none !important; }
             @page {
-                margin: 0.2in !important;
+                margin: calc(0.2in / var(--fit-scale)) !important;
                 size: letter;
             }
-            body { 
-                background: white !important; 
-            }
+            body { background: white !important; }
             .workout-sheet {
                 box-shadow: none !important;
                 padding: 0 !important;
+                width: 100% !important;
             }
-            /* DYNAMIC SCALING ENGINE */
-            #app, .scalable-content, .set-item {
-                font-size: var(--master-fit-scale) !important;
+            
+            /* DYNAMIC FIT ENGINE: Scales fonts and gaps proportionally */
+            #app, .scalable-content {
+                font-size: calc(16px * var(--fit-scale)) !important;
                 line-height: 1.1 !important;
             }
-            .set-item {
-                padding-top: 4px !important;
-                padding-bottom: 4px !important;
+            
+            .set-row-item {
+                padding-top: calc(4px * var(--fit-scale)) !important;
+                padding-bottom: calc(4px * var(--fit-scale)) !important;
                 border-bottom: 1px solid #eee !important;
             }
-            .section-header {
-                font-size: 1.6em !important;
-                color: black !important;
-                border-bottom: 2px solid black !important;
+
+            .section-label-box {
+                border-bottom: calc(4px * var(--fit-scale)) solid #000 !important;
+                margin-bottom: calc(10px * var(--fit-scale)) !important;
             }
-            .round-bracket {
-                border-left: 5px solid #000 !important;
+            
+            .round-bracket-line {
+                border-left-width: calc(6px * var(--fit-scale)) !important;
+                border-left-color: #000 !important;
+            }
+            
+            /* Logic: If user toggles metrics off, hide them here */
+            .metrics-section {
+                display: var(--show-metrics-print) !important;
             }
         }
         
-        /* UI Slider Layout */
+        .print-header { display: none; }
+        
+        /* Interactive Scaling UI */
+        .scalable-content {
+            font-size: calc(18px * var(--fit-scale));
+            line-height: 1.5;
+        }
+
+        /* Slider High-Visibility Styling */
         .fit-slider {
             -webkit-appearance: none;
             width: 100%;
@@ -108,152 +113,165 @@
         }
         .fit-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            background: var(--soflo-blue);
+            background: var(--accent-blue);
             cursor: pointer;
             border: 3px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
     </style>
 </head>
 
 <body class="antialiased">
-    <div id="app" class="font-scalable" :style="{'--master-fit-scale': printFontSize + 'px'}" v-cloak>
+    <div id="app" class="font-scalable" :style="{'--fit-scale': fitMultiplier, '--show-metrics-print': showMetrics ? 'block' : 'none'}" v-cloak>
         
-        <nav class="no-print bg-slate-900 text-white px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-2xl">
+        <nav class="no-print bg-slate-900 text-white px-8 py-4 flex justify-between items-center sticky top-0 z-50 shadow-2xl">
             <div class="flex space-x-8 text-[11px] font-black uppercase tracking-widest">
                 <button @click="view = 'editor'" :class="{'text-blue-400': view === 'editor'}">Editor</button>
                 <button @click="view = 'teams'" :class="{'text-blue-400': view === 'teams'}">Teams</button>
                 <button @click="view = 'groups'" :class="{'text-blue-400': view === 'groups'}">Groups</button>
                 <button @click="view = 'history'" :class="{'text-blue-400': view === 'history'}">History</button>
             </div>
-            <div class="bg-blue-600 px-4 py-1.5 rounded-full font-black text-[10px] uppercase italic tracking-widest">{{ activeTeamName }}</div>
+            <div class="bg-blue-600 px-5 py-2 rounded-full font-black text-[10px] uppercase italic tracking-widest border border-blue-400">{{ activeTeamName }}</div>
         </nav>
 
-        <div v-if="view === 'editor'" class="no-print max-w-2xl mx-auto mt-10 p-8 space-y-8">
-            <div class="bg-white rounded-[3rem] p-10 shadow-2xl border-2 border-slate-100">
+        <div v-if="view === 'editor'" class="no-print max-w-2xl mx-auto mt-12 p-8 space-y-8">
+            <div class="bg-white rounded-[3.5rem] p-10 shadow-2xl border-2 border-slate-100">
                 <div class="flex justify-between items-end mb-10">
                     <input v-model="workoutName" class="text-5xl font-black text-slate-900 outline-none w-full tracking-tighter uppercase placeholder:text-slate-200" placeholder="SESSION NAME">
                     <div class="text-right ml-6 shrink-0">
-                        <div class="text-6xl font-mono font-black text-emerald-600">{{ totalYds }}y</div>
-                        <div class="text-[10px] font-black text-blue-600 uppercase mt-2">Finish: {{ practiceEndTime }}</div>
+                        <div class="text-6xl font-mono font-black text-emerald-600 leading-none">{{ totalYds }}y</div>
+                        <div class="text-[11px] font-black text-blue-600 uppercase mt-2 italic">Ends: {{ practiceEndTime }}</div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-10">
                     <div class="flex flex-col">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Start Clock</label>
-                        <input type="time" v-model="startTime" class="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl p-6 text-2xl font-black text-blue-700 shadow-inner">
+                        <input type="time" v-model="startTime" class="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl p-5 text-2xl font-black text-blue-700 shadow-inner">
                     </div>
-                    <div class="flex flex-col">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Base 100</label>
-                        <select v-model="baseInterval" class="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl p-6 text-2xl font-black appearance-none text-emerald-700 shadow-inner">
+                    <div class="flex flex-col text-center">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Base Pace</label>
+                        <select v-model="baseInterval" class="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl p-5 text-2xl font-black appearance-none text-emerald-700 shadow-inner">
                             <option v-for="t in customIntervals" :key="t" :value="t">{{ t }}</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="mt-10 pt-8 border-t-2 border-slate-50 flex items-center justify-between">
-                    <div class="flex flex-col">
-                        <label class="text-[11px] font-black text-blue-600 uppercase tracking-[0.2em] mb-1">One-Page Fit Command</label>
-                        <p class="text-[9px] text-slate-400 italic">Adjust scale to fit session on one sheet</p>
+                <div class="mt-10 pt-10 border-t-2 border-slate-50 space-y-10">
+                    <div class="flex items-center justify-between">
+                        <div class="flex flex-col">
+                            <label class="text-[12px] font-black text-blue-600 uppercase tracking-widest mb-1">One-Page Scaling</label>
+                            <p class="text-[9px] text-slate-400 italic">1.0 = Force Fit Session</p>
+                        </div>
+                        <div class="flex items-center gap-10">
+                            <input type="range" min="0.5" max="1.5" step="0.1" v-model="fitMultiplier" class="fit-slider w-64">
+                            <span class="text-2xl font-mono font-black text-blue-700 bg-blue-50 px-6 py-2 rounded-2xl ring-4 ring-blue-100">{{ fitMultiplier }}</span>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-8">
-                        <input type="range" min="10" max="34" v-model="printFontSize" class="fit-slider w-56">
-                        <span class="text-xl font-mono font-black text-blue-700 bg-blue-50 px-6 py-2 rounded-2xl ring-2 ring-blue-100">{{ printFontSize }}px</span>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex flex-col">
+                            <label class="text-[12px] font-black text-emerald-600 uppercase tracking-widest mb-1">Breakdown Archive</label>
+                            <p class="text-[9px] text-slate-400 italic">Include volume breakdown on PDF?</p>
+                        </div>
+                        <button @click="showMetrics = !showMetrics" 
+                            :class="showMetrics ? 'bg-emerald-600' : 'bg-slate-200'"
+                            class="relative inline-flex h-10 w-20 shrink-0 cursor-pointer rounded-full border-4 border-transparent transition-colors duration-200 focus:outline-none">
+                            <span :class="showMetrics ? 'translate-x-10' : 'translate-x-0'"
+                                class="pointer-events-none inline-block h-8 w-8 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <textarea v-model="input" class="w-full h-[25rem] bg-white border-4 border-slate-100 p-12 rounded-[3.5rem] font-mono text-xl outline-none shadow-2xl leading-relaxed focus:border-blue-400 placeholder:text-slate-100" placeholder="Warmup:&#10;400 Free&#10;3x&#10;  100 Kick @ 2:00"></textarea>
+            <textarea v-model="input" class="w-full h-[30rem] bg-white border-4 border-slate-100 p-12 rounded-[3.5rem] font-mono text-xl outline-none shadow-2xl leading-relaxed focus:border-blue-400 placeholder:text-slate-100" placeholder="Warmup:&#10;400 Free&#10;3x&#10;  100 Kick @ 2:00"></textarea>
             
-            <div class="grid grid-cols-2 gap-8 mb-20">
-                <button @click="saveWorkout" class="bg-blue-600 text-white p-10 rounded-[3rem] font-black text-lg uppercase tracking-widest shadow-xl active:scale-95 transition-all">Save</button>
-                <button @click="triggerPrint" class="bg-emerald-600 text-white p-10 rounded-[3rem] font-black text-lg uppercase tracking-widest shadow-xl active:scale-95 transition-all">Print Breakdown</button>
+            <div class="grid grid-cols-2 gap-8 mb-24">
+                <button @click="saveWorkout" class="bg-blue-600 text-white p-10 rounded-[3rem] font-black text-lg uppercase tracking-widest shadow-xl active:scale-95 transition-all">Save Practice</button>
+                <button @click="triggerPrint" class="bg-emerald-600 text-white p-10 rounded-[3rem] font-black text-lg uppercase tracking-widest shadow-xl active:scale-95 transition-all">Generate Breakdown</button>
             </div>
         </div>
 
-        <div v-if="view === 'editor'" class="workout-sheet max-w-2xl mx-auto p-12 scalable-content">
+        <div v-if="view === 'editor'" class="workout-sheet max-w-3xl mx-auto p-12 scalable-content">
             
-            <div class="flex justify-between items-end border-b-8 border-black pb-8 mb-12">
+            <div class="flex justify-between items-end border-b-[10px] border-black pb-10 mb-14">
                 <div class="w-3/4">
-                    <h1 class="text-7xl font-black uppercase tracking-tighter leading-none mb-4">{{ workoutName || 'Daily Practice' }}</h1>
-                    <div class="flex items-center gap-6 text-xl font-bold uppercase tracking-widest text-slate-600">
+                    <h1 class="text-7xl font-black uppercase tracking-tighter leading-none text-black mb-6">{{ workoutName || 'Daily Practice' }}</h1>
+                    <div class="flex items-center gap-8 text-2xl font-bold uppercase tracking-widest text-slate-500">
                         <span>{{ todayDate }}</span>
-                        <div class="h-6 w-1 bg-slate-300"></div>
+                        <span class="h-8 w-1.5 bg-slate-300"></span>
                         <span>{{ activeTeamName }} | {{ activeGroupName }}</span>
                     </div>
                 </div>
                 <div class="text-right w-1/4">
-                    <div class="text-[12px] font-black uppercase text-slate-400 mb-2">Base Pace: <span class="text-black ml-2">{{ baseInterval }}</span></div>
-                    <div class="text-7xl font-black leading-none tracking-tighter">{{ totalYds }}y</div>
+                    <div class="text-[13px] font-black uppercase text-slate-400 mb-2">Base Pace: <span class="text-black ml-4 font-black">{{ baseInterval }}</span></div>
+                    <div class="text-8xl font-black leading-none tracking-tighter text-black">{{ totalYds }}y</div>
                 </div>
             </div>
 
-            <div class="space-y-12">
-                <div v-for="(group, gIdx) in bunchedTimeline" :key="'g-'+gIdx" class="bunch-group">
+            <div class="space-y-16">
+                <div v-for="(group, gIdx) in bunchedTimeline" :key="'g-'+gIdx" class="session-bunch-container">
                     
-                    <div v-if="group.title" class="section-header flex justify-between items-end">
-                        <span>{{ group.title }}</span>
-                        <span class="text-sm font-black text-slate-400 tracking-widest">{{ group.groupYards }}y Block</span>
+                    <div v-if="group.title" class="section-label-box flex justify-between items-end border-b-4 border-slate-100 pb-4 mb-10">
+                        <span class="text-5xl font-black uppercase text-blue-700 tracking-tighter">{{ group.title }}</span>
+                        <span class="text-[14px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-5 py-2 rounded-lg">{{ group.groupYards }}Y TOTAL</span>
                     </div>
 
-                    <div class="space-y-6">
+                    <div class="space-y-8">
                         <div v-for="(block, bIdx) in group.blocks" :key="'b-'+bIdx">
-                            
-                            <div :class="{'round-bracket': block.isRound}" class="p-4">
-                                <div v-if="block.isRound" class="text-[14px] font-black text-emerald-600 uppercase tracking-[0.4em] mb-6">
-                                    {{ block.rounds }} ROUNDS — {{ block.blockMins }}m TOTAL
+                            <div :class="{'round-bracket-line': block.isRound}" class="p-4">
+                                <div v-if="block.isRound" class="text-[18px] font-black text-emerald-700 uppercase tracking-[0.4em] mb-10 flex items-center justify-between">
+                                    <span>{{ block.rounds }} ROUNDS — {{ block.blockMins }} MIN TOTAL</span>
                                 </div>
                                 
-                                <div v-for="(item, idx) in block.items" :key="'i-'+idx" class="set-item flex justify-between items-center py-6 border-b border-slate-100 last:border-0">
-                                    <div class="flex items-center gap-10">
-                                        <div class="text-3xl">
-                                            <div v-if="item.isRest" class="italic text-blue-600 font-black tracking-widest uppercase text-sm">REST: {{ item.displayTime }}</div>
+                                <div v-for="(item, idx) in block.items" :key="'i-'+idx" class="set-row-item flex justify-between items-center py-8 border-b-2 border-slate-50 last:border-0">
+                                    <div class="flex items-center gap-14">
+                                        <div class="text-4xl">
+                                            <div v-if="item.isRest" class="italic text-blue-600 font-black tracking-[0.2em] uppercase text-sm">REST: {{ item.displayTime }}</div>
                                             <div v-else class="flex flex-col">
-                                                <div class="flex items-baseline gap-10 leading-none">
-                                                    <span class="font-black text-5xl tracking-tighter">{{ item.qty }} x {{ item.dist }}</span>
-                                                    <span class="text-slate-400 text-2xl font-black uppercase tracking-tighter" :class="{'text-emerald-600': item.isDefault}">@ {{ item.displayInterval }}</span>
+                                                <div class="flex items-baseline gap-12 leading-none">
+                                                    <span class="font-black text-6xl tracking-tighter text-black">{{ item.qty }} x {{ item.dist }}</span>
+                                                    <span class="text-slate-400 text-3xl font-black uppercase tracking-tighter" :class="{'text-emerald-700': item.isDefault}">@ {{ item.displayInterval }}</span>
                                                 </div>
-                                                <div class="text-[15px] text-blue-600 font-black uppercase tracking-widest mt-5 opacity-90">
-                                                    {{ item.note }} <span class="font-normal italic text-slate-300 ml-4">({{ item.setDuration }}m)</span>
+                                                <div class="text-[18px] text-blue-600 font-black uppercase tracking-[0.3em] mt-6 flex items-center gap-6">
+                                                    <span class="bg-blue-50 px-5 py-1.5 rounded-xl border border-blue-100 shadow-sm">{{ item.note }}</span>
+                                                    <span class="text-slate-300 font-bold italic lowercase border-l-4 border-slate-100 pl-5">({{ item.setDuration }} min)</span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    
                                     <div class="text-right flex flex-col justify-center leading-none">
-                                        <span class="font-mono text-3xl font-black tracking-tighter">{{ item.endTime }}</span>
-                                        <span v-if="!item.isRest" class="font-mono text-sm font-black text-slate-300 mt-4 uppercase italic">{{ item.runningYds }}y</span>
+                                        <span class="font-mono text-4xl font-black tracking-tighter text-black">{{ item.endTime }}</span>
+                                        <span v-if="!item.isRest" class="font-mono text-[14px] font-black text-slate-400 mt-4 uppercase italic tracking-widest">{{ item.runningYds }}y</span>
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-40 border-t-8 border-black pt-16 pb-32">
-                <h3 class="text-xl font-black uppercase tracking-[1em] text-slate-200 mb-12 text-center">Volume Archive</h3>
-                <div class="grid grid-cols-2 sm:grid-cols-5 gap-10">
+            <div v-if="showMetrics" class="metrics-section mt-48 border-t-[10px] border-black pt-20 pb-48">
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-12">
                     <div v-for="(yds, cat) in categoryTotals" :key="cat" class="text-center">
-                        <div class="text-[12px] font-black text-blue-600 uppercase tracking-widest mb-4">{{ cat }}</div>
-                        <div class="text-5xl font-mono font-black tracking-tighter">{{ yds }}y</div>
+                        <div class="text-[14px] font-black text-blue-600 uppercase tracking-widest mb-6">{{ cat }}</div>
+                        <div class="text-6xl font-mono font-black tracking-tighter text-black">{{ yds }}y</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div v-if="view === 'teams'" class="no-print p-12 max-w-2xl mx-auto space-y-12">
-            <div class="bg-white p-16 rounded-[4rem] border-4 border-slate-100 shadow-2xl text-center"><h2 class="font-black uppercase text-blue-600 mb-10 tracking-widest text-[12px]">Add Team Identity</h2><div class="flex gap-6"><input v-model="newTeamName" @keyup.enter="addTeam" class="flex-1 bg-slate-50 border-4 border-slate-100 rounded-[2.5rem] p-8 text-2xl font-black outline-none" placeholder="SOFLO Elite"><button @click="addTeam" class="bg-blue-600 text-white px-16 rounded-[2.5rem] font-black text-lg uppercase transition-all shadow-2xl">Add</button></div></div>
-            <div v-for="(t, idx) in teams" :key="t.id" class="bg-white p-10 rounded-[3rem] border-2 border-slate-50 flex justify-between items-center group shadow-sm"><span class="font-black uppercase tracking-[0.4em] text-slate-900 text-lg">{{ t.name }}</span><button @click="deleteTeam(idx)" v-if="teams.length > 1" class="text-red-600 font-black px-10 py-6 bg-red-50 hover:bg-red-100 rounded-3xl text-[12px] uppercase">Remove</button></div>
+            <div class="bg-white p-20 rounded-[4rem] border-4 border-slate-100 shadow-2xl text-center"><h2 class="font-black uppercase text-blue-600 mb-12 tracking-widest text-[14px]">Add Team</h2><div class="flex gap-8"><input v-model="newTeamName" @keyup.enter="addTeam" class="flex-1 bg-slate-50 border-4 border-slate-100 rounded-[3rem] p-10 text-3xl font-black outline-none shadow-inner" placeholder="SOFLO Swimmers"><button @click="addTeam" class="bg-blue-600 text-white px-20 rounded-[3rem] font-black text-xl uppercase transition-all shadow-2xl">Add</button></div></div>
+            <div v-for="(t, idx) in teams" :key="t.id" class="bg-white p-12 rounded-[4rem] border-2 border-slate-50 flex justify-between items-center shadow-md"><span class="font-black uppercase tracking-[0.4em] text-slate-900 text-2xl">{{ t.name }}</span><button @click="deleteTeam(idx)" v-if="teams.length > 1" class="text-red-600 font-black px-12 py-8 bg-red-50 hover:bg-red-100 rounded-3xl text-sm uppercase">Remove</button></div>
         </div>
 
         <div v-if="view === 'groups'" class="no-print p-12 max-w-2xl mx-auto space-y-12">
-            <div class="bg-white p-16 rounded-[4rem] border-4 border-slate-100 shadow-2xl text-center"><h2 class="font-black uppercase text-emerald-700 mb-10 tracking-widest text-[12px]">Manage Groups</h2><div class="flex gap-6"><input v-model="newGroupName" @keyup.enter="addGroup" class="flex-1 bg-slate-50 border-4 border-slate-100 rounded-[2.5rem] p-8 text-2xl font-black outline-none" placeholder="Senior Gold"><button @click="addGroup" class="bg-emerald-600 text-white px-16 rounded-[2.5rem] font-black text-lg uppercase transition-all shadow-2xl">Add</button></div></div>
-            <div v-for="(g, idx) in groups" :key="g.id" class="bg-white p-10 rounded-[3rem] border-2 border-slate-50 flex justify-between items-center group shadow-sm"><span class="font-black uppercase tracking-[0.4em] text-slate-900 text-lg">{{ g.name }}</span><button @click="deleteGroup(idx)" v-if="groups.length > 1" class="text-red-600 font-black px-10 py-6 bg-red-50 hover:bg-red-100 rounded-3xl text-[12px] uppercase">Remove</button></div>
+            <div class="bg-white p-20 rounded-[4rem] border-4 border-slate-100 shadow-2xl text-center"><h2 class="font-black uppercase text-emerald-700 mb-12 tracking-widest text-[14px]">Manage Groups</h2><div class="flex gap-8"><input v-model="newGroupName" @keyup.enter="addGroup" class="flex-1 bg-slate-50 border-4 border-slate-100 rounded-[3rem] p-10 text-3xl font-black outline-none shadow-inner" placeholder="Senior Elite"><button @click="addGroup" class="bg-emerald-600 text-white px-20 rounded-[3rem] font-black text-xl uppercase transition-all shadow-2xl">Add</button></div></div>
+            <div v-for="(g, idx) in groups" :key="g.id" class="bg-white p-12 rounded-[4rem] border-2 border-slate-50 flex justify-between items-center shadow-md"><span class="font-black uppercase tracking-[0.4em] text-slate-900 text-2xl">{{ g.name }}</span><button @click="deleteGroup(idx)" v-if="groups.length > 1" class="text-red-600 font-black px-12 py-8 bg-red-50 hover:bg-red-100 rounded-3xl text-sm uppercase">Remove</button></div>
         </div>
     </div>
 
@@ -262,16 +280,17 @@
 
         createApp({
             setup() {
-                const STORAGE_VERSION = 'swim_v_Breakdown_5.0';
-                const KEYS = { HIST: 'h_'+STORAGE_VERSION, TEAM: 't_'+STORAGE_VERSION, GRUP: 'g_'+STORAGE_VERSION };
+                const STORAGE_UID = 'swim_v_MetricsFit_8.0';
+                const KEYS = { HIST: 'h_'+STORAGE_UID, TEAM: 't_'+STORAGE_UID, GRUP: 'g_'+STORAGE_UID };
 
                 const view = ref('editor');
                 const workoutName = ref('');
                 const history = ref([]);
-                const input = ref("Warmup:\n400 Free\n300 Kick\n200 Scull\n\nMain Set:\n3x\n  100 Free @ 1:30\n  1:00 rest");
+                const input = ref("Warmup:\n400 Free\n300 Kick\n200 Scull\n\nMain Set:\n3x\n  100 Free @ 1:30\n  50 Kick @ 1:00\n  1:00 rest");
                 const startTime = ref("17:45");
                 const baseInterval = ref("1:45");
-                const printFontSize = ref(18); 
+                const fitMultiplier = ref(1.0); 
+                const showMetrics = ref(true); // MASTER TOGGLE
                 
                 const teams = ref([{ id: 1, name: 'SOFLO' }]);
                 const activeTeamId = ref(1);
@@ -285,10 +304,10 @@
                 const activeGroupName = computed(() => groups.value.find(i => i.id === activeGroupId.value)?.name || 'Group');
 
                 const customIntervals = computed(() => {
-                    const r = []; for (let s = 40; s <= 600; s += 5) { const m = Math.floor(s / 60); r.push(`${m}:${(s % 60).toString().padStart(2, '0')}`); } return r;
+                    const r = []; for (let s = 30; s <= 600; s += 5) { const m = Math.floor(s / 60); r.push(`${m}:${(s % 60).toString().padStart(2, '0')}`); } return r;
                 });
 
-                // REINFORCED MATH ENGINE (FORCE-SYNC CLOCK)
+                // REINFORCED CORE MATH
                 const parsedTimeline = computed(() => {
                     try {
                         let mClock = timeToSeconds(startTime.value || "17:45");
@@ -315,10 +334,10 @@
                                 }
                                 i = nIdx - 1; 
 
-                                let repYds = 0; let repSecs = 0; let items = [];
+                                let blockSingleYds = 0; let blockSingleSecs = 0; let items = [];
                                 subLines.forEach(t => {
                                     const p = parseSetString(t, b100);
-                                    if (p) { if (!p.isRest) repYds += p.ydsTotal; repSecs += p.duration; }
+                                    if (p) { if (!p.isRest) blockSingleYds += p.ydsTotal; blockSingleSecs += p.duration; }
                                 });
 
                                 let tClock = mClock; let tYds = yAcc;
@@ -330,8 +349,8 @@
                                     }
                                 });
 
-                                results.push({ id: 'round-'+i, isRound: true, rounds: mult, items, blockYds: repYds * mult, blockMins: Math.floor((repSecs * mult) / 60) });
-                                mClock += (repSecs * mult); yAcc += (repYds * mult);
+                                results.push({ id: 'round-'+i, isRound: true, rounds: mult, items, blockYds: blockSingleYds * mult, blockMins: Math.floor((blockSingleSecs * mult) / 60) });
+                                mClock += (blockSingleSecs * mult); yAcc += (blockSingleYds * mult);
                             } else {
                                 const s = parseSetString(raw, b100);
                                 if (s) {
@@ -344,9 +363,8 @@
                     } catch (e) { return []; }
                 });
 
-                // BUNCHING UI LOGIC (BREAKDOWN FOCUS)
                 const bunchedTimeline = computed(() => {
-                    const final = []; let cTitle = "Session Training"; let cBlocks = []; let cYds = 0;
+                    const final = []; let cTitle = "Practice Session"; let cBlocks = []; let cYds = 0;
                     parsedTimeline.value.forEach(block => {
                         if (block.isTitle) {
                             if (cBlocks.length > 0) final.push({ title: cTitle, blocks: cBlocks, groupYards: cYds });
@@ -361,10 +379,10 @@
                     const stats = { Free: 0, Kick: 0, Pull: 0, Scull: 0, Other: 0 };
                     parsedTimeline.value.forEach(b => {
                         if (b.items) {
-                            const multiplier = b.isRound ? b.rounds : 1;
+                            const mult = b.isRound ? b.rounds : 1;
                             b.items.forEach(it => {
                                 if (!it.isRest) {
-                                    const n = it.note.toLowerCase(); const volume = it.ydsTotal * multiplier;
+                                    const n = it.note.toLowerCase(); const volume = it.ydsTotal * mult;
                                     if (n.includes('free')) stats.Free += volume;
                                     else if (n.includes('kick')) stats.Kick += volume;
                                     else if (n.includes('pull')) stats.Pull += volume;
@@ -414,7 +432,7 @@
                 watch(teams, (nT) => localStorage.setItem(KEYS.TEAM, JSON.stringify(nT)), { deep: true });
                 watch(groups, (nG) => localStorage.setItem(KEYS.GRUP, JSON.stringify(nG)), { deep: true });
 
-                return { view, workoutName, input, startTime, baseInterval, history, customIntervals, parsedTimeline, bunchedTimeline, totalYds, practiceEndTime, saveWorkout, todayDate, triggerPrint, teams, activeTeamId, activeTeamName, groups, activeGroupId, activeGroupName, newTeamName, addTeam, deleteTeam, newGroupName, addGroup, deleteGroup, categoryTotals, printFontSize };
+                return { view, workoutName, input, startTime, baseInterval, history, customIntervals, parsedTimeline, bunchedTimeline, totalYds, practiceEndTime, saveWorkout, todayDate, triggerPrint, teams, activeTeamId, activeTeamName, groups, activeGroupId, activeGroupName, newTeamName, addTeam, deleteTeam, newGroupName, addGroup, deleteGroup, categoryTotals, fitMultiplier, showMetrics };
             }
         }).mount('#app');
     </script>
