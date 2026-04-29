@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Swim Engine Pro | Coach Eryk Precision Scaling</title>
+    <title>Swim Engine Pro | Coach Eryk Explicit Breakdown</title>
     
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        /* Block template flickering during logic load */
+        /* Block template flickering during heavy logic load */
         [v-cloak] { display: none !important; }
         
+        /* High-Contrast Light Design System */
         :root {
             --bg-canvas: #f8fafc;
             --bg-sheet: #ffffff;
@@ -23,31 +24,31 @@
         body {
             background-color: var(--bg-canvas);
             color: var(--text-main);
-            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             margin: 0;
+            padding: 0;
         }
 
+        /* Training Sheet Mechanics */
         .workout-sheet-master {
             background-color: var(--bg-sheet);
             min-height: 100vh;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
         }
 
-        /* Round indicator Sidebar (Yards focused) */
+        /* Round indicator Sidebar (Emerald Style) */
         .round-bracket-sidebar {
-            border-left: 6px solid var(--soflo-emerald);
-            padding-left: 1.5rem;
-            margin-left: 0.25rem;
+            border-left: calc(8px * var(--master-scale)) solid var(--soflo-emerald);
+            padding-left: calc(1.5rem * var(--master-scale));
+            margin-left: 0.5rem;
             background-color: rgba(5, 150, 105, 0.01);
         }
 
-        /* MASTER PRINT PROTOCOL: FONT-ONLY SCALING 
-           This section locks spacing and only scales text
-        */
+        /* MASTER PRINT PROTOCOL: HARD-CLAMP ONE PAGE */
         @media print {
             .no-print { display: none !important; }
             @page {
-                margin: 0.25in !important;
+                margin: 0.15in !important;
                 size: letter;
             }
             body { background: white !important; }
@@ -57,34 +58,53 @@
                 width: 100% !important;
             }
             
-            /* TITLES: Locked to 18pt at 1.0 Multiplier */
-            .section-header-row {
-                font-size: calc(24px * var(--fit-scale)) !important; 
-                border-bottom: 2px solid #000 !important;
-                margin-bottom: 15px !important;
-                padding-bottom: 5px !important;
+            /* PRECISION FONT ENGINE (Tied to Decimal fit-scale) */
+            .section-header-bar {
+                /* Titles: Forced to 18pt (approx 24px) at 1.0 */
+                font-size: calc(24px * var(--master-scale)) !important;
+                border-bottom: calc(4px * var(--master-scale)) solid #000 !important;
+                margin-bottom: calc(10px * var(--master-scale)) !important;
+                padding-bottom: calc(4px * var(--master-scale)) !important;
                 display: flex !important;
+                justify-content: flex-start !important;
                 gap: 20px !important;
             }
 
-            /* SETS: Locked to 11pt-12pt at 1.0 Multiplier (Significantly Smaller) */
             .set-row-line {
-                font-size: calc(15px * var(--fit-scale)) !important;
-                padding-top: 4px !important;
-                padding-bottom: 4px !important;
-                border-bottom: 1px solid #eee !important;
-                line-height: 1.2 !important;
+                /* Sets: Forced to 12pt (approx 16px) at 1.0 */
+                font-size: calc(16px * var(--master-scale)) !important;
+                padding-top: calc(3px * var(--master-scale)) !important;
+                padding-bottom: calc(3px * var(--master-scale)) !important;
+                border-bottom: 1px solid #f1f1f1 !important;
+                line-height: 1.05 !important;
             }
 
+            .scalable-text-container {
+                line-height: 1.05 !important;
+            }
+            
             .round-bracket-sidebar {
-                border-left-width: 5px !important;
+                border-left-width: calc(6px * var(--master-scale)) !important;
                 border-left-color: #000 !important;
             }
 
-            .volume-metrics-footer { display: var(--metrics-visibility) !important; }
+            .metrics-archive-footer {
+                display: var(--metrics-visibility) !important;
+            }
         }
         
-        .fit-command-slider {
+        /* Interactive Scaling UI Mechanics */
+        .section-header-bar {
+            font-size: calc(24px * var(--master-scale));
+            font-weight: 900;
+        }
+
+        .set-row-line {
+            font-size: calc(16px * var(--master-scale));
+        }
+
+        /* Pro Slider Interface */
+        .master-scale-slider {
             -webkit-appearance: none;
             width: 100%;
             height: 10px;
@@ -92,7 +112,7 @@
             background: #cbd5e1;
             outline: none;
         }
-        .fit-command-slider::-webkit-slider-thumb {
+        .master-scale-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             width: 28px;
             height: 28px;
@@ -105,68 +125,63 @@
 </head>
 
 <body class="antialiased">
-    <div id="app" :style="{'--fit-scale': fitMultiplier, '--metrics-visibility': showMetrics ? 'block' : 'none'}" v-cloak>
+    <div id="app" :style="{'--master-scale': fitMultiplier, '--metrics-visibility': showMetrics ? 'block' : 'none'}" v-cloak>
         
-        <nav class="no-print bg-slate-900 text-white px-6 py-4 flex justify-between items-center sticky top-0 z-50">
-            <div class="flex space-x-8 text-[11px] font-black uppercase tracking-widest">
+        <nav class="no-print bg-slate-900 text-white px-8 py-4 flex justify-between items-center sticky top-0 z-50 shadow-2xl">
+            <div class="flex space-x-10 text-[10px] font-black uppercase tracking-widest">
                 <button @click="view = 'editor'" :class="{'text-blue-400': view === 'editor'}">Editor</button>
                 <button @click="view = 'teams'" :class="{'text-blue-400': view === 'teams'}">Teams</button>
                 <button @click="view = 'groups'" :class="{'text-blue-400': view === 'groups'}">Groups</button>
             </div>
-            <div class="bg-blue-600 px-4 py-1.5 rounded-full font-black text-[10px] uppercase italic border border-blue-400 shadow-lg">{{ activeTeamName }}</div>
+            <div class="bg-blue-600 px-4 py-1.5 rounded-full font-black text-[10px] uppercase italic border border-blue-400 shadow-lg">{{ activeTeamName }} | {{ activeGroupName }}</div>
         </nav>
 
         <div v-if="view === 'editor'" class="no-print max-w-2xl mx-auto mt-10 p-6 space-y-8">
             <div class="bg-white rounded-[3rem] p-10 shadow-2xl border-2 border-slate-100">
                 <div class="flex justify-between items-end mb-10">
-                    <div class="w-full">
-                        <input v-model="workoutName" class="text-5xl font-black text-slate-900 outline-none w-full tracking-tighter uppercase placeholder:text-slate-200" placeholder="SESSION NAME">
-                        <div class="flex gap-6 mt-4">
-                            <select v-model="activeTeamId" class="text-xs font-bold uppercase text-slate-500 outline-none">
-                                <option v-for="t in teams" :key="t.id" :value="t.id">{{ t.name }}</option>
-                            </select>
-                            <select v-model="activeGroupId" class="text-xs font-bold uppercase text-slate-500 outline-none border-l-2 border-slate-100 pl-4">
-                                <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
-                            </select>
-                        </div>
-                    </div>
+                    <input v-model="workoutName" class="text-4xl font-black text-slate-900 outline-none w-full tracking-tighter uppercase placeholder:text-slate-200" placeholder="SESSION NAME">
                     <div class="text-right ml-6 shrink-0">
                         <div class="text-6xl font-mono font-black text-emerald-600 leading-none">{{ totalYds }}y</div>
-                        <div class="text-[10px] font-black text-blue-600 uppercase mt-2">Finish: {{ practiceEndTime }}</div>
+                        <div class="text-[10px] font-black text-blue-600 uppercase mt-4">Done: {{ practiceEndTime }}</div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-10">
                     <div class="flex flex-col">
-                        <label class="text-[10px] font-black text-slate-400 uppercase mb-3">Start Clock</label>
-                        <input type="time" v-model="startTime" class="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl p-5 text-2xl font-black text-blue-700">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Start Clock</label>
+                        <input type="time" v-model="startTime" class="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl p-5 text-2xl font-black text-blue-700 shadow-inner">
                     </div>
                     <div class="flex flex-col text-center">
-                        <label class="text-[10px] font-black text-slate-400 uppercase mb-3">Base 100</label>
-                        <select v-model="baseInterval" class="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl p-5 text-2xl font-black appearance-none text-emerald-700">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Base 100</label>
+                        <select v-model="baseInterval" class="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl p-5 text-2xl font-black appearance-none text-emerald-700 shadow-inner">
                             <option v-for="t in customIntervals" :key="t" :value="t">{{ t }}</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="mt-10 pt-8 border-t-2 border-slate-50 flex items-center justify-between">
-                    <div class="flex flex-col">
-                        <label class="text-[12px] font-black text-blue-600 uppercase tracking-widest">Global Font Scale</label>
-                        <p class="text-[9px] text-slate-400 italic">Adjusts text size only</p>
+                <div class="mt-10 pt-8 border-t-2 border-slate-50 space-y-12">
+                    <div class="flex items-center justify-between">
+                        <div class="flex flex-col">
+                            <label class="text-[11px] font-black text-blue-600 uppercase tracking-[0.2em] mb-1">Decimal Fit Command</label>
+                            <p class="text-[9px] text-slate-400 italic">Adjust scale (0.5 to 1.5) to fit session</p>
+                        </div>
+                        <div class="flex items-center gap-8">
+                            <input type="range" min="0.5" max="1.5" step="0.1" v-model="fitMultiplier" class="master-scale-slider w-56">
+                            <span class="text-2xl font-mono font-black text-blue-700 bg-blue-50 px-6 py-2 rounded-2xl ring-4 ring-blue-100">{{ fitMultiplier }}</span>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-6">
-                        <input type="range" min="0.5" max="1.5" step="0.1" v-model="fitMultiplier" class="fit-command-slider w-56">
-                        <span class="text-2xl font-mono font-black text-blue-700 bg-blue-50 px-6 py-2 rounded-2xl border-2 border-blue-100">{{ fitMultiplier }}</span>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex flex-col">
+                            <label class="text-[12px] font-black text-emerald-600 uppercase tracking-[0.2em] mb-1">Archive Metrics</label>
+                            <p class="text-[9px] text-slate-400 italic">Include Breakdown Volume on PDF?</p>
+                        </div>
+                        <button @click="showMetrics = !showMetrics" :class="showMetrics ? 'bg-emerald-600' : 'bg-slate-200'" class="relative inline-flex h-10 w-20 shrink-0 cursor-pointer rounded-full border-4 border-transparent transition-colors duration-200 focus:outline-none"><span :class="showMetrics ? 'translate-x-10' : 'translate-x-0'" class="pointer-events-none h-8 w-8 transform rounded-full bg-white shadow ring-0 transition duration-200"></span></button>
                     </div>
-                </div>
-                
-                <div class="mt-6 flex items-center justify-between">
-                    <label class="text-[10px] font-black text-emerald-600 uppercase">Include Metrics in PDF</label>
-                    <button @click="showMetrics = !showMetrics" :class="showMetrics ? 'bg-emerald-600' : 'bg-slate-200'" class="relative h-8 w-14 rounded-full transition-colors"><span :class="showMetrics ? 'translate-x-6' : 'translate-x-0'" class="inline-block h-6 w-6 transform rounded-full bg-white transition duration-200"></span></button>
                 </div>
             </div>
 
-            <textarea v-model="input" class="w-full h-80 bg-white border-2 border-slate-200 p-8 rounded-[3rem] font-mono text-lg outline-none shadow-inner leading-relaxed focus:border-blue-400" placeholder="Paste workout here..."></textarea>
+            <textarea v-model="input" class="w-full h-[25rem] bg-white border-4 border-slate-100 p-12 rounded-[4rem] font-mono text-xl outline-none shadow-2xl leading-relaxed focus:border-blue-400" placeholder="Warmup:&#10;400 Free&#10;3x&#10;  100 Kick @ 2:00"></textarea>
             
             <div class="grid grid-cols-2 gap-8 mb-20">
                 <button @click="saveWorkout" class="bg-blue-600 text-white p-10 rounded-[3rem] font-black text-lg uppercase tracking-widest shadow-xl active:scale-95 transition-all">Save Session</button>
@@ -174,14 +189,14 @@
             </div>
         </div>
 
-        <div v-if="view === 'editor'" class="workout-sheet-master max-w-4xl mx-auto p-12 scalable-content">
+        <div v-if="view === 'editor'" class="workout-sheet-master max-w-4xl mx-auto p-12 scalable-text-container">
             
             <div class="flex justify-between items-end border-b-[8px] border-black pb-10 mb-12">
                 <div class="w-3/4">
                     <h1 class="text-7xl font-black uppercase tracking-tighter leading-none text-black mb-6">{{ workoutName || 'Daily Practice' }}</h1>
                     <div class="flex items-center gap-8 text-2xl font-bold uppercase tracking-widest text-slate-500">
                         <span>{{ todayDate }}</span>
-                        <div class="h-8 w-1.5 bg-slate-300"></div>
+                        <span class="h-8 w-1.5 bg-slate-300"></span>
                         <span>{{ activeTeamName }} | {{ activeGroupName }}</span>
                     </div>
                 </div>
@@ -194,11 +209,11 @@
             <div class="space-y-12">
                 <div v-for="(group, gIdx) in bunchedTimeline" :key="'g-'+gIdx">
                     
-                    <div v-if="group.title" class="section-header-row flex justify-between items-end border-b-4 border-slate-100 pb-4 mb-10">
+                    <div v-if="group.title" class="section-header-bar flex justify-between items-end border-b-4 border-slate-100 pb-4 mb-10">
                         <span class="uppercase text-blue-700 font-black">{{ group.title }}</span>
                         <div class="flex items-center gap-6 text-[13px] font-black text-slate-400">
-                            <span>{{ group.groupMinutes }} MINS</span>
-                            <span>{{ group.groupYards }}Y TOTAL</span>
+                            <span class="bg-blue-50 px-3 py-1 rounded-lg text-blue-600 border border-blue-100">{{ group.groupMinutes }} MINS</span>
+                            <span class="bg-slate-50 px-3 py-1 rounded-lg border border-slate-200">{{ group.groupYards }}Y TOTAL</span>
                         </div>
                     </div>
 
@@ -209,14 +224,14 @@
                                     {{ block.rounds }} ROUNDS — {{ block.blockMins }} MIN TOTAL
                                 </div>
                                 
-                                <div v-for="(item, idx) in block.items" :key="'i-'+idx" class="set-row-line flex justify-between items-center py-6 border-b-2 border-slate-50 last:border-0">
+                                <div v-for="(item, idx) in block.items" :key="'i-'+idx" class="set-row-line flex justify-between items-center py-6 border-b-2 border-slate-50 last:border-0 hover:bg-slate-50 transition-colors">
                                     <div class="flex items-center gap-14">
-                                        <div class="text-4xl">
+                                        <div class="text-4xl leading-none">
                                             <div v-if="item.isRest" class="italic text-blue-600 font-black tracking-widest uppercase">REST: {{ item.displayTime }}</div>
                                             <div v-else class="flex flex-col">
                                                 <div class="flex items-baseline gap-10 leading-none">
                                                     <span class="font-black text-5xl tracking-tighter text-black">{{ item.qty }} x {{ item.dist }}</span>
-                                                    <span class="text-slate-400 text-2xl font-black" :class="{'text-emerald-700': item.isDefault}">@ {{ item.displayInterval }}</span>
+                                                    <span class="text-slate-400 text-2xl font-black uppercase" :class="{'text-emerald-700': item.isDefault}">@ {{ item.displayInterval }}</span>
                                                 </div>
                                                 <div v-if="item.note" class="text-[15px] text-blue-600 font-black uppercase mt-5 opacity-90 flex items-center gap-4">
                                                     <span>{{ item.note }}</span>
@@ -227,7 +242,7 @@
                                     </div>
                                     <div class="text-right flex flex-col justify-center leading-none">
                                         <span class="font-mono text-3xl font-black text-black">{{ item.endTime }}</span>
-                                        <span v-if="!item.isRest" class="font-mono text-[14px] font-black text-slate-400 mt-2 uppercase italic">{{ item.runningYds }}y</span>
+                                        <span v-if="!item.isRest" class="font-mono text-[14px] font-black text-slate-400 mt-2 uppercase italic leading-none">{{ item.runningYds }}y</span>
                                     </div>
                                 </div>
                             </div>
@@ -236,7 +251,7 @@
                 </div>
             </div>
 
-            <div v-if="showMetrics" class="volume-metrics-footer mt-48 border-t-[10px] border-black pt-16 pb-48">
+            <div v-if="showMetrics" class="metrics-archive-footer mt-48 border-t-[10px] border-black pt-16 pb-48">
                 <div class="grid grid-cols-5 gap-10">
                     <div v-for="(yds, cat) in categoryTotals" :key="cat" class="text-center">
                         <div class="text-[13px] font-black text-blue-600 uppercase mb-4">{{ cat }}</div>
@@ -252,13 +267,15 @@
 
         createApp({
             setup() {
-                const STORAGE_UID = 'swim_v_FontPrecision_11.0';
-                const KEYS = { HIST: 'h_'+STORAGE_UID, TEAM: 't_'+STORAGE_UID, GRUP: 'g_'+STORAGE_UID };
+                const STORE_PREFIX = 'swimEngine_Explicit_v11.5';
+                const STORAGE_HIST = STORE_PREFIX + '_h';
+                const STORAGE_TEAM = STORE_PREFIX + '_t';
+                const STORAGE_GRUP = STORE_PREFIX + '_g';
 
                 const view = ref('editor');
                 const workoutName = ref('');
                 const history = ref([]);
-                const input = ref("Warmup:\n4x100 75 free/25 rev Im\n4x75 k/d/s\n4x50 scull/swim\n4x25 variable speed\n8:00\n\nMain set:\n1x\n  4x200@ 2:40\n  1x100 @ 3:00 Easy\n  6x100@ 1:20\n  1x100 @ 3:00 Easy\n  8x50 @ 0:40");
+                const input = ref("Warmup:\n4x100 75 free/25 rev Im\n4x75 k/d/s\n4x50 scull/swim\n4x25 variable speed\n8:00\n\nPull Set:\n1x\n  6x50 @ 1:00 Back/free\n  4x100 @ 2:00 back/free\n  2x200 @ 4:00 back/free");
                 const startTime = ref("17:45");
                 const baseInterval = ref("1:45");
                 const fitMultiplier = ref(1.0); 
@@ -272,110 +289,110 @@
                 const newGroupName = ref('');
 
                 const todayDate = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: '2-digit', year: '2-digit' });
-                const activeTeamName = computed(() => teams.value.find(i => i.id === activeTeamId.value)?.name || 'Team');
-                const activeGroupName = computed(() => groups.value.find(i => i.id === activeGroupId.value)?.name || 'Group');
+                const activeTeamName = computed(() => { const t = teams.value.find(i => i.id === activeTeamId.value); return t ? t.name : 'Team'; });
+                const activeGroupName = computed(() => { const g = groups.value.find(i => i.id === activeGroupId.value); return g ? g.name : 'Group'; });
                 const customIntervals = computed(() => { const r = []; for (let s = 30; s <= 600; s += 5) { const m = Math.floor(s / 60); r.push(`${m}:${(s % 60).toString().padStart(2, '0')}`); } return r; });
 
                 const parsedTimeline = computed(() => {
                     try {
-                        let mClock = timeToSeconds(startTime.value || "17:45");
-                        let yAcc = 0; const b100 = parseInterval(baseInterval.value);
+                        let mClock = (parseInt(startTime.value.split(':')[0]) * 3600) + (parseInt(startTime.value.split(':')[1]) * 60);
+                        let yAcc = 0; 
+                        const parts = baseInterval.value.split(':');
+                        const b100 = (parseInt(parts[0]) * 60) + (parseInt(parts[1] || 0));
                         const linesBuffer = input.value.split('\n').map(l => l.trim()).filter(l => l !== "");
-                        const results = [];
+                        const finalResults = [];
 
                         for (let i = 0; i < linesBuffer.length; i++) {
-                            const raw = linesBuffer[i];
-                            if (raw.endsWith(':')) { results.push({ isTitle: true, titleText: raw.slice(0, -1) }); continue; }
-                            const rMatch = raw.match(/^(\d+)\s*x$/i);
+                            const rawLine = linesBuffer[i];
+                            if (rawLine.endsWith(':')) { finalResults.push({ isTitle: true, titleText: rawLine.slice(0, -1) }); continue; }
+
+                            const rMatch = rawLine.match(/^(\d+)\s*x$/i);
                             if (rMatch) {
                                 const mult = parseInt(rMatch[1]);
-                                const subL = []; let nIdx = i + 1;
+                                const blockSets = []; let nIdx = i + 1;
                                 while (nIdx < linesBuffer.length && !linesBuffer[nIdx].match(/^(\d+)\s*x$/i) && !linesBuffer[nIdx].endsWith(':')) {
-                                    const p = parseSetString(linesBuffer[nIdx], b100);
-                                    if (p) {
-                                        let noteBuffer = ""; let lookIdx = nIdx + 1;
-                                        while (lookIdx < linesBuffer.length && !parseSetString(linesBuffer[lookIdx], b100) && !linesBuffer[lookIdx].endsWith(':') && !linesBuffer[lookIdx].match(/^(\d+)\s*x$/i)) {
-                                            noteBuffer += (noteBuffer ? " | " : "") + linesBuffer[lookIdx]; lookIdx++;
+                                    const setRaw = linesBuffer[nIdx];
+                                    const parsed = parseInternal(setRaw, b100);
+                                    if (parsed) {
+                                        let noteBuffer = ""; let lIdx = nIdx + 1;
+                                        while (lIdx < linesBuffer.length && !parseInternal(linesBuffer[lIdx], b100) && !linesBuffer[lIdx].endsWith(':') && !linesBuffer[lIdx].match(/^(\d+)\s*x$/i)) {
+                                            noteBuffer += (noteBuffer ? " " : "") + linesBuffer[lIdx]; lIdx++;
                                         }
-                                        subL.push({ ...p, note: p.note + (noteBuffer ? " ["+noteBuffer+"]" : "") });
-                                        nIdx = lookIdx;
+                                        blockSets.push({ ...parsed, note: parsed.note + (noteBuffer ? " " + noteBuffer : "") }); nIdx = lIdx;
                                     } else { nIdx++; }
                                 }
                                 i = nIdx - 1; 
-                                let bYds = 0, bSecs = 0, items = [];
-                                subL.forEach(s => { if (!s.isRest) bYds += s.ydsTotal; bSecs += s.duration; });
+                                let bYds = 0, bSecs = 0, bItems = [];
+                                blockSets.forEach(s => { if (!s.isRest) bYds += s.ydsTotal; bSecs += s.duration; });
                                 let tClock = mClock, tYds = yAcc;
-                                subL.forEach(s => {
+                                blockSets.forEach(s => {
                                     tClock += s.duration; if (!s.isRest) tYds += s.ydsTotal;
-                                    items.push({ ...s, endTime: secondsToClock(tClock), runningYds: tYds, setDuration: Math.round(s.duration / 60) });
+                                    let h = Math.floor(tClock / 3600) % 24; let m = Math.floor((tClock % 3600) / 60); let ap = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12;
+                                    bItems.push({ ...s, endTime: h + ":" + m.toString().padStart(2, '0') + " " + ap, runningYds: tYds, setDuration: Math.round(s.duration / 60) });
                                 });
-                                results.push({ isRound: true, rounds: mult, items, blockYds: bYds * mult, blockMins: Math.floor((bSecs * mult) / 60) });
+                                finalResults.push({ isRound: true, rounds: mult, items: bItems, blockYds: bYds * mult, blockMins: Math.floor((bSecs * mult) / 60) });
                                 mClock += (bSecs * mult); yAcc += (bYds * mult);
                             } else {
-                                const p = parseSetString(raw, b100);
-                                if (p) {
-                                    let noteBuffer = ""; let lookIdx = i + 1;
-                                    while (lookIdx < linesBuffer.length && !parseSetString(linesBuffer[lookIdx], b100) && !linesBuffer[lookIdx].endsWith(':') && !linesBuffer[lookIdx].match(/^(\d+)\s*x$/i)) {
-                                        noteBuffer += (noteBuffer ? " | " : "") + linesBuffer[lookIdx]; lookIdx++;
+                                const parsed = parseInternal(rawLine, b100);
+                                if (parsed) {
+                                    let noteB = ""; let lIdx = i + 1;
+                                    while (lIdx < linesBuffer.length && !parseInternal(linesBuffer[lIdx], b100) && !linesBuffer[lIdx].endsWith(':') && !linesBuffer[lIdx].match(/^(\d+)\s*x$/i)) {
+                                        noteB += (noteB ? " " : "") + linesBuffer[lIdx]; lIdx++;
                                     }
-                                    const fs = { ...p, note: p.note + (noteBuffer ? " ["+noteBuffer+"]" : "") };
-                                    mClock += fs.duration; if (!fs.isRest) yAcc += fs.ydsTotal;
-                                    results.push({ isRound: false, items: [{ ...fs, endTime: secondsToClock(mClock), runningYds: yAcc, setDuration: Math.round(fs.duration / 60) }], blockYds: fs.ydsTotal || 0, blockMins: Math.floor(fs.duration / 60) });
-                                    i = lookIdx - 1;
+                                    const finalS = { ...parsed, note: parsed.note + (noteB ? " " + noteB : "") };
+                                    mClock += finalS.duration; if (!finalS.isRest) yAcc += finalS.ydsTotal;
+                                    let h = Math.floor(mClock / 3600) % 24; let m = Math.floor((mClock % 3600) / 60); let ap = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12;
+                                    finalResults.push({ isRound: false, items: [{ ...finalS, endTime: h + ":" + m.toString().padStart(2, '0') + " " + ap, runningYds: yAcc, setDuration: Math.round(finalS.duration / 60) }], blockYds: finalS.ydsTotal || 0, blockMins: Math.floor(finalS.duration / 60) });
+                                    i = lIdx - 1;
                                 }
                             }
                         }
-                        return results;
+                        return finalResults;
                     } catch (e) { return []; }
                 });
 
+                function parseInternal(str, bv) {
+                    const rM = str.match(/^(\d*:?\d+)$/); if (rM) { const p = rM[1].split(':'); const d = (parseInt(p[0]) * 60) + (parseInt(p[1] || 0)); return { isRest: true, duration: d, displayTime: rM[1], note: 'Rest' }; }
+                    const qP = str.match(/(\d+)\s*x\s*(\d+)/); const sP = str.match(/^(\d+)\s+/);
+                    let q = 1, d = 0; if (qP) { q = parseInt(qP[1]); d = parseInt(qP[2]); } else if (sP) { d = parseInt(sP[1]); } else return null;
+                    const iP = str.match(/[@|on]\s*(\d*:?\d+)/); 
+                    let dr = (d / 100) * bv; if (iP) { const p = iP[1].split(':'); dr = (parseInt(p[0]) * 60) + (parseInt(p[1] || 0)); }
+                    const n = str.replace(/(\d+)\s*x\s*(\d+)/, '').replace(/^(\d+)\s+/, '').replace(/[@|on]\s*(\d*:?\d+)/, '').trim();
+                    return { isRest: false, isDefault: !iP, qty: q, dist: d, ydsTotal: q * d, duration: q * dr, displayInterval: Math.floor(dr/60) + ":" + (dr%60).toString().padStart(2, '0'), note: n || 'Swim' };
+                }
+
                 const bunchedTimeline = computed(() => {
-                    const final = []; let cTitle = "General Session"; let cBlocks = []; let cYds = 0; let cMins = 0;
+                    const f = []; let cT = "Session"; let cB = []; let cY = 0; let cM = 0;
                     parsedTimeline.value.forEach(b => {
-                        if (b.isTitle) {
-                            if (cBlocks.length > 0) final.push({ title: cTitle, blocks: cBlocks, groupYards: cYds, groupMinutes: cMins });
-                            cTitle = b.titleText; cBlocks = []; cYds = 0; cMins = 0;
-                        } else { cBlocks.push(b); cYds += (b.blockYds || 0); cMins += (b.blockMins || 0); }
+                        if (b.isTitle) { if (cB.length > 0) f.push({ title: cT, blocks: cB, groupYards: cY, groupMinutes: cM }); cT = b.titleText; cB = []; cY = 0; cM = 0; }
+                        else { cB.push(b); cY += (b.blockYds || 0); cM += (b.blockMins || 0); }
                     });
-                    if (cBlocks.length > 0) final.push({ title: cTitle, blocks: cBlocks, groupYards: cYds, groupMinutes: cMins });
-                    return final;
+                    if (cB.length > 0) f.push({ title: cT, blocks: cB, groupYards: cY, groupMinutes: cM });
+                    return f;
                 });
 
                 const categoryTotals = computed(() => {
-                    const stats = { Free: 0, Kick: 0, Pull: 0, Scull: 0, Other: 0 };
+                    const s = { Free: 0, Kick: 0, Pull: 0, Scull: 0, Other: 0 };
                     parsedTimeline.value.forEach(b => {
                         if (b.items) {
-                            const mult = b.isRound ? b.rounds : 1;
+                            const m = b.isRound ? b.rounds : 1;
                             b.items.forEach(it => {
                                 if (!it.isRest) {
-                                    const n = it.note.toLowerCase(); const vol = it.ydsTotal * mult;
-                                    if (n.includes('free')) stats.Free += vol; else if (n.includes('kick')) stats.Kick += vol; else if (n.includes('pull')) stats.Pull += vol; else if (n.includes('scull')) stats.Scull += vol; else stats.Other += vol;
+                                    const n = it.note.toLowerCase(); const v = it.ydsTotal * m;
+                                    if (n.includes('free')) s.Free += v; else if (n.includes('kick')) s.Kick += v; else if (n.includes('pull')) s.Pull += v; else if (n.includes('scull')) s.Scull += v; else s.Other += v;
                                 }
                             });
                         }
-                    }); return stats;
+                    }); return s;
                 });
 
                 const totalYds = computed(() => parsedTimeline.value.reduce((a, b) => a + (b.blockYds || 0), 0));
                 const practiceEndTime = computed(() => {
-                    let fs = timeToSeconds(startTime.value || "17:45");
-                    parsedTimeline.value.forEach(b => { if (b.isRound) fs += (b.blockMins * 60); else if (b.items?.[0]) fs += b.items[0].duration; });
-                    return secondsToClock(fs);
+                    let c = (parseInt(startTime.value.split(':')[0]) * 3600) + (parseInt(startTime.value.split(':')[1]) * 60);
+                    parsedTimeline.value.forEach(b => { if (b.isRound) c += (b.blockMins * 60); else if (b.items?.[0]) c += b.items[0].duration; });
+                    let h = Math.floor(c / 3600) % 24; let m = Math.floor((c % 3600) / 60); let ap = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12;
+                    return h + ":" + m.toString().padStart(2, '0') + " " + ap;
                 });
-
-                function parseSetString(str, bv) {
-                    const rM = str.match(/^(\d*:?\d+)$/); if (rM) return { isRest: true, duration: parseInterval(rM[1]), displayTime: rM[1], note: 'Rest' };
-                    const qP = str.match(/(\d+)\s*x\s*(\d+)/); const sP = str.match(/^(\d+)\s+/);
-                    let qty = 1, dist = 0; if (qP) { qty = parseInt(qP[1]); dist = parseInt(qP[2]); } else if (sP) { dist = parseInt(sP[1]); } else return null;
-                    const iP = str.match(/[@|on]\s*(\d*:?\d+)/); const dur = iP ? parseInterval(iP[1]) : (dist / 100) * bv;
-                    const note = str.replace(/(\d+)\s*x\s*(\d+)/, '').replace(/^(\d+)\s+/, '').replace(/[@|on]\s*(\d*:?\d+)/, '').trim();
-                    return { isRest: false, isDefault: !iP, qty, dist, ydsTotal: qty * dist, duration: qty * dur, displayInterval: secondsToInterval(dur), note };
-                }
-
-                function parseInterval(v) { if (v.includes(':')) { const p = v.split(':').map(Number); return (p[0] * 60) + (p[1] || 0); } return parseInt(v) || 0; }
-                function secondsToInterval(t) { const m = Math.floor(t / 60); return `${m}:${(t % 60).toString().padStart(2, '0')}`; }
-                function timeToSeconds(s) { const p = s.split(':').map(Number); return (p[0] * 3600) + (p[1] * 60); }
-                function secondsToClock(t) { let h = Math.floor(t / 3600) % 24; let m = Math.floor((t % 3600) / 60); const ap = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12; return `${h}:${m.toString().padStart(2, '0')} ${ap}`; }
 
                 const addTeam = () => { if (newTeamName.value.trim()) { teams.value.push({ id: Date.now(), name: newTeamName.value.trim() }); newTeamName.value = ''; } };
                 const deleteTeam = (i) => { if(teams.value.length > 1) teams.value.splice(i, 1); };
@@ -385,14 +402,14 @@
                 const triggerPrint = () => { window.print(); };
 
                 onMounted(() => {
-                    const h = localStorage.getItem(KEYS.HIST); if (h) history.value = JSON.parse(h);
-                    const t = localStorage.getItem(KEYS.TEAM); if (t) teams.value = JSON.parse(t);
-                    const g = localStorage.getItem(KEYS.GRUP); if (g) groups.value = JSON.parse(g);
+                    const h = localStorage.getItem(STORAGE_HIST); if (h) history.value = JSON.parse(h);
+                    const t = localStorage.getItem(STORAGE_TEAM); if (t) teams.value = JSON.parse(t);
+                    const g = localStorage.getItem(STORAGE_GRUP); if (g) groups.value = JSON.parse(g);
                 });
-                watch(teams, (nT) => localStorage.setItem(KEYS.TEAM, JSON.stringify(nT)), { deep: true });
-                watch(groups, (nG) => localStorage.setItem(KEYS.GRUP, JSON.stringify(nG)), { deep: true });
+                watch(teams, (nT) => localStorage.setItem(STORAGE_TEAM, JSON.stringify(nT)), { deep: true });
+                watch(groups, (nG) => localStorage.setItem(STORAGE_GRUP, JSON.stringify(nG)), { deep: true });
 
-                return { view, workoutName, input, startTime, baseInterval, fitMultiplier, showMetrics, activeTeamName, activeGroupName, customIntervals, bunchedTimeline, totalYds, practiceEndTime, saveWorkout, todayDate, triggerPrint, teams, activeTeamId, groups, activeGroupId, newTeamName, addTeam, deleteTeam, newGroupName, addGroup, deleteGroup, categoryTotals };
+                return { view, workoutName, input, startTime, baseInterval, fitMultiplier, showMetrics, activeTeamName, activeGroupName, customIntervals, bunchedTimeline, totalYds, practiceEndTime, todayDate, triggerPrint, teams, activeTeamId, groups, activeGroupId, newTeamName, addTeam, deleteTeam, newGroupName, addGroup, deleteGroup, categoryTotals, saveWorkout };
             }
         }).mount('#app');
     </script>
