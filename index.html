@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Swim Engine Pro | Elite Edition</title>
+    <title>Swim Engine Pro | SOFLO Elite</title>
     
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        /* Hidden state for app loading */
+        /* Force-hide content while the engine initializes */
         [v-cloak] { display: none !important; }
         
-        /* Interactive UI Elements */
+        /* Navigation Highlighting */
         .tab-active { 
             border-bottom: 4px solid #3b82f6; 
             color: #3b82f6; 
             font-weight: 900;
         }
 
-        /* Professional PDF Sheet Formatting */
+        /* Professional Commit-Swimming Style PDF Formatting */
         @media print {
             .no-print { display: none !important; }
             body { 
@@ -50,12 +50,6 @@
             .border-slate-800 { 
                 border-color: #ddd !important; 
             }
-            .stats-grid {
-                display: grid !important;
-                grid-template-cols: repeat(4, 1fr) !important;
-                gap: 10px !important;
-                margin-top: 30px !important;
-            }
         }
         .print-header { display: none; }
     </style>
@@ -79,7 +73,7 @@
         <div class="print-header">
             <div class="flex justify-between items-end">
                 <div>
-                    <h1 class="text-4xl font-bold uppercase tracking-tighter">{{ workoutName || 'Daily Session' }}</h1>
+                    <h1 class="text-4xl font-bold uppercase tracking-tighter">{{ workoutName || 'Daily Training' }}</h1>
                     <p class="text-sm font-bold mt-1 text-slate-700">
                         {{ todayDate }} — {{ activeTeamName }} | {{ activeGroupName }} — 25 Yards
                     </p>
@@ -110,7 +104,7 @@
                     </div>
                     <div class="text-right shrink-0">
                         <div class="text-4xl font-mono font-black text-emerald-400 tracking-tighter">{{ totalYds }}y</div>
-                        <div class="text-[10px] font-black text-blue-400 uppercase mt-2 italic tracking-widest">
+                        <div class="text-[10px] font-black text-blue-400 uppercase mt-2 italic tracking-widest leading-none">
                             Finish: {{ practiceEndTime }}
                         </div>
                     </div>
@@ -120,12 +114,12 @@
                     <div class="flex flex-col">
                         <label class="text-[9px] font-black text-slate-500 uppercase mb-3 tracking-widest">Start Time</label>
                         <input type="time" v-model="startTime" 
-                            class="w-full bg-[#0f172a] border border-slate-700 rounded-2xl p-4 text-sm text-blue-300 outline-none font-bold focus:border-blue-500 transition-all">
+                            class="w-full bg-[#0f172a] border border-slate-700 rounded-2xl p-4 text-sm text-blue-300 outline-none font-bold">
                     </div>
                     <div class="flex flex-col text-center">
-                        <label class="text-[9px] font-black text-emerald-600 uppercase mb-3 tracking-widest">Base Interval (100y)</label>
+                        <label class="text-[9px] font-black text-emerald-600 uppercase mb-3 tracking-widest">Base (100y)</label>
                         <select v-model="baseInterval" 
-                            class="w-full bg-[#0f172a] border border-slate-700 rounded-2xl p-4 text-sm text-emerald-400 outline-none text-center font-bold appearance-none hover:border-emerald-500 transition-all">
+                            class="w-full bg-[#0f172a] border border-slate-700 rounded-2xl p-4 text-sm text-emerald-400 outline-none text-center font-bold appearance-none">
                             <option v-for="t in customIntervals" :key="t" :value="t">{{ t }}</option>
                         </select>
                     </div>
@@ -134,18 +128,18 @@
 
             <textarea v-model="input" 
                 class="w-full h-80 bg-[#1e293b] border border-slate-700 p-7 rounded-[2.5rem] font-mono text-sm mb-8 outline-none no-print shadow-inner leading-relaxed focus:border-blue-500 transition-colors" 
-                placeholder="Warmup:&#10;400 Free&#10;300 Kick&#10;&#10;3x&#10;  100 Scull @ 2:00"></textarea>
+                placeholder="Type your sets (e.g., 400 Free)..."></textarea>
             
             <div class="grid grid-cols-2 gap-5 no-print mb-12">
-                <button @click="saveWorkout" class="bg-blue-600 hover:bg-blue-500 p-6 rounded-3xl font-black text-[12px] uppercase tracking-[0.2em] transition-all shadow-2xl active:scale-95">Save Session</button>
+                <button @click="saveWorkout" class="bg-blue-600 hover:bg-blue-500 p-6 rounded-3xl font-black text-[12px] uppercase tracking-[0.2em] transition-all shadow-2xl active:scale-95">Save</button>
                 <button @click="triggerPrint" class="bg-emerald-600 hover:bg-emerald-500 p-6 rounded-3xl font-black text-[12px] uppercase tracking-[0.2em] transition-all shadow-2xl active:scale-95">Print / PDF</button>
             </div>
 
             <div class="space-y-8">
-                <div v-for="block in parsedTimeline" :key="block.id" class="set-block bg-[#1e293b]/40 p-8 rounded-[2rem] border border-slate-800/50 backdrop-blur-sm shadow-sm relative">
+                <div v-for="block in parsedTimeline" :key="block.id" class="set-block bg-[#1e293b]/40 p-8 rounded-[2rem] border border-slate-800/50 backdrop-blur-sm relative shadow-sm">
                     
                     <div v-if="block.isRound" class="flex justify-between items-center border-b border-slate-800/50 mb-5 pb-4">
-                        <span class="text-[12px] font-black text-emerald-500 uppercase tracking-[0.2em] flex items-center gap-3">
+                        <span class="text-[12px] font-black text-emerald-500 uppercase tracking-[0.2em]">
                             {{ block.rounds }} ROUNDS
                         </span>
                         <span class="text-[11px] text-slate-500 font-mono uppercase tracking-widest">
@@ -153,20 +147,20 @@
                         </span>
                     </div>
                     
-                    <div v-for="(item, idx) in block.items" :key="idx" class="flex justify-between items-center py-3.5 border-b border-slate-800/20 last:border-0">
+                    <div v-for="(item, idx) in block.items" :key="idx" class="flex justify-between items-center py-3.5 border-b border-slate-800/20 last:border-0 group">
                         <div class="flex items-center gap-6">
                             <div class="text-lg">
                                 <div v-if="item.isRest" class="italic text-blue-400 font-black tracking-widest uppercase text-sm">
                                     REST: {{ item.displayTime }}
                                 </div>
                                 <div v-else class="flex flex-col">
-                                    <div class="flex items-baseline gap-4">
+                                    <div class="flex items-baseline gap-4 leading-none">
                                         <span class="font-black text-slate-100 text-xl tracking-tighter">{{ item.qty }} x {{ item.dist }}</span>
                                         <span class="text-slate-500 text-[12px] font-black uppercase" :class="{'text-emerald-500': item.isDefault}">
                                             @ {{ item.displayInterval }}
                                         </span>
                                     </div>
-                                    <div class="text-[10px] text-blue-500 font-black uppercase tracking-widest mt-1 opacity-70">
+                                    <div class="text-[10px] text-blue-500 font-black uppercase tracking-widest mt-2 opacity-70">
                                         {{ item.note }} <span class="ml-1 italic font-normal text-slate-400">({{ item.setDuration }}m)</span>
                                     </div>
                                 </div>
@@ -183,7 +177,7 @@
                 </div>
             </div>
 
-            <div class="mt-12 border-t-2 border-slate-800 pt-10 stats-grid">
+            <div class="mt-12 border-t-2 border-slate-800 pt-10">
                 <h3 class="text-xs font-black uppercase tracking-[0.4em] text-slate-500 mb-6 no-print">Session Volume Analytics</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
                     <div v-for="(yds, cat) in categoryTotals" :key="cat" class="bg-[#1e293b]/60 p-5 rounded-2xl border border-slate-800/50">
@@ -197,18 +191,234 @@
         <div v-if="view === 'teams'" class="space-y-6">
             <div class="bg-[#1e293b] p-8 rounded-[2.5rem] border border-slate-800/50 shadow-2xl mb-8">
                 <h2 class="font-black uppercase text-blue-500 mb-6 tracking-widest text-sm">Add Team Identity</h2>
-                <div class="flex gap-3">
-                    <input v-model="newTeamName" @keyup.enter="addTeam" 
-                        class="flex-1 bg-[#0f172a] border border-slate-700 rounded-2xl p-4 text-sm text-white outline-none focus:border-blue-500" 
-                        placeholder="Team Name (e.g. SOFLO)">
-                    <button @click="addTeam" class="bg-emerald-600 px-8 rounded-2xl font-black text-xs uppercase shadow-lg">Add</button>
-                </div>
+                <div class="flex gap-3"><input v-model="newTeamName" @keyup.enter="addTeam" class="flex-1 bg-[#0f172a] border border-slate-700 rounded-2xl p-4 text-sm text-white outline-none" placeholder="Team Name"><button @click="addTeam" class="bg-emerald-600 px-8 rounded-2xl font-black text-xs uppercase shadow-lg">Add</button></div>
             </div>
             <div v-for="(t, idx) in teams" :key="t.id" class="bg-[#1e293b] p-6 rounded-3xl border border-slate-800 flex justify-between items-center group">
                 <span class="font-black uppercase tracking-widest text-slate-200 text-sm">{{ t.name }}</span>
-                <button @click="deleteTeam(idx)" v-if="teams.length > 1" class="text-red-500 font-black px-5 py-3 bg-red-900/10 hover:bg-red-900/30 rounded-xl text-[10px] uppercase">Delete</button>
+                <button @click="deleteTeam(idx)" v-if="teams.length > 1" class="text-red-500 font-black px-5 py-3 bg-red-900/10 rounded-xl text-[10px] uppercase">Delete</button>
             </div>
         </div>
 
         <div v-if="view === 'groups'" class="space-y-6">
-            <div class="bg-[#1e293
+            <div class="bg-[#1e293b] p-8 rounded-[2.5rem] border border-slate-800/50 shadow-2xl mb-8">
+                <h2 class="font-black uppercase text-emerald-500 mb-6 tracking-widest text-sm">Manage Groups</h2>
+                <div class="flex gap-3"><input v-model="newGroupName" @keyup.enter="addGroup" class="flex-1 bg-[#0f172a] border border-slate-700 rounded-2xl p-4 text-sm text-white outline-none" placeholder="Group Name"><button @click="addGroup" class="bg-emerald-600 px-8 rounded-2xl font-black text-xs uppercase shadow-lg">Add</button></div>
+            </div>
+            <div v-for="(g, idx) in groups" :key="g.id" class="bg-[#1e293b] p-6 rounded-3xl border border-slate-800 flex justify-between items-center">
+                <span class="font-black uppercase tracking-widest text-slate-200 text-sm">{{ g.name }}</span>
+                <button @click="deleteGroup(idx)" v-if="groups.length > 1" class="text-red-500 font-black px-5 py-3 bg-red-900/10 rounded-xl text-[10px] uppercase">Delete</button>
+            </div>
+        </div>
+
+        <div v-if="view === 'history'" class="space-y-5 no-print">
+            <div v-for="(w, idx) in history" :key="idx" class="bg-[#1e293b] p-7 rounded-[2rem] border border-slate-800 flex justify-between items-center transition-all active:scale-[0.98]">
+                <div class="max-w-[70%]"><div class="font-black text-blue-400 text-lg uppercase tracking-tighter truncate">{{ w.name || 'Untitled Session' }}</div><div class="text-[10px] text-slate-500 font-black mt-2 tracking-widest uppercase">{{ w.date }} • {{ w.yardage }}y</div></div>
+                <div class="flex gap-3"><button @click="loadWorkout(w)" class="bg-blue-600 px-6 py-3 rounded-2xl text-[10px] font-black uppercase">Load</button><button @click="deleteWorkout(idx)" class="bg-red-900/20 text-red-500 px-5 py-3 rounded-2xl text-[10px] font-black uppercase border border-red-900/20">X</button></div>
+            </div>
+            <div v-if="history.length === 0" class="text-center py-24 text-slate-600 font-black uppercase text-sm tracking-[0.4em]">Empty History</div>
+        </div>
+
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted, watch } = Vue;
+
+        createApp({
+            setup() {
+                // Persistent Store Keys
+                const STORE_HISTORY = 'swimHistory_v4';
+                const STORE_TEAMS = 'swimTeams_v4';
+                const STORE_GROUPS = 'swimGroups_v4';
+
+                // Core State
+                const view = ref('editor');
+                const workoutName = ref('');
+                const history = ref([]);
+                const input = ref("400 Free\n300 Kick\n3x\n  100 Scull @ 2:00");
+                const startTime = ref("17:45");
+                const baseInterval = ref("1:45");
+                
+                // Identity Management
+                const teams = ref([{ id: 1, name: 'SOFLO' }]);
+                const activeTeamId = ref(1);
+                const groups = ref([{ id: 1, name: 'Senior' }]);
+                const activeGroupId = ref(1);
+                const newTeamName = ref('');
+                const newGroupName = ref('');
+
+                const todayDate = new Date().toLocaleDateString('en-US', { 
+                    weekday: 'short', month: 'short', day: '2-digit', year: '2-digit' 
+                });
+
+                const activeTeamName = computed(() => teams.value.find(t => t.id === activeTeamId.value)?.name || 'Team');
+                const activeGroupName = computed(() => groups.value.find(g => g.id === activeGroupId.value)?.name || 'Group');
+
+                const customIntervals = computed(() => {
+                    const times = [];
+                    for (let s = 45; s <= 360; s += 5) {
+                        const m = Math.floor(s / 60); const sc = s % 60;
+                        times.push(`${m}:${sc.toString().padStart(2, '0')}`);
+                    }
+                    return times;
+                });
+
+                // The Parsing Engine
+                const parsedTimeline = computed(() => {
+                    try {
+                        let clockSecs = timeToSeconds(startTime.value || "17:45");
+                        let rYdsCounter = 0;
+                        const bSec100 = parseInterval(baseInterval.value);
+                        const linesArr = input.value.split('\n');
+                        const collection = [];
+
+                        for (let i = 0; i < linesArr.length; i++) {
+                            const raw = linesArr[i].trim();
+                            if (!raw) continue;
+
+                            // Round Detection
+                            const rMatch = raw.match(/^(\d+)\s*x$/i);
+                            if (rMatch) {
+                                const rCount = parseInt(rMatch[1]);
+                                const subL = []; let nIdx = i + 1;
+                                while (nIdx < linesArr.length && linesArr[nIdx].trim() !== "" && !linesArr[nIdx].trim().match(/^(\d+)\s*x$/i)) {
+                                    subL.push(linesArr[nIdx].trim()); nIdx++;
+                                }
+                                i = nIdx - 1;
+
+                                let bYards = 0, bSecs = 0;
+                                const bItems = [];
+                                for (let r = 0; r < rCount; r++) {
+                                    subL.forEach(txt => {
+                                        const p = parseLine(txt, bSec100);
+                                        if (p) {
+                                            clockSecs += p.duration;
+                                            if (!p.isRest) rYdsCounter += p.yds;
+                                            bItems.push({ 
+                                                ...p, endTime: secondsToTime(clockSecs), 
+                                                runningYds: rYdsCounter, setDuration: Math.round(p.duration / 60)
+                                            });
+                                            if (r === 0) { if (!p.isRest) bYards += p.yds; bSecs += p.duration; }
+                                        }
+                                    });
+                                }
+                                collection.push({ id: i, isRound: true, rounds: rCount, items: bItems, blockYds: bYards * rCount, blockMins: Math.floor((bSecs * rCount) / 60) });
+                            } else {
+                                const s = parseLine(raw, bSec100);
+                                if (s) {
+                                    clockSecs += s.duration;
+                                    if (!s.isRest) rYdsCounter += s.yds;
+                                    collection.push({ id: i, isRound: false, items: [{ ...s, endTime: secondsToTime(clockSecs), runningYds: rYdsCounter, setDuration: Math.round(s.duration / 60) }], blockYds: s.yds || 0 });
+                                }
+                            }
+                        }
+                        return collection;
+                    } catch (e) { return []; }
+                });
+
+                // Analytics Logic
+                const categoryTotals = computed(() => {
+                    const stats = { Free: 0, Kick: 0, Pull: 0, Scull: 0, Other: 0 };
+                    parsedTimeline.value.forEach(b => {
+                        b.items.forEach(it => {
+                            if (!it.isRest) {
+                                const n = it.note.toLowerCase();
+                                if (n.includes('free')) stats.Free += it.yds;
+                                else if (n.includes('kick')) stats.Kick += it.yds;
+                                else if (n.includes('pull')) stats.Pull += it.yds;
+                                else if (n.includes('scull')) stats.Scull += it.yds;
+                                else stats.Other += it.yds;
+                            }
+                        });
+                    });
+                    return stats;
+                });
+
+                const totalYds = computed(() => parsedTimeline.value.reduce((a, b) => a + (b.blockYds || 0), 0));
+                const practiceEndTime = computed(() => {
+                    if (parsedTimeline.value.length === 0) return secondsToTime(timeToSeconds(startTime.value || "17:45"));
+                    const lastB = parsedTimeline.value[parsedTimeline.value.length - 1];
+                    return lastB.items[lastB.items.length - 1].endTime;
+                });
+
+                function parseLine(str, b100) {
+                    const rMatch = str.match(/^(\d*:?\d+)$/);
+                    if (rMatch) return { isRest: true, duration: parseInterval(rMatch[1]), displayTime: rMatch[1], note: 'Rest' };
+                    
+                    const qP = str.match(/(\d+)\s*x/);
+                    const dP = str.match(/x\s*(\d+)/);
+                    const sP = str.match(/^(\d+)/);
+                    
+                    let q = 1, d = 0;
+                    if (qP && dP) { q = parseInt(qP[1]); d = parseInt(dP[1]); }
+                    else if (sP) { d = parseInt(sP[0]); }
+                    else return null;
+
+                    const oP = str.match(/[@|on]\s*(\d*:?\d+)/);
+                    const dur = oP ? parseInterval(oP[1]) : (d / 100) * b100;
+                    const n = str.replace(/(\d+)\s*x\s*(\d+)/, '').replace(/^(\d+)/, '').replace(/[@|on]\s*(\d*:?\d+)/, '').trim();
+                    
+                    return { isRest: false, isDefault: !oP, qty: q, dist: d, yds: q * d, duration: q * dur, displayInterval: secondsToIntervalFormat(dur), note: n || 'Swim' };
+                }
+
+                function parseInterval(v) {
+                    if (v.includes(':')) { const [m, s] = v.split(':').map(Number); return (m * 60) + (s || 0); }
+                    return parseInt(v) || 0;
+                }
+
+                function secondsToIntervalFormat(secs) {
+                    const m = Math.floor(secs / 60); const s = Math.round(secs % 60);
+                    return `${m}:${s.toString().padStart(2, '0')}`;
+                }
+
+                function timeToSeconds(t) {
+                    if (!t) return 0; const [h, m] = t.split(':').map(Number);
+                    return (h * 3600) + (m * 60);
+                }
+
+                function secondsToTime(secs) {
+                    let h = Math.floor(secs / 3600) % 24; let m = Math.floor((secs % 3600) / 60);
+                    const p = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12;
+                    return `${h}:${m.toString().padStart(2, '0')} ${p}`;
+                }
+
+                const addTeam = () => { if (newTeamName.value.trim()) { teams.value.push({ id: Date.now(), name: newTeamName.value.trim() }); newTeamName.value = ''; } };
+                const deleteTeam = (i) => { if(teams.value.length > 1) teams.value.splice(i, 1); };
+                const addGroup = () => { if (newGroupName.value.trim()) { groups.value.push({ id: Date.now(), name: newGroupName.value.trim() }); newGroupName.value = ''; } };
+                const deleteGroup = (i) => { if(groups.value.length > 1) groups.value.splice(i, 1); };
+
+                const saveWorkout = () => {
+                    history.value.unshift({ 
+                        name: workoutName.value || 'New Session', yardage: totalYds.value, 
+                        date: todayDate, content: input.value, team: activeTeamName.value 
+                    });
+                    localStorage.setItem(STORE_HISTORY, JSON.stringify(history.value));
+                    alert("Session Saved Successfully!");
+                };
+
+                const loadWorkout = (w) => { workoutName.value = w.name; input.value = w.content || ""; view.value = 'editor'; };
+                const deleteWorkout = (idx) => { if(confirm("Delete permanently?")) { history.value.splice(idx, 1); localStorage.setItem(STORE_HISTORY, JSON.stringify(history.value)); } };
+                
+                function triggerPrint() { window.print(); }
+
+                onMounted(() => {
+                    const h = localStorage.getItem(STORE_HISTORY); if (h) history.value = JSON.parse(h);
+                    const t = localStorage.getItem(STORE_TEAMS); if (t) teams.value = JSON.parse(t);
+                    const g = localStorage.getItem(STORE_GROUPS); if (g) groups.value = JSON.parse(g);
+                });
+
+                watch(teams, (nT) => localStorage.setItem(STORE_TEAMS, JSON.stringify(nT)), { deep: true });
+                watch(groups, (nG) => localStorage.setItem(STORE_GROUPS, JSON.stringify(nG)), { deep: true });
+
+                return { 
+                    view, workoutName, input, startTime, baseInterval, history, 
+                    customIntervals, parsedTimeline, totalYds, practiceEndTime, 
+                    saveWorkout, loadWorkout, deleteWorkout, todayDate, triggerPrint,
+                    teams, activeTeamId, activeTeamName, newTeamName, addTeam, deleteTeam,
+                    groups, activeGroupId, activeGroupName, newGroupName, addGroup, deleteGroup,
+                    categoryTotals
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
