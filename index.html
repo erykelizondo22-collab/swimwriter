@@ -7,19 +7,13 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .tab-active { 
-            border-bottom: 3px solid #3b82f6; 
-            color: #3b82f6; 
-        }
-        @media print { 
-            .no-print { display: none !important; } 
-            body { background: white !important; color: black !important; padding: 0; } 
-        }
+        .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; }
+        @media print { .no-print { display: none !important; } body { background: white !important; color: black !important; padding: 0; } }
     </style>
 </head>
 
 <body class="bg-[#0f172a] text-slate-200 p-4 font-sans antialiased">
-    <div id="app" class="max-w-xl mx-auto pb-24">
+    <div id="app" class="max-w-xl mx-auto pb-24" v-cloak>
         
         <nav class="flex justify-between items-center mb-6 no-print border-b border-slate-800 pb-2">
             <div class="flex space-x-5">
@@ -57,7 +51,7 @@
                     <div class="flex flex-col">
                         <label class="text-[8px] font-black text-emerald-600 uppercase mb-1 text-center font-bold">100 Base Pace</label>
                         <select v-model="baseInterval" class="w-full bg-[#0f172a] border border-slate-700 rounded-xl p-2 text-sm text-emerald-400 outline-none">
-                            <option v-for="t in customIntervals" :value="t">{{ t }}</option>
+                            <option v-for="t in customIntervals" :key="t" :value="t">{{ t }}</option>
                         </select>
                     </div>
                 </div>
@@ -83,7 +77,7 @@
                         <span class="text-slate-400">+{{ block.blockYds }}y</span>
                     </div>
                     
-                    <div v-for="item in block.items" class="flex justify-between items-center py-1.5 border-b border-slate-800/30 last:border-0">
+                    <div v-for="(item, idx) in block.items" :key="idx" class="flex justify-between items-center py-1.5 border-b border-slate-800/30 last:border-0">
                         <div class="flex items-center gap-4">
                             <div class="text-[9px] font-mono text-slate-500 w-14 text-center">
                                 {{ item.startTime }}
@@ -238,4 +232,81 @@
                     }
                     
                     const qty = parseInt(str.match(/(\d+)\s*x/)?.[1] || 0);
-                    const dist = parseInt(str.match(/x\s*(\
+                    const dist = parseInt(str.match(/x\s*(\d+)/)?.[1] || 0);
+                    if (!qty || !dist) return null;
+                    
+                    const over = str.match(/[@|on]\s*(\d*:?\d+)/)?.[1];
+                    let secPerRep = over ? parseInterval(over) : (dist / 100) * baseSec100;
+                    
+                    return { 
+                        isRest: false, 
+                        isDefault: !over, 
+                        qty, dist, yds: qty * dist, 
+                        duration: qty * secPerRep, 
+                        displayInterval: secondsToIntervalFormat(secPerRep) 
+                    };
+                }
+
+                function parseInterval(s) {
+                    if (s.includes(':')) {
+                        const [m, sc] = s.split(':').map(Number);
+                        return (m * 60) + (sc || 0);
+                    }
+                    return parseInt(s) || 0;
+                }
+
+                function secondsToIntervalFormat(s) {
+                    const m = Math.floor(s / 60);
+                    const sc = Math.round(s % 60);
+                    return `${m}:${sc.toString().padStart(2, '0')}`;
+                }
+
+                function timeToSeconds(t) {
+                    if(!t) return 0;
+                    const [h, m] = t.split(':').map(Number);
+                    return (h * 3600) + (m * 60);
+                }
+
+                function secondsToTime(s) { 
+                    let h = Math.floor(s / 3600) % 24;
+                    let m = Math.floor((s % 3600) / 60);
+                    const ap = h >= 12 ? 'PM' : 'AM';
+                    h = h % 12 || 12;
+                    return `${h}:${m.toString().padStart(2, '0')} ${ap}`;
+                }
+
+                const saveWorkout = () => {
+                    history.value.unshift({ 
+                        name: workoutName.value || 'New Session', 
+                        yardage: totalYds.value, 
+                        date: new Date().toLocaleDateString() 
+                    });
+                    localStorage.setItem('swimHistory', JSON.stringify(history.value));
+                    alert("Saved!");
+                };
+
+                const loadWorkout = (w) => {
+                    workoutName.value = w.name;
+                    view.value = 'editor';
+                };
+
+                const deleteWorkout = (idx) => {
+                    history.value.splice(idx, 1);
+                    localStorage.setItem('swimHistory', JSON.stringify(history.value));
+                };
+
+                onMounted(() => {
+                    const h = localStorage.getItem('swimHistory');
+                    if (h) history.value = JSON.parse(h);
+                });
+
+                return { 
+                    view, workoutName, input, startTime, baseInterval, history, 
+                    customIntervals, parsedTimeline, totalYds, practiceEndTime, 
+                    saveWorkout, loadWorkout, deleteWorkout 
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
