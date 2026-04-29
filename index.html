@@ -3,242 +3,318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Swim Engine Pro | SOFLO Elite</title>
+    <title>Swim Engine Pro | Coach Eryk Edition</title>
     
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        /* Force-hide content while the engine initializes */
+        /* Essential: Hides raw code before the app is fully ready */
         [v-cloak] { display: none !important; }
         
-        /* Navigation Highlighting */
+        /* Navigation & Interaction UI Styles */
         .tab-active { 
-            border-bottom: 4px solid #3b82f6; 
+            border-bottom: 5px solid #3b82f6; 
             color: #3b82f6; 
             font-weight: 900;
+            transition: all 0.3s ease;
         }
 
-        /* Professional Commit-Swimming Style PDF Formatting */
+        /* Specialized Deck Print Formatting (Commit-Swimming Style) */
         @media print {
             .no-print { display: none !important; }
             body { 
                 background: white !important; 
                 color: black !important; 
                 padding: 0; 
-                font-family: 'Helvetica', 'Arial', sans-serif; 
+                margin: 0;
+                font-family: 'Helvetica Neue', 'Arial', sans-serif; 
             }
             .print-header { 
                 display: block !important; 
-                border-bottom: 2px solid black; 
-                margin-bottom: 25px; 
-                padding-bottom: 15px; 
+                border-bottom: 3px solid #000; 
+                margin-bottom: 30px; 
+                padding-bottom: 20px; 
             }
             .set-block { 
                 border: none !important; 
                 background: transparent !important; 
-                margin-bottom: 20px !important; 
+                margin-bottom: 25px !important; 
                 padding: 0 !important; 
                 page-break-inside: avoid; 
             }
             .text-emerald-400, .text-blue-500, .text-slate-200, .text-blue-400, .text-slate-400 { 
                 color: black !important; 
             }
-            .bg-[#1e293b], .bg-[#0f172a] { 
+            .bg-[#1e293b], .bg-[#0f172a], .bg-[#1e293b]\/40 { 
                 background: transparent !important; 
             }
             .border-slate-800 { 
-                border-color: #ddd !important; 
+                border-color: #000 !important; 
+                border-bottom-width: 1px !important;
+            }
+            /* Dynamic Font Control: Applied globally for print output */
+            .dynamic-print-size {
+                font-size: var(--print-font-size) !important;
+            }
+            .timeline-container {
+                margin-top: 20px;
             }
         }
         .print-header { display: none; }
     </style>
 </head>
 
-<body class="bg-[#0f172a] text-slate-200 p-4 font-sans antialiased">
-    <div id="app" class="max-w-xl mx-auto pb-32" v-cloak>
+<body class="bg-[#0f172a] text-slate-200 p-4 font-sans antialiased selection:bg-blue-500/30">
+    <div id="app" class="max-w-xl mx-auto pb-40 dynamic-print-size" :style="{'--print-font-size': printFontSize + 'px'}" v-cloak>
         
-        <nav class="flex justify-between items-center mb-8 no-print border-b border-slate-800 pb-3">
-            <div class="flex space-x-6 text-[10px] font-black uppercase tracking-widest">
-                <button @click="view = 'editor'" :class="{'tab-active': view === 'editor'}" class="pb-2 transition-all">Editor</button>
-                <button @click="view = 'teams'" :class="{'tab-active': view === 'teams'}" class="pb-2 transition-all">Teams</button>
-                <button @click="view = 'groups'" :class="{'tab-active': view === 'groups'}" class="pb-2 transition-all">Groups</button>
-                <button @click="view = 'history'" :class="{'tab-active': view === 'history'}" class="pb-2 transition-all">History</button>
+        <nav class="flex justify-between items-center mb-10 no-print border-b border-slate-800 pb-4">
+            <div class="flex space-x-8 text-[11px] font-black uppercase tracking-[0.2em]">
+                <button @click="view = 'editor'" :class="{'tab-active': view === 'editor'}" class="pb-2 hover:text-blue-400 transition-colors">Editor</button>
+                <button @click="view = 'teams'" :class="{'tab-active': view === 'teams'}" class="pb-2 hover:text-blue-400 transition-colors">Teams</button>
+                <button @click="view = 'groups'" :class="{'tab-active': view === 'groups'}" class="pb-2 hover:text-blue-400 transition-colors">Groups</button>
+                <button @click="view = 'history'" :class="{'tab-active': view === 'history'}" class="pb-2 hover:text-blue-400 transition-colors">History</button>
             </div>
-            <div class="text-[10px] font-black text-blue-500 uppercase italic tracking-widest">
+            <div class="text-[11px] font-black text-blue-500 uppercase italic tracking-widest bg-blue-500/10 px-3 py-1 rounded-lg">
                 {{ activeTeamName }}
             </div>
         </nav>
 
         <div class="print-header">
             <div class="flex justify-between items-end">
-                <div>
-                    <h1 class="text-4xl font-bold uppercase tracking-tighter">{{ workoutName || 'Daily Training' }}</h1>
-                    <p class="text-sm font-bold mt-1 text-slate-700">
-                        {{ todayDate }} — {{ activeTeamName }} | {{ activeGroupName }} — 25 Yards
+                <div class="w-2/3">
+                    <h1 class="text-5xl font-black uppercase tracking-tighter leading-none">{{ workoutName || 'Daily Practice' }}</h1>
+                    <p class="text-md font-bold mt-3 text-slate-800 uppercase tracking-widest border-l-4 border-black pl-3">
+                        {{ todayDate }} — {{ activeTeamName }} | {{ activeGroupName }}
                     </p>
                 </div>
-                <div class="text-right">
-                    <p class="text-xs font-black uppercase text-slate-500">100 Base: {{ baseInterval }}</p>
-                    <p class="text-3xl font-black">{{ totalYds }} YARDS</p>
+                <div class="text-right w-1/3">
+                    <div class="mb-2">
+                        <span class="text-[10px] font-black uppercase text-slate-500 tracking-widest">Base Pace:</span>
+                        <span class="text-lg font-bold ml-2">{{ baseInterval }}</span>
+                    </div>
+                    <p class="text-4xl font-black tracking-tighter leading-none">{{ totalYds }} YARDS</p>
                 </div>
             </div>
         </div>
 
-        <div v-if="view === 'editor'">
+        <div v-if="view === 'editor'" class="space-y-8">
             
-            <div class="bg-[#1e293b] p-7 rounded-[2.5rem] mb-8 border border-slate-700/50 shadow-2xl no-print">
-                <div class="flex justify-between items-start mb-8">
-                    <div class="w-full mr-6">
+            <div class="bg-[#1e293b] p-8 rounded-[3rem] border border-slate-700/50 shadow-2xl no-print ring-1 ring-white/5">
+                <div class="flex justify-between items-start mb-10">
+                    <div class="w-full mr-8">
                         <input v-model="workoutName" 
-                            class="bg-transparent text-3xl font-black text-blue-500 outline-none w-full uppercase tracking-tighter placeholder:text-slate-700" 
+                            class="bg-transparent text-4xl font-black text-blue-500 outline-none w-full uppercase tracking-tighter placeholder:text-slate-800 focus:placeholder:text-slate-700" 
                             placeholder="SESSION NAME">
-                        <div class="flex gap-4 mt-2">
-                            <select v-model="activeTeamId" class="bg-transparent text-[11px] font-black text-slate-500 uppercase outline-none cursor-pointer hover:text-blue-400">
-                                <option v-for="t in teams" :key="t.id" :value="t.id">{{ t.name }}</option>
-                            </select>
-                            <select v-model="activeGroupId" class="bg-transparent text-[11px] font-black text-slate-500 uppercase outline-none cursor-pointer hover:text-emerald-400">
-                                <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
-                            </select>
+                        <div class="flex gap-6 mt-4">
+                            <div class="flex flex-col">
+                                <label class="text-[8px] font-black text-slate-600 uppercase mb-1 tracking-widest">Team</label>
+                                <select v-model="activeTeamId" class="bg-transparent text-[11px] font-black text-slate-400 uppercase outline-none cursor-pointer hover:text-white transition-colors">
+                                    <option v-for="t in teams" :key="t.id" :value="t.id">{{ t.name }}</option>
+                                </select>
+                            </div>
+                            <div class="flex flex-col border-l border-slate-800 pl-6">
+                                <label class="text-[8px] font-black text-slate-600 uppercase mb-1 tracking-widest">Group</label>
+                                <select v-model="activeGroupId" class="bg-transparent text-[11px] font-black text-slate-400 uppercase outline-none cursor-pointer hover:text-white transition-colors">
+                                    <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     <div class="text-right shrink-0">
-                        <div class="text-4xl font-mono font-black text-emerald-400 tracking-tighter">{{ totalYds }}y</div>
-                        <div class="text-[10px] font-black text-blue-400 uppercase mt-2 italic tracking-widest leading-none">
-                            Finish: {{ practiceEndTime }}
+                        <div class="text-5xl font-mono font-black text-emerald-400 tracking-tighter leading-none">{{ totalYds }}y</div>
+                        <div class="text-[10px] font-black text-blue-400 uppercase mt-4 italic tracking-[0.2em] bg-blue-400/10 px-2 py-1 rounded">
+                            Done: {{ practiceEndTime }}
                         </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-8">
-                    <div class="flex flex-col">
-                        <label class="text-[9px] font-black text-slate-500 uppercase mb-3 tracking-widest">Start Time</label>
+                <div class="grid grid-cols-2 gap-10">
+                    <div class="flex flex-col group">
+                        <label class="text-[9px] font-black text-slate-500 uppercase mb-3 tracking-[0.3em] group-hover:text-blue-500 transition-colors">Start Clock</label>
                         <input type="time" v-model="startTime" 
-                            class="w-full bg-[#0f172a] border border-slate-700 rounded-2xl p-4 text-sm text-blue-300 outline-none font-bold">
+                            class="w-full bg-[#0f172a] border border-slate-700 rounded-3xl p-5 text-md text-blue-300 outline-none font-bold focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-inner">
                     </div>
-                    <div class="flex flex-col text-center">
-                        <label class="text-[9px] font-black text-emerald-600 uppercase mb-3 tracking-widest">Base (100y)</label>
+                    <div class="flex flex-col text-center group">
+                        <label class="text-[9px] font-black text-emerald-600 uppercase mb-3 tracking-[0.3em] group-hover:text-emerald-400 transition-colors">Base Interval</label>
                         <select v-model="baseInterval" 
-                            class="w-full bg-[#0f172a] border border-slate-700 rounded-2xl p-4 text-sm text-emerald-400 outline-none text-center font-bold appearance-none">
+                            class="w-full bg-[#0f172a] border border-slate-700 rounded-3xl p-5 text-md text-emerald-400 outline-none text-center font-bold appearance-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-inner">
                             <option v-for="t in customIntervals" :key="t" :value="t">{{ t }}</option>
                         </select>
                     </div>
                 </div>
-            </div>
-
-            <textarea v-model="input" 
-                class="w-full h-80 bg-[#1e293b] border border-slate-700 p-7 rounded-[2.5rem] font-mono text-sm mb-8 outline-none no-print shadow-inner leading-relaxed focus:border-blue-500 transition-colors" 
-                placeholder="Type your sets (e.g., 400 Free)..."></textarea>
-            
-            <div class="grid grid-cols-2 gap-5 no-print mb-12">
-                <button @click="saveWorkout" class="bg-blue-600 hover:bg-blue-500 p-6 rounded-3xl font-black text-[12px] uppercase tracking-[0.2em] transition-all shadow-2xl active:scale-95">Save</button>
-                <button @click="triggerPrint" class="bg-emerald-600 hover:bg-emerald-500 p-6 rounded-3xl font-black text-[12px] uppercase tracking-[0.2em] transition-all shadow-2xl active:scale-95">Print / PDF</button>
-            </div>
-
-            <div class="space-y-8">
-                <div v-for="block in parsedTimeline" :key="block.id" class="set-block bg-[#1e293b]/40 p-8 rounded-[2rem] border border-slate-800/50 backdrop-blur-sm relative shadow-sm">
-                    
-                    <div v-if="block.isRound" class="flex justify-between items-center border-b border-slate-800/50 mb-5 pb-4">
-                        <span class="text-[12px] font-black text-emerald-500 uppercase tracking-[0.2em]">
-                            {{ block.rounds }} ROUNDS
-                        </span>
-                        <span class="text-[11px] text-slate-500 font-mono uppercase tracking-widest">
-                            Block: {{ block.blockMins }}m Total
-                        </span>
+                
+                <div class="mt-10 pt-8 border-t border-slate-700/50 flex items-center justify-between">
+                    <div class="flex flex-col">
+                        <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Print Font Scaling</label>
+                        <p class="text-[8px] text-slate-600 italic">Adjust to fit session on one page</p>
                     </div>
+                    <div class="flex items-center gap-6">
+                        <input type="range" min="10" max="24" v-model="printFontSize" class="w-40 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                        <span class="text-sm font-mono font-black text-blue-400 bg-blue-400/10 px-3 py-1 rounded-xl ring-1 ring-blue-400/20">{{ printFontSize }}px</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative group no-print">
+                <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-emerald-600 rounded-[2.5rem] blur opacity-10 group-hover:opacity-25 transition duration-1000 group-hover:duration-200"></div>
+                <textarea v-model="input" 
+                    class="relative w-full h-96 bg-[#1e293b] border border-slate-700 p-8 rounded-[2.5rem] font-mono text-sm outline-none shadow-2xl leading-relaxed focus:border-blue-500 transition-all placeholder:text-slate-800" 
+                    placeholder="E.g.&#10;Warmup:&#10;400 Free&#10;3x&#10;  100 Kick @ 2:00"></textarea>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-6 no-print mb-16">
+                <button @click="saveWorkout" class="bg-blue-600 hover:bg-blue-500 p-7 rounded-[2rem] font-black text-[13px] uppercase tracking-[0.3em] transition-all shadow-2xl active:scale-95 ring-1 ring-white/10">Save Session</button>
+                <button @click="triggerPrint" class="bg-emerald-600 hover:bg-emerald-500 p-7 rounded-[2rem] font-black text-[13px] uppercase tracking-[0.3em] transition-all shadow-2xl active:scale-95 ring-1 ring-white/10">Generate PDF</button>
+            </div>
+
+            <div class="space-y-12 timeline-container">
+                <div v-for="block in parsedTimeline" :key="block.id" class="set-block">
                     
-                    <div v-for="(item, idx) in block.items" :key="idx" class="flex justify-between items-center py-3.5 border-b border-slate-800/20 last:border-0 group">
-                        <div class="flex items-center gap-6">
-                            <div class="text-lg">
-                                <div v-if="item.isRest" class="italic text-blue-400 font-black tracking-widest uppercase text-sm">
-                                    REST: {{ item.displayTime }}
-                                </div>
-                                <div v-else class="flex flex-col">
-                                    <div class="flex items-baseline gap-4 leading-none">
-                                        <span class="font-black text-slate-100 text-xl tracking-tighter">{{ item.qty }} x {{ item.dist }}</span>
-                                        <span class="text-slate-500 text-[12px] font-black uppercase" :class="{'text-emerald-500': item.isDefault}">
-                                            @ {{ item.displayInterval }}
-                                        </span>
+                    <div v-if="block.isTitle" class="mb-6 flex items-center gap-4">
+                        <h2 class="text-3xl font-black uppercase text-blue-500 tracking-tighter pr-4">
+                            {{ block.titleText }}
+                        </h2>
+                        <div class="flex-grow h-[2px] bg-gradient-to-r from-blue-500/40 to-transparent"></div>
+                    </div>
+
+                    <div v-else class="bg-[#1e293b]/40 p-10 rounded-[2.5rem] border border-slate-800/50 backdrop-blur-md relative shadow-xl">
+                        
+                        <div v-if="block.isRound" class="flex justify-between items-center border-b border-slate-800/50 mb-6 pb-5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+                                <span class="text-[13px] font-black text-emerald-500 uppercase tracking-[0.3em]">
+                                    {{ block.rounds }} ROUNDS
+                                </span>
+                            </div>
+                            <span class="text-[11px] text-slate-500 font-mono font-bold uppercase tracking-widest italic">
+                                BLOCK: {{ block.blockMins }}m | {{ block.blockYds }}y
+                            </span>
+                        </div>
+                        
+                        <div v-for="(item, idx) in block.items" :key="idx" class="flex justify-between items-center py-5 border-b border-slate-800/20 last:border-0 group transition-all hover:bg-white/5 rounded-xl px-2 -mx-2">
+                            <div class="flex items-center gap-8">
+                                <div class="text-xl">
+                                    <div v-if="item.isRest" class="italic text-blue-400 font-black tracking-widest uppercase text-sm flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                        REST: {{ item.displayTime }}
                                     </div>
-                                    <div class="text-[10px] text-blue-500 font-black uppercase tracking-widest mt-2 opacity-70">
-                                        {{ item.note }} <span class="ml-1 italic font-normal text-slate-400">({{ item.setDuration }}m)</span>
+                                    <div v-else class="flex flex-col">
+                                        <div class="flex items-baseline gap-5 leading-none">
+                                            <span class="font-black text-slate-100 text-2xl tracking-tighter">{{ item.qty }} x {{ item.dist }}</span>
+                                            <span class="text-slate-500 text-[13px] font-black uppercase tracking-tighter" :class="{'text-emerald-500': item.isDefault}">
+                                                @ {{ item.displayInterval }}
+                                            </span>
+                                        </div>
+                                        <div class="text-[11px] text-blue-500 font-black uppercase tracking-[0.2em] mt-3 opacity-80 flex items-center gap-2">
+                                            <span class="bg-blue-500/20 px-2 py-0.5 rounded text-[9px]">{{ item.note }}</span>
+                                            <span class="text-slate-500 font-normal italic lowercase border-l border-slate-800 pl-2">({{ item.setDuration }}m)</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+                            
+                            <div class="text-right flex flex-col justify-center leading-none">
+                                <span class="font-mono text-[14px] font-black text-slate-200 uppercase tracking-tighter">{{ item.endTime }}</span>
+                                <span v-if="!item.isRest" class="font-mono text-[10px] font-bold text-slate-600 mt-2 tracking-tighter italic">
+                                    {{ item.runningYds }}y
+                                </span>
+                            </div>
                         </div>
-                        
-                        <div class="text-right flex flex-col justify-center">
-                            <span class="font-mono text-[12px] font-black text-slate-300 uppercase leading-none">{{ item.endTime }}</span>
-                            <span v-if="!item.isRest" class="font-mono text-[10px] font-bold text-slate-600 mt-2 tracking-tighter">
-                                {{ item.runningYds }}y
-                            </span>
-                        </div>
+
                     </div>
                 </div>
             </div>
 
-            <div class="mt-12 border-t-2 border-slate-800 pt-10">
-                <h3 class="text-xs font-black uppercase tracking-[0.4em] text-slate-500 mb-6 no-print">Session Volume Analytics</h3>
-                <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                    <div v-for="(yds, cat) in categoryTotals" :key="cat" class="bg-[#1e293b]/60 p-5 rounded-2xl border border-slate-800/50">
-                        <div class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">{{ cat }}</div>
-                        <div class="text-xl font-mono font-black text-slate-100">{{ yds }}y</div>
+            <div class="mt-24 border-t-2 border-slate-800 pt-12 pb-20">
+                <div class="flex items-center gap-4 mb-10 no-print">
+                    <h3 class="text-xs font-black uppercase tracking-[0.5em] text-slate-600">Session Volume Analytics</h3>
+                    <div class="flex-grow h-px bg-slate-800"></div>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-5">
+                    <div v-for="(yds, cat) in categoryTotals" :key="cat" class="bg-[#1e293b]/60 p-7 rounded-[2rem] border border-slate-800/50 shadow-inner group hover:border-blue-500/30 transition-all">
+                        <div class="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-3 group-hover:text-blue-300 transition-colors">{{ cat }}</div>
+                        <div class="text-3xl font-mono font-black text-slate-100 leading-none tracking-tighter">{{ yds }}y</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div v-if="view === 'teams'" class="space-y-6">
-            <div class="bg-[#1e293b] p-8 rounded-[2.5rem] border border-slate-800/50 shadow-2xl mb-8">
-                <h2 class="font-black uppercase text-blue-500 mb-6 tracking-widest text-sm">Add Team Identity</h2>
-                <div class="flex gap-3"><input v-model="newTeamName" @keyup.enter="addTeam" class="flex-1 bg-[#0f172a] border border-slate-700 rounded-2xl p-4 text-sm text-white outline-none" placeholder="Team Name"><button @click="addTeam" class="bg-emerald-600 px-8 rounded-2xl font-black text-xs uppercase shadow-lg">Add</button></div>
+        <div v-if="view === 'teams'" class="space-y-8 animate-in fade-in duration-500">
+            <div class="bg-[#1e293b] p-10 rounded-[3rem] border border-slate-800/50 shadow-2xl mb-10 ring-1 ring-white/5">
+                <h2 class="font-black uppercase text-blue-500 mb-8 tracking-[0.3em] text-xs">Add New Team Identity</h2>
+                <div class="flex gap-4">
+                    <input v-model="newTeamName" @keyup.enter="addTeam" 
+                        class="flex-1 bg-[#0f172a] border border-slate-700 rounded-2xl p-5 text-md text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-inner" 
+                        placeholder="e.g. SOFLO Swimmers">
+                    <button @click="addTeam" class="bg-emerald-600 hover:bg-emerald-500 px-10 rounded-2xl font-black text-xs uppercase shadow-xl transition-all active:scale-95">Add</button>
+                </div>
             </div>
-            <div v-for="(t, idx) in teams" :key="t.id" class="bg-[#1e293b] p-6 rounded-3xl border border-slate-800 flex justify-between items-center group">
-                <span class="font-black uppercase tracking-widest text-slate-200 text-sm">{{ t.name }}</span>
-                <button @click="deleteTeam(idx)" v-if="teams.length > 1" class="text-red-500 font-black px-5 py-3 bg-red-900/10 rounded-xl text-[10px] uppercase">Delete</button>
-            </div>
-        </div>
-
-        <div v-if="view === 'groups'" class="space-y-6">
-            <div class="bg-[#1e293b] p-8 rounded-[2.5rem] border border-slate-800/50 shadow-2xl mb-8">
-                <h2 class="font-black uppercase text-emerald-500 mb-6 tracking-widest text-sm">Manage Groups</h2>
-                <div class="flex gap-3"><input v-model="newGroupName" @keyup.enter="addGroup" class="flex-1 bg-[#0f172a] border border-slate-700 rounded-2xl p-4 text-sm text-white outline-none" placeholder="Group Name"><button @click="addGroup" class="bg-emerald-600 px-8 rounded-2xl font-black text-xs uppercase shadow-lg">Add</button></div>
-            </div>
-            <div v-for="(g, idx) in groups" :key="g.id" class="bg-[#1e293b] p-6 rounded-3xl border border-slate-800 flex justify-between items-center">
-                <span class="font-black uppercase tracking-widest text-slate-200 text-sm">{{ g.name }}</span>
-                <button @click="deleteGroup(idx)" v-if="groups.length > 1" class="text-red-500 font-black px-5 py-3 bg-red-900/10 rounded-xl text-[10px] uppercase">Delete</button>
+            <div v-for="(t, idx) in teams" :key="t.id" class="bg-[#1e293b] p-7 rounded-[2rem] border border-slate-800 flex justify-between items-center group hover:bg-slate-800/50 transition-colors">
+                <span class="font-black uppercase tracking-[0.2em] text-slate-200 text-sm">{{ t.name }}</span>
+                <button @click="deleteTeam(idx)" v-if="teams.length > 1" class="text-red-500 font-black px-6 py-4 bg-red-900/10 hover:bg-red-900/30 rounded-xl text-[10px] uppercase transition-all">Remove</button>
             </div>
         </div>
 
-        <div v-if="view === 'history'" class="space-y-5 no-print">
-            <div v-for="(w, idx) in history" :key="idx" class="bg-[#1e293b] p-7 rounded-[2rem] border border-slate-800 flex justify-between items-center transition-all active:scale-[0.98]">
-                <div class="max-w-[70%]"><div class="font-black text-blue-400 text-lg uppercase tracking-tighter truncate">{{ w.name || 'Untitled Session' }}</div><div class="text-[10px] text-slate-500 font-black mt-2 tracking-widest uppercase">{{ w.date }} • {{ w.yardage }}y</div></div>
-                <div class="flex gap-3"><button @click="loadWorkout(w)" class="bg-blue-600 px-6 py-3 rounded-2xl text-[10px] font-black uppercase">Load</button><button @click="deleteWorkout(idx)" class="bg-red-900/20 text-red-500 px-5 py-3 rounded-2xl text-[10px] font-black uppercase border border-red-900/20">X</button></div>
+        <div v-if="view === 'groups'" class="space-y-8 animate-in fade-in duration-500">
+            <div class="bg-[#1e293b] p-10 rounded-[3rem] border border-slate-800/50 shadow-2xl mb-10 ring-1 ring-white/5">
+                <h2 class="font-black uppercase text-emerald-500 mb-8 tracking-[0.3em] text-xs">Manage Training Groups</h2>
+                <div class="flex gap-4">
+                    <input v-model="newGroupName" @keyup.enter="addGroup" 
+                        class="flex-1 bg-[#0f172a] border border-slate-700 rounded-2xl p-5 text-md text-white outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-inner" 
+                        placeholder="e.g. Senior Gold">
+                    <button @click="addGroup" class="bg-blue-600 hover:bg-blue-500 px-10 rounded-2xl font-black text-xs uppercase shadow-xl transition-all active:scale-95">Add</button>
+                </div>
             </div>
-            <div v-if="history.length === 0" class="text-center py-24 text-slate-600 font-black uppercase text-sm tracking-[0.4em]">Empty History</div>
+            <div v-for="(g, idx) in groups" :key="g.id" class="bg-[#1e293b] p-7 rounded-[2rem] border border-slate-800 flex justify-between items-center group hover:bg-slate-800/50 transition-colors">
+                <span class="font-black uppercase tracking-[0.2em] text-slate-200 text-sm">{{ g.name }}</span>
+                <button @click="deleteGroup(idx)" v-if="groups.length > 1" class="text-red-500 font-black px-6 py-4 bg-red-900/10 hover:bg-red-900/30 rounded-xl text-[10px] uppercase transition-all">Remove</button>
+            </div>
+        </div>
+
+        <div v-if="view === 'history'" class="space-y-6 no-print animate-in fade-in duration-500">
+            <div v-for="(w, idx) in history" :key="idx" class="bg-[#1e293b] p-8 rounded-[2.5rem] border border-slate-800 flex justify-between items-center transition-all hover:bg-slate-800/40 hover:border-slate-600 active:scale-[0.98] shadow-lg">
+                <div class="max-w-[70%]">
+                    <div class="font-black text-blue-400 text-xl uppercase tracking-tighter truncate leading-none mb-3">{{ w.name || 'Untitled Practice' }}</div>
+                    <div class="flex items-center gap-4 text-[10px] text-slate-500 font-black uppercase tracking-widest">
+                        <span>{{ w.date }}</span>
+                        <span class="w-1 h-1 bg-slate-700 rounded-full"></span>
+                        <span class="text-emerald-500">{{ w.yardage }}y Total</span>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <button @click="loadWorkout(w)" class="bg-blue-600 hover:bg-blue-500 px-8 py-4 rounded-2xl text-[10px] font-black uppercase shadow-xl ring-1 ring-white/10">Load</button>
+                    <button @click="deleteWorkout(idx)" class="bg-red-900/20 text-red-500 px-6 py-4 rounded-2xl text-[10px] font-black uppercase border border-red-900/20 hover:bg-red-900/40 transition-colors">X</button>
+                </div>
+            </div>
+            <div v-if="history.length === 0" class="text-center py-32 text-slate-700 font-black uppercase text-sm tracking-[0.5em] italic">No Saved Sessions</div>
         </div>
 
     </div>
 
     <script>
+        // Use Global Vue Scope
         const { createApp, ref, computed, onMounted, watch } = Vue;
 
         createApp({
             setup() {
-                // Persistent Store Keys
-                const STORE_HISTORY = 'swimHistory_v4';
-                const STORE_TEAMS = 'swimTeams_v4';
-                const STORE_GROUPS = 'swimGroups_v4';
+                // Application Configuration & Storage Keys
+                const APP_STORAGE_KEYS = {
+                    HISTORY: 'swimHistory_vCoach_1.0',
+                    TEAMS: 'swimTeams_vCoach_1.0',
+                    GROUPS: 'swimGroups_vCoach_1.0'
+                };
 
-                // Core State
+                // Master Reactive States
                 const view = ref('editor');
                 const workoutName = ref('');
                 const history = ref([]);
-                const input = ref("400 Free\n300 Kick\n3x\n  100 Scull @ 2:00");
+                const input = ref("Warmup:\n400 Free\n300 Kick\n\nMain Set:\n3x\n  100 Scull @ 2:00");
                 const startTime = ref("17:45");
                 const baseInterval = ref("1:45");
+                const printFontSize = ref(14);
                 
-                // Identity Management
+                // Identity System State
                 const teams = ref([{ id: 1, name: 'SOFLO' }]);
                 const activeTeamId = ref(1);
                 const groups = ref([{ id: 1, name: 'Senior' }]);
@@ -246,176 +322,329 @@
                 const newTeamName = ref('');
                 const newGroupName = ref('');
 
+                // Date/Time Logic (ISO-Format)
                 const todayDate = new Date().toLocaleDateString('en-US', { 
                     weekday: 'short', month: 'short', day: '2-digit', year: '2-digit' 
                 });
 
-                const activeTeamName = computed(() => teams.value.find(t => t.id === activeTeamId.value)?.name || 'Team');
-                const activeGroupName = computed(() => groups.value.find(g => g.id === activeGroupId.value)?.name || 'Group');
-
-                const customIntervals = computed(() => {
-                    const times = [];
-                    for (let s = 45; s <= 360; s += 5) {
-                        const m = Math.floor(s / 60); const sc = s % 60;
-                        times.push(`${m}:${sc.toString().padStart(2, '0')}`);
-                    }
-                    return times;
+                // Computed Logic: Display Labels
+                const activeTeamName = computed(() => {
+                    const found = teams.value.find(t => t.id === activeTeamId.value);
+                    return found ? found.name : 'Coach Eryk';
                 });
 
-                // The Parsing Engine
+                const activeGroupName = computed(() => {
+                    const found = groups.value.find(g => g.id === activeGroupId.value);
+                    return found ? found.name : 'Elite Group';
+                });
+
+                // Generator: 100-Base Pace Options (45s to 6min)
+                const customIntervals = computed(() => {
+                    const options = [];
+                    for (let seconds = 45; seconds <= 360; seconds += 5) {
+                        const m = Math.floor(seconds / 60);
+                        const s = seconds % 60;
+                        options.push(`${m}:${s.toString().padStart(2, '0')}`);
+                    }
+                    return options;
+                });
+
+                // THE CORE ENGINE: HEAVY PARSER & TIMELINE GENERATOR
                 const parsedTimeline = computed(() => {
                     try {
-                        let clockSecs = timeToSeconds(startTime.value || "17:45");
-                        let rYdsCounter = 0;
-                        const bSec100 = parseInterval(baseInterval.value);
-                        const linesArr = input.value.split('\n');
-                        const collection = [];
+                        // Master Clock Reference (Synchronized to startTime UI)
+                        let masterClockSecs = timeToSeconds(startTime.value || "17:45");
+                        let globalYardageCounter = 0;
+                        const baseSecsPer100 = parseIntervalToSeconds(baseInterval.value);
+                        
+                        // Split Raw Input into Processing Array
+                        const linesBuffer = input.value.split('\n');
+                        const compiledBlocks = [];
 
-                        for (let i = 0; i < linesArr.length; i++) {
-                            const raw = linesArr[i].trim();
-                            if (!raw) continue;
+                        for (let lineIndex = 0; lineIndex < linesArrLength(); lineIndex++) {
+                            const rawLine = linesBuffer[lineIndex].trim();
+                            if (!rawLine) continue;
 
-                            // Round Detection
-                            const rMatch = raw.match(/^(\d+)\s*x$/i);
-                            if (rMatch) {
-                                const rCount = parseInt(rMatch[1]);
-                                const subL = []; let nIdx = i + 1;
-                                while (nIdx < linesArr.length && linesArr[nIdx].trim() !== "" && !linesArr[nIdx].trim().match(/^(\d+)\s*x$/i)) {
-                                    subL.push(linesArr[nIdx].trim()); nIdx++;
+                            // LOGIC: TITLE DETECTION (Ends in Colon)
+                            if (rawLine.endsWith(':')) {
+                                compiledBlocks.push({ 
+                                    id: 'block_title_' + lineIndex, 
+                                    isTitle: true, 
+                                    titleText: rawLine.slice(0, -1) 
+                                });
+                                continue;
+                            }
+
+                            // LOGIC: ROUND DETECTION (Regex check for '3x')
+                            const roundRegexMatch = rawLine.match(/^(\d+)\s*x$/i);
+                            if (roundRegexMatch) {
+                                const roundsToRun = parseInt(roundRegexMatch[1]);
+                                const subLinesBuffer = [];
+                                let lookAheadIndex = lineIndex + 1;
+                                
+                                // Buffer sub-lines until next break or title
+                                while (lookAheadIndex < linesBuffer.length && 
+                                       linesBuffer[lookAheadIndex].trim() !== "" && 
+                                       !linesBuffer[lookAheadIndex].trim().match(/^(\d+)\s*x$/i) && 
+                                       !linesBuffer[lookAheadIndex].trim().endsWith(':')) {
+                                    subLinesBuffer.push(linesBuffer[lookAheadIndex].trim());
+                                    lookAheadIndex++;
                                 }
-                                i = nIdx - 1;
+                                lineIndex = lookAheadIndex - 1; // Skip forward in main loop
 
-                                let bYards = 0, bSecs = 0;
-                                const bItems = [];
-                                for (let r = 0; r < rCount; r++) {
-                                    subL.forEach(txt => {
-                                        const p = parseLine(txt, bSec100);
-                                        if (p) {
-                                            clockSecs += p.duration;
-                                            if (!p.isRest) rYdsCounter += p.yds;
-                                            bItems.push({ 
-                                                ...p, endTime: secondsToTime(clockSecs), 
-                                                runningYds: rYdsCounter, setDuration: Math.round(p.duration / 60)
+                                let blockYardageSum = 0;
+                                let blockSecondsSum = 0;
+                                const renderedSubItems = [];
+
+                                // Process multi-round cycles
+                                for (let r = 0; r < roundsToRun; r++) {
+                                    subLinesBuffer.forEach(subText => {
+                                        const parsedSetObj = parseSetStringToObj(subText, baseSecsPer100);
+                                        if (parsedSetObj) {
+                                            masterClockSecs += parsedSetObj.duration;
+                                            if (!parsedSetObj.isRest) globalYardageCounter += parsedSetObj.ydsTotal;
+                                            
+                                            renderedSubItems.push({ 
+                                                ...parsedSetObj, 
+                                                endTime: secondsToClockFormat(masterClockSecs), 
+                                                runningYds: globalYardageCounter,
+                                                setDuration: Math.round(parsedSetObj.duration / 60)
                                             });
-                                            if (r === 0) { if (!p.isRest) bYards += p.yds; bSecs += p.duration; }
+                                            
+                                            if (r === 0) {
+                                                if (!parsedSetObj.isRest) blockYardageSum += parsedSetObj.ydsTotal;
+                                                blockSecondsSum += parsedSetObj.duration;
+                                            }
                                         }
                                     });
                                 }
-                                collection.push({ id: i, isRound: true, rounds: rCount, items: bItems, blockYds: bYards * rCount, blockMins: Math.floor((bSecs * rCount) / 60) });
+                                compiledBlocks.push({ 
+                                    id: 'block_round_' + lineIndex, 
+                                    isRound: true, 
+                                    rounds: roundsToRun, 
+                                    items: renderedSubItems, 
+                                    blockYds: blockYardageSum * roundsToRun, 
+                                    blockMins: Math.floor((blockSecondsSum * roundsToRun) / 60) 
+                                });
                             } else {
-                                const s = parseLine(raw, bSec100);
-                                if (s) {
-                                    clockSecs += s.duration;
-                                    if (!s.isRest) rYdsCounter += s.yds;
-                                    collection.push({ id: i, isRound: false, items: [{ ...s, endTime: secondsToTime(clockSecs), runningYds: rYdsCounter, setDuration: Math.round(s.duration / 60) }], blockYds: s.yds || 0 });
+                                // LOGIC: STANDALONE SET DETECTION
+                                const singleSetObj = parseSetStringToObj(rawLine, baseSecsPer100);
+                                if (singleSetObj) {
+                                    masterClockSecs += singleSetObj.duration;
+                                    if (!singleSetObj.isRest) globalYardageCounter += singleSetObj.ydsTotal;
+                                    
+                                    compiledBlocks.push({ 
+                                        id: 'block_set_' + lineIndex, 
+                                        isRound: false, 
+                                        items: [{ 
+                                            ...singleSetObj, 
+                                            endTime: secondsToClockFormat(masterClockSecs), 
+                                            runningYds: globalYardageCounter,
+                                            setDuration: Math.round(singleSetObj.duration / 60)
+                                        }], 
+                                        blockYds: singleSetObj.ydsTotal || 0 
+                                    });
                                 }
                             }
                         }
-                        return collection;
-                    } catch (e) { return []; }
+                        return compiledBlocks;
+
+                        // Internal helper for loop safety
+                        function linesArrLength() { return linesBuffer.length; }
+                    } catch (fatalError) {
+                        console.error("Critical Engine Failure:", fatalError);
+                        return [];
+                    }
                 });
 
-                // Analytics Logic
+                // LOGIC: CATEGORY BREAKDOWN (Free, Kick, Pull, Scull)
                 const categoryTotals = computed(() => {
-                    const stats = { Free: 0, Kick: 0, Pull: 0, Scull: 0, Other: 0 };
-                    parsedTimeline.value.forEach(b => {
-                        b.items.forEach(it => {
-                            if (!it.isRest) {
-                                const n = it.note.toLowerCase();
-                                if (n.includes('free')) stats.Free += it.yds;
-                                else if (n.includes('kick')) stats.Kick += it.yds;
-                                else if (n.includes('pull')) stats.Pull += it.yds;
-                                else if (n.includes('scull')) stats.Scull += it.yds;
-                                else stats.Other += it.yds;
-                            }
-                        });
+                    const runningTotals = { Free: 0, Kick: 0, Pull: 0, Scull: 0, Other: 0 };
+                    parsedTimeline.value.forEach(block => {
+                        if (block.items) {
+                            block.items.forEach(set => {
+                                if (!set.isRest) {
+                                    const noteString = set.note.toLowerCase();
+                                    if (noteString.includes('free')) runningTotals.Free += set.ydsTotal;
+                                    else if (noteString.includes('kick')) runningTotals.Kick += set.ydsTotal;
+                                    else if (noteString.includes('pull')) runningTotals.Pull += set.ydsTotal;
+                                    else if (noteString.includes('scull')) runningTotals.Scull += set.ydsTotal;
+                                    else runningTotals.Other += set.ydsTotal;
+                                }
+                            });
+                        }
                     });
-                    return stats;
+                    return runningTotals;
                 });
 
-                const totalYds = computed(() => parsedTimeline.value.reduce((a, b) => a + (b.blockYds || 0), 0));
+                // LOGIC: GLOBAL TOTALS (Yardage & End Time)
+                const totalYds = computed(() => {
+                    return parsedTimeline.value.reduce((acc, curr) => acc + (curr.blockYds || 0), 0);
+                });
+
                 const practiceEndTime = computed(() => {
-                    if (parsedTimeline.value.length === 0) return secondsToTime(timeToSeconds(startTime.value || "17:45"));
-                    const lastB = parsedTimeline.value[parsedTimeline.value.length - 1];
-                    return lastB.items[lastB.items.length - 1].endTime;
+                    if (parsedTimeline.value.length === 0) return secondsToClockFormat(timeToSeconds(startTime.value || "17:45"));
+                    let finalTargetItem = null;
+                    for (let i = parsedTimeline.value.length - 1; i >= 0; i--) {
+                        if (parsedTimeline.value[i].items) { 
+                            finalTargetItem = parsedTimeline.value[i].items[parsedTimeline.value[i].items.length - 1]; 
+                            break; 
+                        }
+                    }
+                    return finalTargetItem ? finalTargetItem.endTime : secondsToClockFormat(timeToSeconds(startTime.value || "17:45"));
                 });
 
-                function parseLine(str, b100) {
-                    const rMatch = str.match(/^(\d*:?\d+)$/);
-                    if (rMatch) return { isRest: true, duration: parseInterval(rMatch[1]), displayTime: rMatch[1], note: 'Rest' };
+                // THE PARSER: CORE REGEX DECRYPTION
+                function parseSetStringToObj(str, currentBase100) {
+                    // Scenario A: Rest Detection (Line only contains time)
+                    const restMatch = str.match(/^(\d*:?\d+)$/);
+                    if (restMatch) {
+                        return { 
+                            isRest: true, 
+                            duration: parseIntervalToSeconds(restMatch[1]), 
+                            displayTime: restMatch[1], 
+                            note: 'Rest' 
+                        };
+                    }
                     
-                    const qP = str.match(/(\d+)\s*x/);
-                    const dP = str.match(/x\s*(\d+)/);
-                    const sP = str.match(/^(\d+)/);
+                    // Regex Patterns
+                    const pattern_Qty = str.match(/(\d+)\s*x/);
+                    const pattern_Dist = str.match(/x\s*(\d+)/);
+                    const pattern_SoloDist = str.match(/^(\d+)/);
                     
-                    let q = 1, d = 0;
-                    if (qP && dP) { q = parseInt(qP[1]); d = parseInt(dP[1]); }
-                    else if (sP) { d = parseInt(sP[0]); }
-                    else return null;
+                    let final_Qty = 1, final_Dist = 0;
+                    
+                    // Scenario B: Detailed Set (e.g., 4x100)
+                    if (pattern_Qty && pattern_Dist) { 
+                        final_Qty = parseInt(pattern_Qty[1]); 
+                        final_Dist = parseInt(pattern_Dist[1]); 
+                    } 
+                    // Scenario C: Shorthand Set (e.g., 400 Free)
+                    else if (pattern_SoloDist) { 
+                        final_Dist = parseInt(pattern_SoloDist[0]); 
+                    }
+                    else { return null; }
 
-                    const oP = str.match(/[@|on]\s*(\d*:?\d+)/);
-                    const dur = oP ? parseInterval(oP[1]) : (d / 100) * b100;
-                    const n = str.replace(/(\d+)\s*x\s*(\d+)/, '').replace(/^(\d+)/, '').replace(/[@|on]\s*(\d*:?\d+)/, '').trim();
+                    // Interval Extraction
+                    const pattern_Interval = str.match(/[@|on]\s*(\d*:?\d+)/);
+                    const final_Secs = pattern_Interval ? 
+                                       parseIntervalToSeconds(pattern_Interval[1]) : 
+                                       (final_Dist / 100) * currentBase100;
                     
-                    return { isRest: false, isDefault: !oP, qty: q, dist: d, yds: q * d, duration: q * dur, displayInterval: secondsToIntervalFormat(dur), note: n || 'Swim' };
+                    // Note Extraction (Removing digits and markers)
+                    const noteBuffer = str.replace(/(\d+)\s*x\s*(\d+)/, '')
+                                          .replace(/^(\d+)/, '')
+                                          .replace(/[@|on]\s*(\d*:?\d+)/, '')
+                                          .trim();
+                    
+                    return { 
+                        isRest: false, 
+                        isDefault: !pattern_Interval, 
+                        qty: final_Qty, 
+                        dist: final_Dist, 
+                        ydsTotal: final_Qty * final_Dist, 
+                        duration: final_Qty * final_Secs, 
+                        displayInterval: secondsToIntervalString(final_Secs), 
+                        note: noteBuffer || 'Swim' 
+                    };
                 }
 
-                function parseInterval(v) {
-                    if (v.includes(':')) { const [m, s] = v.split(':').map(Number); return (m * 60) + (s || 0); }
-                    return parseInt(v) || 0;
+                // UTILITY CONVERSIONS
+                function parseIntervalToSeconds(val) {
+                    if (val.includes(':')) {
+                        const parts = val.split(':').map(Number);
+                        return (parts[0] * 60) + (parts[1] || 0);
+                    }
+                    return parseInt(val) || 0;
                 }
 
-                function secondsToIntervalFormat(secs) {
-                    const m = Math.floor(secs / 60); const s = Math.round(secs % 60);
+                function secondsToIntervalString(total) {
+                    const m = Math.floor(total / 60);
+                    const s = Math.round(total % 60);
                     return `${m}:${s.toString().padStart(2, '0')}`;
                 }
 
-                function timeToSeconds(t) {
-                    if (!t) return 0; const [h, m] = t.split(':').map(Number);
-                    return (h * 3600) + (m * 60);
+                function timeToSeconds(timeStr) {
+                    if (!timeStr) return 0;
+                    const parts = timeStr.split(':').map(Number);
+                    return (parts[0] * 3600) + (parts[1] * 60);
                 }
 
-                function secondsToTime(secs) {
-                    let h = Math.floor(secs / 3600) % 24; let m = Math.floor((secs % 3600) / 60);
-                    const p = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12;
-                    return `${h}:${m.toString().padStart(2, '0')} ${p}`;
+                function secondsToClockFormat(total) {
+                    let h = Math.floor(total / 3600) % 24;
+                    let m = Math.floor((total % 3600) / 60);
+                    const ampm = h >= 12 ? 'pm' : 'am';
+                    h = h % 12 || 12;
+                    return `${h}:${m.toString().padStart(2, '0')} ${ampm}`;
                 }
 
-                const addTeam = () => { if (newTeamName.value.trim()) { teams.value.push({ id: Date.now(), name: newTeamName.value.trim() }); newTeamName.value = ''; } };
+                // UI HANDLERS: IDENTITY
+                const addTeam = () => { 
+                    if (newTeamName.value.trim()) { 
+                        teams.value.push({ id: Date.now(), name: newTeamName.value.trim() }); 
+                        newTeamName.value = ''; 
+                    } 
+                };
                 const deleteTeam = (i) => { if(teams.value.length > 1) teams.value.splice(i, 1); };
-                const addGroup = () => { if (newGroupName.value.trim()) { groups.value.push({ id: Date.now(), name: newGroupName.value.trim() }); newGroupName.value = ''; } };
+                
+                const addGroup = () => { 
+                    if (newGroupName.value.trim()) { 
+                        groups.value.push({ id: Date.now(), name: newGroupName.value.trim() }); 
+                        newGroupName.value = ''; 
+                    } 
+                };
                 const deleteGroup = (i) => { if(groups.value.length > 1) groups.value.splice(i, 1); };
 
+                // DATA HANDLERS: STORAGE
                 const saveWorkout = () => {
-                    history.value.unshift({ 
-                        name: workoutName.value || 'New Session', yardage: totalYds.value, 
-                        date: todayDate, content: input.value, team: activeTeamName.value 
-                    });
-                    localStorage.setItem(STORE_HISTORY, JSON.stringify(history.value));
-                    alert("Session Saved Successfully!");
+                    const sessionData = { 
+                        name: workoutName.value || 'Untitled Practice', 
+                        yardage: totalYds.value, 
+                        date: todayDate, 
+                        content: input.value, 
+                        team: activeTeamName.value,
+                        group: activeGroupName.value
+                    };
+                    history.value.unshift(sessionData);
+                    localStorage.setItem(APP_STORAGE_KEYS.HISTORY, JSON.stringify(history.value));
+                    alert("Training Session Successfully Logged!");
                 };
 
-                const loadWorkout = (w) => { workoutName.value = w.name; input.value = w.content || ""; view.value = 'editor'; };
-                const deleteWorkout = (idx) => { if(confirm("Delete permanently?")) { history.value.splice(idx, 1); localStorage.setItem(STORE_HISTORY, JSON.stringify(history.value)); } };
+                const loadWorkout = (item) => { 
+                    workoutName.value = item.name; 
+                    input.value = item.content || ""; 
+                    view.value = 'editor'; 
+                };
+
+                const deleteWorkout = (idx) => {
+                    if(confirm("Permanently delete this session from history?")) {
+                        history.value.splice(idx, 1);
+                        localStorage.setItem(APP_STORAGE_KEYS.HISTORY, JSON.stringify(history.value));
+                    }
+                };
                 
+                // Printing Command
                 function triggerPrint() { window.print(); }
 
+                // LIFECYCLE HOOKS: PERSISTENCE
                 onMounted(() => {
-                    const h = localStorage.getItem(STORE_HISTORY); if (h) history.value = JSON.parse(h);
-                    const t = localStorage.getItem(STORE_TEAMS); if (t) teams.value = JSON.parse(t);
-                    const g = localStorage.getItem(STORE_GROUPS); if (g) groups.value = JSON.parse(g);
+                    const h = localStorage.getItem(APP_STORAGE_KEYS.HISTORY); if (h) history.value = JSON.parse(h);
+                    const t = localStorage.getItem(APP_STORAGE_KEYS.TEAMS); if (t) teams.value = JSON.parse(t);
+                    const g = localStorage.getItem(APP_STORAGE_KEYS.GROUPS); if (g) groups.value = JSON.parse(g);
                 });
 
-                watch(teams, (nT) => localStorage.setItem(STORE_TEAMS, JSON.stringify(nT)), { deep: true });
-                watch(groups, (nG) => localStorage.setItem(STORE_GROUPS, JSON.stringify(nG)), { deep: true });
+                // Auto-Save Configuration Changes
+                watch(teams, (nT) => localStorage.setItem(APP_STORAGE_KEYS.TEAMS, JSON.stringify(nT)), { deep: true });
+                watch(groups, (nG) => localStorage.setItem(APP_STORAGE_KEYS.GROUPS, JSON.stringify(nG)), { deep: true });
 
+                // Exposure to Template
                 return { 
                     view, workoutName, input, startTime, baseInterval, history, 
                     customIntervals, parsedTimeline, totalYds, practiceEndTime, 
                     saveWorkout, loadWorkout, deleteWorkout, todayDate, triggerPrint,
                     teams, activeTeamId, activeTeamName, newTeamName, addTeam, deleteTeam,
                     groups, activeGroupId, activeGroupName, newGroupName, addGroup, deleteGroup,
-                    categoryTotals
+                    categoryTotals, printFontSize
                 };
             }
         }).mount('#app');
