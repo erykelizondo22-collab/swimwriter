@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="Swim Pro">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3144/3144573.png">
     
-    <title>Swim Engine Pro | Coach Eryk Vertical</title>
+    <title>Swim Engine Pro | Coach Eryk Anti-Cutoff</title>
     
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -32,7 +32,7 @@
             padding: 0;
         }
 
-        /* 1-INCH VERTICAL STACK PRINT ENGINE */
+        /* FLEX-FILL PRINT ENGINE (No Cutoffs) */
         @media print {
             .no-print { display: none !important; }
             
@@ -50,24 +50,17 @@
             .workout-sheet-master {
                 box-shadow: none !important;
                 width: 8.5in !important;
-                height: 11in !important;
+                /* REMOVED: height: 11in and overflow: hidden to prevent cutting off */
+                min-height: 11in !important;
                 margin: 0 !important;
-                /* HARD-CODED 1-INCH MARGINS */
-                padding: 1in !important; 
-                display: flex !important;
-                flex-direction: column !important;
-                box-sizing: border-box !important;
-                overflow: hidden !important;
-            }
-
-            /* VERTICAL STACKING: Force single column */
-            .sets-container {
+                padding: 1in !important; /* Fixed 1-inch margins */
                 display: block !important;
-                width: 100% !important;
+                box-sizing: border-box !important;
             }
 
+            /* FONT SCALING (Multiplier-linked) */
             .section-header-bar {
-                font-size: calc(18px * var(--fit-scale)) !important; /* 14pt base */
+                font-size: calc(18px * var(--fit-scale)) !important;
                 margin-top: calc(10px * var(--fit-scale)) !important;
                 margin-bottom: calc(4px * var(--fit-scale)) !important;
                 border-bottom: 2px solid #000 !important;
@@ -75,7 +68,7 @@
             }
 
             .set-row-line {
-                font-size: calc(10.5px * var(--fit-scale)) !important; /* 8pt base */
+                font-size: calc(10.5px * var(--fit-scale)) !important; 
                 padding-top: 1px !important;
                 padding-bottom: 1px !important;
                 line-height: 1.0 !important;
@@ -83,13 +76,11 @@
             }
 
             .qty-dist-text { font-size: 2.1em !important; font-weight: 900 !important; letter-spacing: -0.04em !important; }
-            .note-text { font-size: 1.0em !important; font-weight: 600 !important; }
             .clock-text { font-size: 1.4em !important; font-weight: 800 !important; }
-
             .page-bunch-container { margin-bottom: calc(8px * var(--fit-scale)) !important; }
         }
 
-        /* SCREEN UI */
+        /* SCREEN PREVIEW */
         .workout-sheet-master {
             background-color: var(--bg-paper);
             min-height: 100vh;
@@ -100,7 +91,7 @@
             -webkit-appearance: none; width: 100%; height: 10px; border-radius: 5px; background: #cbd5e1; outline: none;
         }
         .fit-slider::-webkit-slider-thumb {
-            -webkit-appearance: none; width: 30px; height: 30px; border-radius: 50%; background: var(--soflo-blue); cursor: pointer; border: 3px solid white;
+            -webkit-appearance: none; width: 30px; height: 32px; border-radius: 50%; background: var(--soflo-blue); border: 3px solid white; cursor: pointer;
         }
     </style>
 </head>
@@ -108,13 +99,13 @@
 <body class="antialiased">
     <div id="app" :style="{'--fit-scale': fitMultiplier}" v-cloak>
         
-        <nav class="no-print bg-slate-900 text-white px-4 py-4 flex justify-between items-center sticky top-0 z-50 shadow-lg">
+        <nav class="no-print bg-slate-900 text-white px-4 py-4 flex justify-between items-center sticky top-0 z-50">
             <div class="flex space-x-6 text-[10px] font-black uppercase tracking-widest">
                 <button @click="view = 'editor'" :class="{'text-blue-400': view === 'editor'}">Editor</button>
                 <button @click="view = 'teams'" :class="{'text-blue-400': view === 'teams'}">Teams</button>
                 <button @click="view = 'groups'" :class="{'text-blue-400': view === 'groups'}">Groups</button>
             </div>
-            <div class="text-[9px] font-black bg-blue-600 px-3 py-1 rounded-full uppercase border border-blue-400">{{ activeTeamName }}</div>
+            <div class="text-[9px] font-black bg-blue-600 px-3 py-1 rounded-full uppercase border border-blue-400">{{ activeTeamName }} | {{ activeGroupName }}</div>
         </nav>
 
         <div v-if="view === 'editor'" class="no-print max-w-xl mx-auto p-4 space-y-4">
@@ -124,77 +115,74 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div class="flex flex-col">
                         <label class="text-[9px] font-black text-slate-400 uppercase">Start Clock</label>
-                        <input type="time" v-model="startTime" class="w-full border rounded-xl p-3 text-lg font-black text-blue-700 bg-slate-50">
+                        <input type="time" v-model="startTime" class="w-full border rounded-xl p-3 font-black text-blue-700 bg-slate-50">
                     </div>
                     <div class="flex flex-col">
                         <label class="text-[9px] font-black text-slate-400 uppercase">Base Pace</label>
-                        <select v-model="baseInterval" class="w-full border rounded-xl p-3 text-lg font-black bg-slate-50">
+                        <select v-model="baseInterval" class="w-full border rounded-xl p-3 font-black bg-slate-50">
                             <option v-for="t in customIntervals" :key="t" :value="t">{{ t }}</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="border-t mt-4 pt-4">
-                    <label class="text-[10px] font-black text-blue-600 uppercase">Fit-to-Page Multiplier ({{ fitMultiplier }})</label>
+                    <label class="text-[10px] font-black text-blue-600 uppercase">Multiplier: {{ fitMultiplier }}</label>
                     <div class="mt-2"><input type="range" min="0.4" max="1.1" step="0.05" v-model="fitMultiplier" class="fit-slider"></div>
-                    <p class="text-[8px] text-slate-400 mt-2 italic">*Margin is fixed to 1-inch on standard 8.5x11.</p>
+                    <p class="text-[8px] text-slate-400 mt-2 italic font-bold text-red-500">*Use a lower multiplier (0.7-0.8) to fit everything on one sheet.</p>
                 </div>
             </div>
 
             <textarea v-model="input" class="w-full h-64 bg-white border border-slate-200 p-5 rounded-2xl font-mono text-sm outline-none shadow-inner" placeholder="Paste sets here..."></textarea>
-            <button @click="triggerPrint" class="w-full bg-emerald-600 text-white p-4 rounded-xl font-black uppercase shadow-lg">Print Vertical Stack</button>
+            <button @click="triggerPrint" class="w-full bg-emerald-600 text-white p-4 rounded-xl font-black uppercase shadow-lg">Generate Print / PDF</button>
         </div>
 
         <div v-if="view === 'editor'" class="workout-sheet-master max-w-4xl mx-auto p-12 sm:p-16">
             
             <div class="flex justify-between items-end border-b-[8px] border-black pb-3 mb-6">
                 <div class="w-3/4">
-                    <h1 class="text-4xl sm:text-5xl font-black uppercase tracking-tighter leading-none mb-1 text-black">{{ workoutName || 'Practice' }}</h1>
+                    <h1 class="text-4xl sm:text-5xl font-black uppercase tracking-tighter leading-none text-black">{{ workoutName || 'Practice' }}</h1>
                     <div class="text-[10px] font-bold uppercase tracking-widest text-slate-500">
                         {{ todayDate }} — {{ activeTeamName }} | {{ activeGroupName }}
                     </div>
                 </div>
                 <div class="text-right">
-                    <div class="text-[10px] font-black text-slate-400 uppercase">Total Yards</div>
+                    <div class="text-[9px] font-black text-slate-400 uppercase">Total Yards</div>
                     <div class="text-5xl sm:text-6xl font-black leading-none text-black">{{ totalYds }}y</div>
                 </div>
             </div>
 
-            <div class="sets-container">
-                <div v-for="(group, gIdx) in bunchedTimeline" :key="'g'+gIdx" class="page-bunch-container">
-                    
-                    <div v-if="group.title" class="section-header-bar flex justify-between items-end border-b-2 border-black">
-                        <span class="uppercase text-blue-700 font-black text-lg">{{ group.title }}</span>
-                        <div class="flex gap-4 text-[10px] font-black text-slate-400 uppercase">
-                            <span>{{ group.groupMinutes }} MIN</span>
-                            <span>{{ group.groupYards }}Y</span>
-                        </div>
+            <div v-for="(group, gIdx) in bunchedTimeline" :key="'g'+gIdx" class="page-bunch-container">
+                <div v-if="group.title" class="section-header-bar flex justify-between items-end border-b-2 border-black">
+                    <span class="uppercase text-blue-700 font-black text-lg">{{ group.title }}</span>
+                    <div class="flex gap-4 text-[10px] font-black text-slate-400 uppercase">
+                        <span>{{ group.groupMinutes }} MIN</span>
+                        <span>{{ group.groupYards }}Y</span>
                     </div>
+                </div>
 
-                    <div class="space-y-0.5">
-                        <div v-for="(block, bIdx) in group.blocks" :key="'b'+bIdx">
-                            <div :class="{'border-l-4 border-emerald-500 pl-3 ml-1': block.isRound}" class="mb-1">
-                                <div v-if="block.isRound" class="text-[10px] font-black text-emerald-600 uppercase mb-1">
-                                    {{ block.rounds }} ROUNDS — {{ block.blockMins }}m Total
-                                </div>
-                                
-                                <div v-for="(item, idx) in block.items" :key="'i'+idx" class="set-row-line flex justify-between items-center py-0.5">
-                                    <div class="flex items-center gap-4">
-                                        <div class="leading-tight">
-                                            <div v-if="item.isRest" class="italic text-blue-600 font-bold uppercase text-[0.75em]">REST: {{ item.displayTime }}</div>
-                                            <div v-else class="flex flex-col">
-                                                <div class="flex items-baseline gap-3 leading-none">
-                                                    <span class="qty-dist-text text-xl sm:text-2xl font-black text-black">{{ item.qty }} x {{ item.dist }}</span>
-                                                    <span class="text-slate-400 font-bold uppercase">@ {{ item.displayInterval }}</span>
-                                                </div>
-                                                <div v-if="item.note" class="note-text text-blue-600 uppercase">{{ item.note }}</div>
+                <div class="space-y-0.5">
+                    <div v-for="(block, bIdx) in group.blocks" :key="'b'+bIdx">
+                        <div :class="{'border-l-4 border-emerald-500 pl-3 ml-1': block.isRound}" class="mb-1">
+                            <div v-if="block.isRound" class="text-[10px] font-black text-emerald-600 uppercase mb-1">
+                                {{ block.rounds }} ROUNDS — {{ block.blockMins }}m Total
+                            </div>
+                            
+                            <div v-for="(item, idx) in block.items" :key="'i'+idx" class="set-row-line flex justify-between items-center py-0.5">
+                                <div class="flex items-center gap-4">
+                                    <div class="leading-tight">
+                                        <div v-if="item.isRest" class="italic text-blue-600 font-bold uppercase text-[0.75em]">REST: {{ item.displayTime }}</div>
+                                        <div v-else class="flex flex-col">
+                                            <div class="flex items-baseline gap-3 leading-none">
+                                                <span class="qty-dist-text text-xl sm:text-2xl font-black text-black">{{ item.qty }} x {{ item.dist }}</span>
+                                                <span class="text-slate-400 font-bold uppercase">@ {{ item.displayInterval }}</span>
                                             </div>
+                                            <div v-if="item.note" class="text-[0.75em] text-blue-600 font-bold uppercase mt-0.5">{{ item.note }}</div>
                                         </div>
                                     </div>
-                                    <div class="text-right leading-none shrink-0">
-                                        <div class="clock-text font-mono font-black text-sm sm:text-lg text-black">{{ item.endTime }}</div>
-                                        <div v-if="!item.isRest" class="text-[0.6em] text-slate-400 italic">{{ item.runningYds }}y</div>
-                                    </div>
+                                </div>
+                                <div class="text-right leading-none shrink-0">
+                                    <div class="clock-text font-mono font-black text-sm sm:lg text-black">{{ item.endTime }}</div>
+                                    <div v-if="!item.isRest" class="text-[0.6em] text-slate-400 italic">{{ item.runningYds }}y</div>
                                 </div>
                             </div>
                         </div>
@@ -209,10 +197,10 @@
         createApp({
             setup() {
                 const view = ref('editor'); const workoutName = ref('SESSION 4/30');
-                const input = ref("Warmup:\n4x100 75 free/25 rev Im\n4x75 k/d/s\n4x50 scull/swim\n4x25 variable speed\n8:00\n\nPull Set:\n1x\n  6x50 @ 1:00 Back/free\n  4x100 @ 2:00 back/free\n  2x200 @ 4:00 back/free\n\nMain set:\n1x\n  4x200 @ 2:40\n  1x100 @ 3:00 Easy\n  6x100 @ 1:20\n  1x100 @ 3:00 Easy\n  8x50 @ 0:40\n\nWarmdown:\n200 easy\n100 social kick");
+                const input = ref("Warmup:\n4x100 75 free/25 rev Im\n4x75 k/d/s\n4x50 scull/swim\n4x25 variable speed\n8:00\n\nPre set: unders\n20x25 @ 0:40\nO: under\nE: Over no breath last 10\n\nPull Set:\n1x\n  6x50 @ 1:00 Back/free\n  4x100 @ 2:00 back/free\n  2x200 @ 4:00 back/free\n\nMain set:\n1x\n  4x200 @ 2:40\n  1x100 @ 3:00 Easy\n  6x100 @ 1:20\n  1x100 @ 3:00 Easy\n  8x50 @ 0:40\n\nWarmdown:\n200 easy\n100 social kick");
                 const startTime = ref("17:45"); const baseInterval = ref("1:45");
-                const fitMultiplier = ref(0.9);
-                const teams = ref([{ id: 1, name: 'SOFLO' }]); const groups = ref([{ id: 1, name: 'Elite' }]);
+                const fitMultiplier = ref(0.8);
+                const teams = ref([{ id: 1, name: 'SOFLO' }]); const groups = ref([{ id: 1, name: 'Senior Elite' }]);
                 const activeTeamId = ref(1); const activeGroupId = ref(1);
                 const todayDate = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: '2-digit', year: '2-digit' });
 
@@ -290,15 +278,8 @@
                 });
 
                 const totalYds = computed(() => parsedTimeline.value.reduce((a, b) => a + (b.blockYds || 0), 0));
-                const practiceEndTime = computed(() => {
-                    let c = (parseInt(startTime.value.split(':')[0]) * 3600) + (parseInt(startTime.value.split(':')[1]) * 60);
-                    parsedTimeline.value.forEach(b => { if (b.isRound) c += (b.blockMins * 60); else if (b.items?.[0]) c += b.items[0].dur; });
-                    let h = Math.floor(c / 3600) % 24; let m = Math.floor((c % 3600) / 60); let ap = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12;
-                    return h + ":" + m.toString().padStart(2, '0') + " " + ap;
-                });
-
                 const triggerPrint = () => { window.print(); };
-                return { view, workoutName, input, startTime, baseInterval, fitMultiplier, activeTeamName, activeGroupName, customIntervals, bunchedTimeline, totalYds, practiceEndTime, todayDate, triggerPrint, teams, activeTeamId, groups, activeGroupId };
+                return { view, workoutName, input, startTime, baseInterval, fitMultiplier, activeTeamName, activeGroupName, customIntervals, bunchedTimeline, totalYds, todayDate, triggerPrint, teams, activeTeamId, groups, activeGroupId };
             }
         }).mount('#app');
     </script>
