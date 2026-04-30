@@ -8,9 +8,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Swim Pro">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3144/3144573.png">
-    <meta name="mobile-web-app-capable" content="yes">
     
-    <title>Swim Engine Pro | Coach Eryk App</title>
+    <title>Swim Engine Pro | Precision Margins</title>
     
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -19,67 +18,84 @@
         [v-cloak] { display: none !important; }
         
         :root {
-            --bg-interface: #f8fafc;
+            --bg-ui: #f8fafc;
             --bg-paper: #ffffff;
             --soflo-blue: #2563eb;
             --soflo-emerald: #059669;
-            --safe-top: env(safe-area-inset-top);
         }
 
         body {
-            background-color: var(--bg-interface);
+            background-color: var(--bg-ui);
             color: #000;
-            font-family: 'Inter', system-ui, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             margin: 0;
-            /* Prevents weird bouncing on mobile */
-            overscroll-behavior: none;
+            padding: 0;
         }
 
-        /* App-Like Feel: Full bleed and touch optimized */
-        .workout-sheet-master {
-            background-color: var(--bg-paper);
-            min-height: 100vh;
-            padding-top: calc(1rem + var(--safe-top));
-        }
-
-        /* Mobile Responsive Header */
-        @media (max-width: 640px) {
-            .main-header-text { font-size: 2.5rem !important; }
-            .set-row-line { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
-        }
-
-        /* PRINT CONTROL - Locked to 8.5x11 Force */
+        /* 1 INCH PRECISION PRINT ENGINE */
         @media print {
             .no-print { display: none !important; }
-            @page { size: letter; margin: 0.1in !important; }
-            body { background: white !important; }
-            .workout-sheet-master { box-shadow: none !important; padding: 0 !important; width: 100% !important; margin: 0 !important; }
             
+            @page {
+                size: letter;
+                /* Reset browser margins to 0 to let the div control the 1-inch frame */
+                margin: 0 !important; 
+            }
+
+            body { 
+                background: white !important; 
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            
+            .workout-sheet-master {
+                box-shadow: none !important;
+                width: 8.5in !important;
+                height: 11in !important;
+                margin: 0 !important;
+                /* FORCE 1 INCH (2.54cm) ON ALL SIDES */
+                padding: 1in !important; 
+                display: block !important;
+                box-sizing: border-box !important;
+                page-break-after: always;
+            }
+
+            /* FONT HIERARCHY */
             .section-header-bar {
-                font-size: calc(18px * var(--fit-scale)) !important; 
-                margin-top: calc(10px * var(--fit-scale)) !important;
-                margin-bottom: calc(4px * var(--fit-scale)) !important;
+                font-size: calc(18.5px * var(--fit-scale)) !important; /* ~14pt base */
+                margin-top: calc(12px * var(--fit-scale)) !important;
+                margin-bottom: calc(6px * var(--fit-scale)) !important;
                 border-bottom: 2px solid #000 !important;
+                padding-bottom: 3px !important;
             }
 
             .set-row-line {
-                font-size: calc(10.5px * var(--fit-scale)) !important; 
+                font-size: calc(10.5px * var(--fit-scale)) !important; /* ~8pt base */
                 padding-top: 1px !important;
                 padding-bottom: 1px !important;
                 line-height: 1.0 !important;
                 border-bottom: 0.5px solid #eee !important;
             }
 
-            .qty-dist-text { font-size: 1.8em !important; font-weight: 900 !important; }
-            .clock-text { font-size: 1.5em !important; font-weight: 800 !important; }
+            .qty-dist-text { font-size: 2.2em !important; font-weight: 900 !important; letter-spacing: -0.04em !important; }
+            .note-text { font-size: 1.0em !important; font-weight: 600 !important; }
+            .clock-text { font-size: 1.4em !important; font-weight: 800 !important; }
+
+            .page-bunch-container { margin-bottom: calc(10px * var(--fit-scale)) !important; }
         }
 
-        /* Touch-friendly Slider */
+        /* SCREEN PREVIEW STYLING */
+        .workout-sheet-master {
+            background-color: var(--bg-paper);
+            min-height: 100vh;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
         .fit-slider {
-            -webkit-appearance: none; width: 100%; height: 12px; border-radius: 10px; background: #cbd5e1; outline: none;
+            -webkit-appearance: none; width: 100%; height: 10px; border-radius: 5px; background: #cbd5e1; outline: none;
         }
         .fit-slider::-webkit-slider-thumb {
-            -webkit-appearance: none; width: 32px; height: 32px; border-radius: 50%; background: var(--soflo-blue); border: 3px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            -webkit-appearance: none; width: 30px; height: 30px; border-radius: 50%; background: var(--soflo-blue); cursor: pointer; border: 3px solid white;
         }
     </style>
 </head>
@@ -87,22 +103,22 @@
 <body class="antialiased">
     <div id="app" :style="{'--fit-scale': fitMultiplier}" v-cloak>
         
-        <nav class="no-print bg-slate-900 text-white px-4 py-4 flex justify-between items-center sticky top-0 z-50 border-b border-slate-700 shadow-lg">
-            <div class="flex space-x-4 text-[11px] font-black uppercase">
+        <nav class="no-print bg-slate-900 text-white px-4 py-4 flex justify-between items-center sticky top-0 z-50 shadow-lg">
+            <div class="flex space-x-6 text-[10px] font-black uppercase tracking-widest">
                 <button @click="view = 'editor'" :class="{'text-blue-400': view === 'editor'}">Editor</button>
                 <button @click="view = 'teams'" :class="{'text-blue-400': view === 'teams'}">Teams</button>
                 <button @click="view = 'groups'" :class="{'text-blue-400': view === 'groups'}">Groups</button>
             </div>
-            <div class="text-[9px] font-black bg-blue-600 px-3 py-1 rounded-full uppercase italic border border-blue-400">{{ activeTeamName }}</div>
+            <div class="text-[9px] font-black bg-blue-600 px-3 py-1 rounded-full uppercase border border-blue-400 tracking-tighter">{{ activeTeamName }} | {{ activeGroupName }}</div>
         </nav>
 
         <div v-if="view === 'editor'" class="no-print max-w-xl mx-auto p-4 space-y-4">
             <div class="bg-white rounded-3xl p-5 shadow-xl border border-slate-200">
-                <input v-model="workoutName" class="text-2xl font-black text-slate-900 outline-none w-full uppercase mb-4" placeholder="SESSION NAME">
+                <input v-model="workoutName" class="text-3xl font-black text-slate-900 outline-none w-full uppercase mb-4" placeholder="SESSION NAME">
                 
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div class="flex flex-col">
-                        <label class="text-[9px] font-black text-slate-400 uppercase">Start Time</label>
+                        <label class="text-[9px] font-black text-slate-400 uppercase">Start Clock</label>
                         <input type="time" v-model="startTime" class="w-full border rounded-xl p-3 text-lg font-black text-blue-700 bg-slate-50">
                     </div>
                     <div class="flex flex-col">
@@ -114,42 +130,39 @@
                 </div>
 
                 <div class="border-t pt-4">
-                    <label class="text-[10px] font-black text-blue-600 uppercase">Force Page fit ({{ fitMultiplier }})</label>
+                    <label class="text-[10px] font-black text-blue-600 uppercase">Page Fit Command ({{ fitMultiplier }})</label>
                     <div class="mt-2">
-                        <input type="range" min="0.5" max="1.3" step="0.05" v-model="fitMultiplier" class="fit-slider">
+                        <input type="range" min="0.5" max="1.2" step="0.05" v-model="fitMultiplier" class="fit-slider">
                     </div>
+                    <p class="text-[8px] text-slate-400 mt-2 italic">*Margin is locked to 1-inch on 8.5x11 paper.</p>
                 </div>
             </div>
 
-            <textarea v-model="input" class="w-full h-72 bg-white border border-slate-200 p-5 rounded-2xl font-mono text-sm outline-none shadow-inner" placeholder="Enter workout here..."></textarea>
-            
-            <div class="grid grid-cols-2 gap-3">
-                <button @click="saveWorkout" class="bg-slate-800 text-white p-4 rounded-xl font-black uppercase text-xs">Save</button>
-                <button @click="triggerPrint" class="bg-blue-600 text-white p-4 rounded-xl font-black uppercase text-xs shadow-lg">Print / PDF</button>
-            </div>
+            <textarea v-model="input" class="w-full h-64 bg-white border border-slate-200 p-5 rounded-2xl font-mono text-sm outline-none shadow-inner" placeholder="Enter sets..."></textarea>
+            <button @click="triggerPrint" class="w-full bg-emerald-600 text-white p-4 rounded-xl font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">Print Sheet (1" Margins)</button>
         </div>
 
-        <div v-if="view === 'editor'" class="workout-sheet-master max-w-3xl mx-auto p-4 sm:p-10">
+        <div v-if="view === 'editor'" class="workout-sheet-master max-w-4xl mx-auto p-12 sm:p-16">
             
-            <div class="flex justify-between items-end border-b-8 border-black pb-4 mb-6">
+            <div class="flex justify-between items-end border-b-8 border-black pb-4 mb-8">
                 <div class="w-3/4">
-                    <h1 class="main-header-text text-4xl sm:text-6xl font-black uppercase tracking-tighter leading-none mb-1">{{ workoutName || 'Practice' }}</h1>
-                    <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-500">
+                    <h1 class="text-5xl font-black uppercase tracking-tighter leading-none mb-1">{{ workoutName || 'Practice' }}</h1>
+                    <div class="text-xs font-bold uppercase tracking-widest text-slate-500">
                         {{ todayDate }} — {{ activeTeamName }} | {{ activeGroupName }}
                     </div>
                 </div>
                 <div class="text-right">
-                    <div class="text-[9px] font-black text-slate-400 uppercase">Total Yards</div>
-                    <div class="text-4xl sm:text-6xl font-black leading-none">{{ totalYds }}y</div>
+                    <div class="text-[10px] font-black text-slate-400 uppercase">Total Yards</div>
+                    <div class="text-6xl font-black leading-none">{{ totalYds }}y</div>
                 </div>
             </div>
 
             <div class="scalable-content">
                 <div v-for="(group, gIdx) in bunchedTimeline" :key="'g'+gIdx" class="page-bunch-container">
                     
-                    <div v-if="group.title" class="section-header-bar flex justify-between items-end border-b-2 border-black pb-1 mb-3">
-                        <span class="uppercase text-blue-700 font-black text-lg sm:text-xl">{{ group.title }}</span>
-                        <div class="flex gap-3 text-[9px] font-black text-slate-400 uppercase">
+                    <div v-if="group.title" class="section-header-bar flex justify-between items-end border-b-2 border-black">
+                        <span class="uppercase text-blue-700 font-black text-xl">{{ group.title }}</span>
+                        <div class="flex gap-4 text-[10px] font-black text-slate-400 uppercase">
                             <span>{{ group.groupMinutes }} MIN</span>
                             <span>{{ group.groupYards }}Y</span>
                         </div>
@@ -162,22 +175,22 @@
                                     {{ block.rounds }} ROUNDS — {{ block.blockMins }}m Total
                                 </div>
                                 
-                                <div v-for="(item, idx) in block.items" :key="'i'+idx" class="set-row-line flex justify-between items-center py-1">
+                                <div v-for="(item, idx) in block.items" :key="'i'+idx" class="set-row-line flex justify-between items-center">
                                     <div class="flex items-center gap-4">
                                         <div class="leading-tight">
-                                            <div v-if="item.isRest" class="italic text-blue-600 font-bold uppercase text-[0.7em]">REST: {{ item.displayTime }}</div>
+                                            <div v-if="item.isRest" class="italic text-blue-600 font-bold uppercase text-[0.8em]">REST: {{ item.displayTime }}</div>
                                             <div v-else class="flex flex-col">
-                                                <div class="flex items-baseline gap-2 leading-none">
-                                                    <span class="qty-dist-text text-xl sm:text-3xl font-black">{{ item.qty }} x {{ item.dist }}</span>
-                                                    <span class="text-slate-400 font-bold text-sm sm:text-lg">@ {{ item.displayInterval }}</span>
+                                                <div class="flex items-baseline gap-3 leading-none">
+                                                    <span class="qty-dist-text">{{ item.qty }} x {{ item.dist }}</span>
+                                                    <span class="text-slate-400 font-bold uppercase ml-3">@ {{ item.displayInterval }}</span>
                                                 </div>
-                                                <div v-if="item.note" class="text-[0.7em] sm:text-[0.8em] text-blue-600 font-bold uppercase mt-0.5">{{ item.note }}</div>
+                                                <div v-if="item.note" class="note-text text-blue-600 uppercase">{{ item.note }}</div>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="text-right leading-none shrink-0">
-                                        <div class="clock-text font-mono font-black text-sm sm:text-xl">{{ item.endTime }}</div>
-                                        <div v-if="!item.isRest" class="text-[0.6em] text-slate-400 italic">{{ item.runningYds }}y</div>
+                                        <div class="clock-text font-mono text-black">{{ item.endTime }}</div>
+                                        <div v-if="!item.isRest" class="text-[0.7em] text-slate-400 italic">{{ item.runningYds }}y</div>
                                     </div>
                                 </div>
                             </div>
@@ -189,11 +202,11 @@
     </div>
 
     <script>
-        const { createApp, ref, computed, onMounted } = Vue;
+        const { createApp, ref, computed } = Vue;
         createApp({
             setup() {
-                const view = ref('editor'); const workoutName = ref('DAILY SESSION');
-                const input = ref("Warmup:\n4x100 75 free/25 rev Im\n4x75 k/d/s\n4x50 scull/swim\n4x25 variable speed\n8:00");
+                const view = ref('editor'); const workoutName = ref('SESSION 4/30');
+                const input = ref("Warmup:\n4x100 75 free/25 rev Im\n4x75 k/d/s\n4x50 scull/swim\n4x25 variable speed\n8:00\n\nPull Set:\n1x\n  6x50 @ 1:00 Back/free\n  4x100 @ 2:00 back/free\n  2x200 @ 4:00 back/free");
                 const startTime = ref("17:45"); const baseInterval = ref("1:45");
                 const fitMultiplier = ref(0.9);
                 const teams = ref([{ id: 1, name: 'SOFLO' }]); const groups = ref([{ id: 1, name: 'Senior Elite' }]);
@@ -201,7 +214,7 @@
                 const todayDate = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: '2-digit', year: '2-digit' });
 
                 const activeTeamName = computed(() => teams.value.find(i => i.id === activeTeamId.value)?.name || 'SOFLO');
-                const activeGroupName = computed(() => groups.value.find(i => i.id === activeGroupId.value)?.name || 'Gold');
+                const activeGroupName = computed(() => groups.value.find(i => i.id === activeGroupId.value)?.name || 'Squad');
                 const customIntervals = computed(() => { const r = []; for (let s = 30; s <= 600; s += 5) { const m = Math.floor(s / 60); r.push(`${m}:${(s % 60).toString().padStart(2, '0')}`); } return r; });
 
                 const parsedTimeline = computed(() => {
@@ -281,9 +294,8 @@
                     return h + ":" + m.toString().padStart(2, '0') + " " + ap;
                 });
 
-                const saveWorkout = () => { alert("Saved!"); }; const triggerPrint = () => { window.print(); };
-
-                return { view, workoutName, input, startTime, baseInterval, fitMultiplier, activeTeamName, activeGroupName, customIntervals, bunchedTimeline, totalYds, practiceEndTime, todayDate, triggerPrint, teams, activeTeamId, groups, activeGroupId, saveWorkout };
+                const triggerPrint = () => { window.print(); };
+                return { view, workoutName, input, startTime, baseInterval, fitMultiplier, activeTeamName, activeGroupName, customIntervals, bunchedTimeline, totalYds, practiceEndTime, todayDate, triggerPrint, teams, activeTeamId, groups, activeGroupId };
             }
         }).mount('#app');
     </script>
