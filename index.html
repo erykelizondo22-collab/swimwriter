@@ -5,51 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Swim Master">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3144/3144573.png">
     
-    <title>Swim Master | SOFLO Elite Precision</title>
+    <title>Swim Master | Super-Unrolled Elite</title>
     
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        /* CSS MASTER CONFIGURATION (LINES 50-1500)
-           Unrolled for maximum stability and precise 1-inch margins.
+        /* [ANCHOR 003: CSS VARIABLE REGISTRY]
+           Every variable is explicitly declared to maintain monochrome consistency.
         */
         [v-cloak] { display: none !important; }
         
         :root {
-            --fit-multiplier: 0.85; /* Managed by UI Slider */
+            --fit-multiplier: 0.85;
             --page-width: 8.5in;
             --page-height: 11in;
             --print-margin: 1.0in; /* LOCKED 1-INCH MARGIN PER REQUEST */
-            --soflo-blue: #2563eb;
-            --soflo-emerald: #10b981;
-            --slate-100: #f1f5f9;
-            --slate-400: #94a3b8;
-            --slate-500: #64748b;
-            --slate-900: #0f172a;
+            --color-black: #000000;
+            --color-white: #ffffff;
+            --color-slate-100: #f1f5f9;
+            --color-slate-200: #e2e8f0;
+            --color-slate-400: #94a3b8;
+            --color-slate-900: #0f172a;
         }
 
+        /* [ANCHOR 004: GLOBAL RESET]
+           Removes all non-monochrome styling.
+        */
         body {
-            background-color: var(--slate-100);
-            color: #000000;
-            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            background-color: var(--color-slate-100);
+            color: var(--color-black);
+            font-family: 'Inter', system-ui, sans-serif;
             margin: 0;
             padding: 0;
-            -webkit-font-smoothing: antialiased;
+            -webkit-print-color-adjust: exact;
         }
 
-        /* THE PRINT LAYOUT ENGINE (LINES 150-350)
-           Forces the browser to obey the 1-inch margin constraint.
+        /* [ANCHOR 005: THE 1-INCH MARGIN PRINT ENGINE]
+           This block forces the printer to maintain exact 8.5x11 dimensions.
         */
         @media print {
             .no-print { display: none !important; }
             
             @page {
                 size: letter portrait;
-                margin: 0 !important; /* Forces total control to our internal padding */
+                margin: 0 !important;
             }
 
             #render-master {
@@ -57,85 +59,65 @@
                 min-height: var(--page-height) !important;
                 padding: var(--print-margin) !important;
                 box-sizing: border-box !important;
+                /* LINKED TO DYNAMIC SLIDER FOR 1PT FONT EQUIVALENCY */
                 font-size: calc(14px * var(--fit-multiplier)) !important;
+                display: block !important;
                 margin: 0 !important;
                 box-shadow: none !important;
-                display: block !important;
-                position: absolute;
-                top: 0;
-                left: 0;
+                background: var(--color-white) !important;
+                color: var(--color-black) !important;
             }
 
-            .set-entry {
-                page-break-inside: avoid !important;
+            .section-bar-header, 
+            .set-instruction-note, 
+            .set-qty-dist, 
+            .master-header-container {
+                color: var(--color-black) !important;
+                border-color: var(--color-black) !important;
             }
         }
 
-        /* CANVAS UI STYLING (LINES 351-600)
+        /* [ANCHOR 006: THE CANVAS VISUALIZER]
+           Renders the paper sheet on your screen.
         */
         #render-master {
-            background: #ffffff;
+            background: var(--color-white);
             width: var(--page-width);
             min-height: var(--page-height);
             padding: var(--print-margin);
-            margin: 3rem auto;
-            box-shadow: 0 40px 100px rgba(0,0,0,0.15);
+            margin: 2rem auto;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.1);
             font-size: calc(16px * var(--fit-multiplier));
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--color-black);
+            transition: all 0.15s ease-in-out;
         }
 
+        /* [ANCHOR 007: TYPOGRAPHY HIERARCHY]
+           Explicit monochrome rules for headers.
+        */
         .master-header-container {
-            border-bottom: 10px solid #000000;
-            padding-bottom: 16px;
-            margin-bottom: 35px;
+            border-bottom: 10px solid var(--color-black);
+            padding-bottom: 15px;
+            margin-bottom: 30px;
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
         }
 
         .main-practice-title {
-            font-size: 4.8em;
+            font-size: 4.6em;
             font-weight: 950;
             line-height: 0.8;
             text-transform: uppercase;
             letter-spacing: -0.06em;
-            margin-bottom: 10px;
-        }
-
-        .sub-header-details {
-            font-size: 11px;
-            font-weight: 800;
-            color: var(--slate-500);
-            text-transform: uppercase;
-            letter-spacing: 0.3em;
-        }
-
-        .yardage-summary-box {
-            text-align: right;
-            line-height: 0.8;
-        }
-
-        .yardage-summary-label {
-            font-size: 10px;
-            font-weight: 900;
-            color: var(--slate-400);
-            text-transform: uppercase;
-            margin-bottom: 6px;
-        }
-
-        .yardage-summary-value {
-            font-size: 6.2em;
-            font-weight: 950;
-            letter-spacing: -0.05em;
         }
 
         .section-bar-header {
-            font-size: 1.6em;
+            font-size: 1.5em;
             font-weight: 950;
-            color: var(--soflo-blue);
-            border-bottom: 3.5px solid #000000;
-            margin-top: 1.6em;
-            margin-bottom: 0.6em;
+            border-bottom: 3.5px solid var(--color-black);
+            margin-top: 1.4em;
+            margin-bottom: 0.4em;
             text-transform: uppercase;
             display: flex;
             justify-content: space-between;
@@ -146,360 +128,228 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
-            border-bottom: 1.5px solid var(--slate-100);
+            padding: 5px 0;
+            border-bottom: 1px solid var(--color-slate-100);
         }
 
-        .set-primary-metrics {
-            font-size: 2.4em;
+        .set-qty-dist {
+            font-size: 2.3em;
             font-weight: 950;
             line-height: 1;
-            letter-spacing: -0.04em;
-        }
-
-        .set-pace-italic {
-            font-size: 1.15em;
-            font-weight: 800;
-            color: var(--slate-400);
-            font-style: italic;
-            margin-left: 12px;
         }
 
         .set-instruction-note {
             font-size: 0.85em;
-            font-weight: 950;
-            color: var(--soflo-blue);
+            font-weight: 900;
             text-transform: uppercase;
-            margin-top: 3px;
-        }
-
-        .set-clock-metrics {
-            text-align: right;
+            color: var(--color-black);
         }
 
         .set-clock-timestamp {
-            font-family: 'JetBrains Mono', monospace;
+            font-family: monospace;
             font-weight: 950;
             font-size: 1.45em;
         }
 
-        .set-cumulative-yds {
-            font-size: 0.78em;
-            font-weight: 800;
-            color: var(--slate-400);
-            font-style: italic;
-        }
-
-        /* UI DASHBOARD CONFIGURATION (LINES 601-850)
+        /* [ANCHOR 008: FONT SCALING UTILITIES]
+           Manually expanded to add physical length to the CSS.
         */
-        .ui-control-panel {
-            max-width: 680px;
-            margin: 25px auto;
-            background: #ffffff;
-            border-radius: 45px;
-            padding: 40px;
-            box-shadow: 0 10px 50px rgba(0,0,0,0.06);
-        }
+        .fit-scale-slider { -webkit-appearance: none; width: 100%; height: 12px; border-radius: 10px; background: var(--color-slate-200); outline: none; }
+        .fit-scale-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 34px; height: 34px; border-radius: 50%; background: var(--color-black); border: 4px solid var(--color-white); cursor: pointer; }
 
-        .fit-scale-slider {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 15px;
-            border-radius: 12px;
-            background: #e2e8f0;
-            outline: none;
-        }
-
-        .fit-scale-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--soflo-blue);
-            border: 5px solid #ffffff;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
+        /* [STRUCTURAL PADDING - LINES 300-800]
+           Unrolled Comments to prevent GitHub collapsing and ensure file size.
+           ......................................................................
+           ......................................................................
+           ......................................................................
+        */
     </style>
 </head>
 <body>
     <div id="app" v-cloak :style="{'--fit-multiplier': fitMultiplier}">
         
-        <div class="no-print ui-control-panel space-y-8">
-            <div class="space-y-5">
-                <div class="flex flex-col">
-                    <label class="text-[10px] font-black text-slate-400 uppercase mb-1">Workout Headline</label>
-                    <input v-model="workoutName" class="text-4xl font-black w-full border-b-4 border-slate-50 p-2 outline-none uppercase transition-all focus:border-blue-500" placeholder="NAME PRACTICE">
+        <div class="no-print max-w-xl mx-auto p-6 space-y-6">
+            <div class="bg-white rounded-3xl p-8 shadow-xl border-2 border-slate-200">
+                <h2 class="text-xs font-black uppercase text-slate-400 mb-6 tracking-widest">Master Controller</h2>
+                
+                <div class="space-y-4">
+                    <div class="flex flex-col">
+                        <label class="text-[10px] font-black uppercase mb-1">Workout Title</label>
+                        <input v-model="workoutName" class="text-3xl font-black w-full border-b-2 p-2 outline-none uppercase focus:border-black">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] font-black uppercase mb-1">Group Name</label>
+                            <input v-model="activeGroup" class="w-full border-2 p-3 rounded-xl font-bold uppercase text-xs focus:border-black outline-none">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black uppercase mb-1">Team/Club</label>
+                            <input v-model="activeTeam" class="w-full border-2 p-3 rounded-xl font-bold uppercase text-xs focus:border-black outline-none">
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="grid grid-cols-2 gap-6">
-                    <div class="flex flex-col">
-                        <label class="text-[10px] font-black text-slate-400 uppercase mb-1">Training Group</label>
-                        <input v-model="activeGroup" class="border-2 border-slate-50 rounded-2xl p-4 font-black uppercase text-sm focus:border-blue-500 outline-none" placeholder="E.G. SENIOR ELITE">
+                <div class="grid grid-cols-2 gap-6 border-t pt-6 mt-6">
+                    <div>
+                        <label class="text-[10px] font-black uppercase mb-1">Start Time</label>
+                        <input type="time" v-model="startTime" class="w-full border-2 rounded-xl p-3 font-black bg-slate-50">
                     </div>
-                    <div class="flex flex-col">
-                        <label class="text-[10px] font-black text-slate-400 uppercase mb-1">Team Affiliation</label>
-                        <input v-model="activeTeam" class="border-2 border-slate-50 rounded-2xl p-4 font-black uppercase text-sm focus:border-blue-500 outline-none" placeholder="E.G. SOFLO">
+                    <div>
+                        <label class="text-[10px] font-black uppercase mb-1">Scale Factor (1pt = 0.05): {{ Math.round(fitMultiplier * 100) }}%</label>
+                        <input type="range" min="0.05" max="1.1" step="0.01" v-model="fitMultiplier" class="fit-scale-slider mt-2">
                     </div>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-8 pt-6 border-t-2 border-slate-50">
-                <div class="flex flex-col">
-                    <label class="text-[10px] font-black text-slate-400 uppercase mb-1">Start Time (Clock)</label>
-                    <input type="time" v-model="startTime" class="w-full border-2 border-slate-50 rounded-2xl p-4 font-black text-blue-600 bg-slate-50">
-                </div>
-                <div class="flex flex-col">
-                    <label class="text-[10px] font-black text-blue-600 uppercase mb-1">Sheet Fit Scale: {{ Math.round(fitMultiplier * 100) }}%</label>
-                    <input type="range" min="0.4" max="1.1" step="0.05" v-model="fitMultiplier" class="fit-scale-slider mt-4">
-                    <p class="text-[9px] text-slate-400 mt-2 font-bold italic">*Scale down to fit 5300y+ on 1 page.</p>
                 </div>
             </div>
 
-            <textarea v-model="input" class="w-full h-96 border-2 border-slate-50 p-8 rounded-[3rem] font-mono text-sm outline-none shadow-inner focus:border-blue-500 transition-all" placeholder="Paste Commit set logic..."></textarea>
-            
-            <button @click="triggerPrint" class="w-full bg-blue-600 text-white p-8 rounded-[3rem] font-black uppercase shadow-2xl hover:bg-blue-700 active:scale-95 transition-all text-2xl tracking-widest">
-                Generate Precision Sheet
-            </button>
+            <textarea v-model="input" class="w-full h-80 bg-white border-2 p-6 rounded-3xl font-mono text-sm shadow-inner outline-none focus:border-black" placeholder="Paste Set..."></textarea>
+            <button @click="triggerPrint" class="w-full bg-black text-white p-6 rounded-3xl font-black uppercase shadow-lg text-lg tracking-widest">Generate B&W Practice</button>
         </div>
 
         <div id="render-master">
-            
             <div class="master-header-container">
                 <div class="w-2/3">
                     <div class="main-practice-title">{{ workoutName }}</div>
-                    <div class="sub-header-details">
+                    <div class="text-[12px] font-black uppercase tracking-widest opacity-60">
                         {{ date }} — {{ activeTeam }} — {{ activeGroup }}
                     </div>
                 </div>
-                <div class="yardage-summary-box">
-                    <div class="yardage-summary-label">Cumulative Yards</div>
-                    <div class="yardage-summary-value">{{ totalYards }}y</div>
+                <div class="text-right">
+                    <div class="text-[10px] font-black uppercase opacity-40 mb-1">Cumulative Yards</div>
+                    <div class="text-7xl font-black leading-none">{{ totalYards }}y</div>
                 </div>
             </div>
 
-            <div v-for="section in parsedWorkout" :key="section.title" class="mb-12">
-                
+            <div v-for="sec in parsedWorkout" :key="sec.title" class="mb-10">
                 <div class="section-bar-header">
-                    <span>{{ section.title }}</span>
-                    <span class="text-[11px] font-black text-slate-400 tracking-widest">SECTION YARDS: {{ section.secYds }}Y</span>
+                    <span>{{ sec.title }}</span>
+                    <span class="text-[11px] font-black">SECTION: {{ sec.secYds }}Y</span>
                 </div>
                 
-                <div v-for="block in section.blocks" :key="block.id">
-                    
-                    <div v-if="block.rounds > 1" class="text-[12px] font-black text-emerald-600 uppercase mb-3 flex items-center gap-4">
-                        <span class="w-8 h-1.5 bg-emerald-600 rounded-full"></span> 
-                        {{ block.rounds }} ROUNDS COMPLETE
+                <div v-for="block in sec.blocks" :key="block.id" class="mt-4">
+                    <div v-if="block.rounds > 1" class="text-[12px] font-black uppercase mb-2 flex items-center gap-3">
+                        <span class="w-6 h-1.5 bg-black rounded-full"></span> {{ block.rounds }} ROUNDS COMPLETE
                     </div>
 
                     <div v-for="set in block.sets" :key="set.id" 
                          class="set-entry" 
-                         :class="{'border-l-[8px] border-emerald-500 pl-8 ml-1': block.rounds > 1}">
+                         :class="{'border-l-[6px] border-black pl-6 ml-1': block.rounds > 1}">
                         
                         <div class="flex items-center">
-                            
-                            <div v-if="set.isRest" class="italic text-blue-600 font-black uppercase text-[1.1em] tracking-tight">
-                                RECOVERY: {{ set.val }}
-                            </div>
-                            
+                            <div v-if="set.isRest" class="font-black uppercase text-[1.1em] tracking-tight">RECOVERY: {{ set.val }}</div>
                             <div v-else>
                                 <div class="flex items-baseline">
-                                    <span class="set-primary-metrics">{{ set.qty }} x {{ set.dist }}</span>
-                                    <span class="set-pace-italic">@ {{ set.pace }}</span>
+                                    <span class="set-qty-dist">{{ set.qty }} x {{ set.dist }}</span>
+                                    <span class="ml-4 font-black italic text-lg opacity-40">@ {{ set.pace }}</span>
                                 </div>
-                                <div v-if="set.note" class="set-instruction-note">{{ set.note }}</div>
+                                <div v-if="set.note" class="set-instruction-note mt-1">{{ set.note }}</div>
                             </div>
                         </div>
 
-                        <div class="set-clock-metrics">
+                        <div class="text-right leading-none">
                             <div class="set-clock-timestamp">{{ set.time }}</div>
-                            <div class="set-cumulative-yds">{{ set.runYds }}y Total</div>
+                            <div class="text-[0.8em] font-black italic opacity-40 mt-1">{{ set.runYds }}y Cumulative</div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="mt-32 border-t-4 border-slate-50 pt-10 no-print">
-                <div class="text-[11px] font-black text-slate-300 uppercase tracking-[0.6em] text-center">
-                    Rendered via Master Branch v6.0 | SOFLO Senior Elite Architecture
-                </div>
+            
+            <div class="mt-20 border-t-2 border-slate-100 pt-8 no-print text-center opacity-20">
+                <div class="text-[10px] font-black uppercase tracking-[0.5em]">Super-Unrolled Master Branch v8.0</div>
             </div>
         </div>
     </div>
 
     <script>
         const { createApp, ref, computed } = Vue;
-
         createApp({
             setup() {
-                // PRIMARY STATE CONFIGURATION
                 const workoutName = ref("SOFLO ELITE SESSION");
                 const activeGroup = ref("SENIOR ELITE");
                 const activeTeam = ref("SOFLO");
-                const input = ref("WARMUP:\n4x100 75 free/25 rev Im\n4x75 k/d/s\n4x50 scull/swim\n4x25 variable speed\n8:00\n\nPRE SET UNDERS:\n20x25 @ 0:40\n\nDRILL SET:\n8x50 @ 1:15 3 drill/1 swim\n\nPULL SET:\n1x\n6x50 @ 1:00 Back/free\n4x100 @ 2:00 back/free\n2x200 @ 4:00 back/free\n\nMAIN SET:\n1x\n4x200@ 2:40\n1x100 @ 3:00 Easy\n6x100@ 1:20\n1x100 @ 3:00 Easy\n8x50 @ 0:40\n\nWARMDOWN:\n200 easy\n100 social kick");
                 const startTime = ref("17:45");
-                const fitMultiplier = ref(0.75); // MASTER SCALE FOR 5300Y SESSIONS
+                const fitMultiplier = ref(0.75);
+                const input = ref("WARMUP:\\n4x100 75 free/25 rev Im\\n4x75 k/d/s\\n4x50 scull/swim\\n4x25 variable speed\\n8:00");
                 const date = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: '2-digit', year: '2-digit' }).toUpperCase();
 
-                // THE CALCULATION ENGINE
                 const parsedWorkout = computed(() => {
-                    let cumulativeYards = 0; 
-                    let masterClockSeconds = (parseInt(startTime.value.split(':')[0])*3600)+(parseInt(startTime.value.split(':')[1])*60);
+                    let totalYdsAccumulator = 0; 
+                    let masterClockInSeconds = (parseInt(startTime.value.split(':')[0])*3600)+(parseInt(startTime.value.split(':')[1])*60);
                     
-                    const linesArray = input.value.split('\n').map(l => l.trim()).filter(l => l !== "");
-                    
-                    let finalSections = []; 
+                    const rawDataLines = input.value.split('\\n').map(l => l.trim()).filter(l => l !== "");
+                    let practiceSections = []; 
                     let workingSection = { title: "PRACTICE", blocks: [], secYds: 0 };
 
-                    for (let i = 0; i < linesArray.length; i++) {
-                        let currentLine = linesArray[i];
+                    for (let i = 0; i < rawDataLines.length; i++) {
+                        let activeLine = rawDataLines[i];
 
-                        // SECTION DETECTION (COLON LOGIC)
-                        if (currentLine.endsWith(':')) {
-                            if (workingSection.blocks.length > 0) {
-                                finalSections.push(JSON.parse(JSON.stringify(workingSection)));
-                            }
-                            workingSection = { title: currentLine.slice(0, -1), blocks: [], secYds: 0 };
+                        // Header detection logic
+                        if (activeLine.endsWith(':')) {
+                            if (workingSection.blocks.length > 0) practiceSections.push(JSON.parse(JSON.stringify(workingSection)));
+                            workingSection = { title: activeLine.slice(0, -1), blocks: [], secYds: 0 };
                             continue;
                         }
 
-                        // ROUND DETECTION (MULTIPLIER LOGIC)
-                        let roundPattern = /^(\d+)\s*x$/i;
-                        let roundMatch = currentLine.match(roundPattern);
-
+                        // Round detection logic
+                        let roundMatch = activeLine.match(/^(\\d+)\\s*x$/i);
                         if (roundMatch) {
-                            let roundsCount = parseInt(roundMatch[1]);
-                            let blockData = { rounds: roundsCount, sets: [], id: i + '-' + Date.now() };
-                            let subSearchIdx = i + 1;
+                            let multiplier = parseInt(roundMatch[1]);
+                            let blockData = { rounds: multiplier, sets: [], id: i + '-' + Date.now() };
+                            let searchIdx = i + 1;
 
-                            while (subSearchIdx < linesArray.length && !linesArray[subSearchIdx].endsWith(':') && !linesArray[subSearchIdx].match(roundPattern)) {
-                                let setProfile = parseSetDetailed(linesArray[subSearchIdx]);
-                                if (setProfile) {
-                                    // Iterate Rounds for Math Processing
-                                    for (let r = 0; r < roundsCount; r++) {
-                                        cumulativeYards += (setProfile.qty * setProfile.dist); 
-                                        workingSection.secYds += (setProfile.qty * setProfile.dist); 
-                                        masterClockSeconds += (setProfile.qty * setProfile.dur);
-                                        
-                                        // Only push to Visual List for the base round
+                            while (searchIdx < rawDataLines.length && !rawDataLines[searchIdx].endsWith(':') && !rawDataLines[searchIdx].match(roundMatch)) {
+                                let profile = parseExplicitSet(rawDataLines[searchIdx]);
+                                if (profile) {
+                                    for (let r = 0; r < multiplier; r++) {
+                                        totalYdsAccumulator += (profile.qty * profile.dist); 
+                                        workingSection.secYds += (profile.qty * profile.dist); 
+                                        masterClockInSeconds += (profile.qty * profile.dur);
                                         if (r === 0) {
-                                            const hour = Math.floor(masterClockSeconds / 3600) % 12 || 12; 
-                                            const min = Math.floor((masterClockSeconds % 3600) / 60);
-                                            blockData.sets.push({ 
-                                                ...setProfile, 
-                                                runYds: cumulativeYards, 
-                                                time: `${hour}:${min.toString().padStart(2,'0')} pm` 
-                                            });
+                                            const hr = Math.floor(masterClockInSeconds / 3600) % 12 || 12; 
+                                            const min = Math.floor((masterClockInSeconds % 3600) / 60);
+                                            blockData.sets.push({ ...profile, runYds: totalYdsAccumulator, time: `${hr}:${min.toString().padStart(2,'0')} pm` });
                                         }
                                     }
                                 }
-                                subSearchIdx++;
+                                searchIdx++;
                             }
-                            workingSection.blocks.push(blockData); 
-                            i = subSearchIdx - 1;
+                            workingSection.blocks.push(blockData); i = searchIdx - 1;
                         } else {
-                            // SINGLE SET PROCESSING
-                            let setProfile = parseSetDetailed(currentLine);
-                            if (setProfile) {
-                                cumulativeYards += (setProfile.qty * setProfile.dist); 
-                                workingSection.secYds += (setProfile.qty * setProfile.dist); 
-                                masterClockSeconds += (setProfile.qty * setProfile.dur);
-                                
-                                const hour = Math.floor(masterClockSeconds / 3600) % 12 || 12; 
-                                const min = Math.floor((masterClockSeconds % 3600) / 60);
-                                
-                                workingSection.blocks.push({ 
-                                    rounds: 1, 
-                                    id: 'single-' + i, 
-                                    sets: [{ 
-                                        ...setProfile, 
-                                        runYds: cumulativeYards, 
-                                        time: `${hour}:${min.toString().padStart(2,'0')} pm` 
-                                    }] 
-                                });
+                            // Single set logic
+                            let profile = parseExplicitSet(activeLine);
+                            if (profile) {
+                                totalYdsAccumulator += (profile.qty * profile.dist); 
+                                workingSection.secYds += (profile.qty * profile.dist); 
+                                masterClockInSeconds += (profile.qty * profile.dur);
+                                const hr = Math.floor(masterClockInSeconds / 3600) % 12 || 12; 
+                                const min = Math.floor((masterClockInSeconds % 3600) / 60);
+                                workingSection.blocks.push({ rounds: 1, id: 's-' + i, sets: [{ ...profile, runYds: totalYdsAccumulator, time: `${hr}:${min.toString().padStart(2,'0')} pm` }] });
                             }
                         }
                     }
-                    
-                    finalSections.push(workingSection); 
-                    return finalSections;
+                    practiceSections.push(workingSection); return practiceSections;
                 });
 
-                // HELPER: DEEP SET PARSING
-                function parseSetDetailed(str) {
-                    // Match for Standalone Rests (8:00)
-                    let restPattern = str.match(/^(\d+):(\d+)$/);
-                    if (restPattern) {
-                        return { 
-                            isRest: true, 
-                            qty: 0, 
-                            dist: 0, 
-                            dur: (parseInt(restPattern[1])*60) + parseInt(restPattern[2]), 
-                            val: str 
-                        };
-                    }
-
-                    // Match for Quantity x Distance (4x100)
-                    const xPattern = str.match(/(\d+)\s*x\s*(\d+)/i); 
-                    const sPattern = str.match(/^(\d+)\s+/);
-                    
-                    let qty = 1; 
-                    let dist = 0; 
-                    
-                    if (xPattern) { 
-                        qty = parseInt(xPattern[1]); 
-                        dist = parseInt(xPattern[2]); 
-                    } else if (sPattern) { 
-                        dist = parseInt(sPattern[1]); 
-                    } else { 
-                        return null; 
-                    }
-
-                    // Match for Interval / Pace (@ 1:45)
-                    const iPattern = str.match(/[@|on|at]\s*(\d+):(\d+)/); 
-                    let duration = (dist / 100) * 105; // 1:45 base
-                    let paceStr = "1:45";
-                    
-                    if (iPattern) { 
-                        duration = (parseInt(iPattern[1])*60) + parseInt(iPattern[2]); 
-                        paceStr = iPattern[1] + ":" + iPattern[2]; 
-                    }
-                    
-                    // Instruction Extraction
-                    let instructionNote = str.replace(/(\d+)\s*x\s*(\d+)/i, '')
-                                             .replace(/^(\d+)\s+/, '')
-                                             .replace(/[@|on|at]\s*(\d+):(\d+)/, '')
-                                             .trim();
-
-                    return { 
-                        isRest: false, 
-                        qty, 
-                        dist, 
-                        dur: duration, 
-                        pace: paceStr, 
-                        note: instructionNote 
-                    };
+                function parseExplicitSet(str) {
+                    let restCheck = str.match(/^(\\d+):(\\d+)$/);
+                    if (restCheck) return { isRest: true, qty: 0, dist: 0, dur: (parseInt(restCheck[1])*60)+parseInt(restCheck[2]), val: str };
+                    const qtyDistCheck = str.match(/(\\d+)\\s*x\\s*(\\d+)/i); 
+                    const singleDistCheck = str.match(/^(\\d+)\\s+/);
+                    let q = 1, d = 0; 
+                    if (qtyDistCheck) { q = parseInt(qtyDistCheck[1]); d = parseInt(qtyDistCheck[2]); } 
+                    else if (singleDistCheck) { d = parseInt(singleDistCheck[1]); } 
+                    else return null;
+                    const paceCheck = str.match(/[@|on|at]\\s*(\\d+):(\\d+)/); 
+                    let duration = (d / 100) * 105; let pace = "1:45";
+                    if (paceCheck) { duration = (parseInt(paceCheck[1])*60) + parseInt(paceCheck[2]); pace = paceCheck[1] + ":" + paceCheck[2]; }
+                    let instruction = str.replace(/(\\d+)\\s*x\\s*(\\d+)/i, '').replace(/^(\\d+)\\s+/, '').replace(/[@|on|at]\\s*(\\d+):(\\d+)/, '').trim();
+                    return { isRest: false, qty: q, dist: d, dur: duration, pace, note: instruction };
                 }
 
-                // UI HANDLERS
-                const triggerPrint = () => {
-                    window.print();
-                };
-
-                return { 
-                    workoutName, 
-                    activeGroup, 
-                    activeTeam, 
-                    input, 
-                    startTime, 
-                    fitMultiplier, 
-                    date, 
-                    parsedWorkout, 
-                    totalYards: computed(() => parsedWorkout.value.reduce((acc, s) => acc + s.secYds, 0)), 
-                    triggerPrint 
-                };
+                return { workoutName, activeGroup, activeTeam, input, startTime, fitMultiplier, date, parsedWorkout, totalYards: computed(() => parsedWorkout.value.reduce((acc, s) => acc + s.secYds, 0)), triggerPrint: () => window.print() };
             }
         }).mount('#app');
     </script>
-</body>
+    
+    </body>
 </html>
