@@ -5,22 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3144/3144573.png">
-    
-    <title>Swim Master | v13 Scale Fixed</title>
-    
+    <title>Swim Master | v14 Force-Scale</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        /* [ANCHOR: VUE CLOAK] */
         [v-cloak] { display: none !important; }
         
-        /* [ANCHOR: DYNAMIC SCALE ENGINE]
-           This CSS block allows the slider to control the entire document.
-        */
+        /* THE ROOT SCALE CONTROLLER */
         :root {
-            --fit-multiplier: 0.85;
-            --margin-lock: 1.0in; /* LOCKED 1-INCH MARGIN */
+            --fit: 0.85;
+            --m: 1.0in; /* LOCKED 1-INCH MARGIN */
         }
 
         body {
@@ -31,21 +26,17 @@
             padding: 0;
         }
 
-        /* [ANCHOR: PRINT ENGINE]
-           The exact scale you see on screen is passed to the printer.
-        */
+        /* FORCE SCALE PRINT ENGINE */
         @media print {
             .no-print { display: none !important; }
-            @page {
-                size: letter portrait;
-                margin: 0 !important;
-            }
-            #render-sheet {
+            @page { size: letter portrait; margin: 0 !important; }
+            #sheet {
                 width: 8.5in !important;
                 min-height: 11in !important;
-                padding: var(--margin-lock) !important;
+                padding: var(--m) !important;
                 box-sizing: border-box !important;
-                font-size: calc(14px * var(--fit-multiplier)) !important;
+                /* FORCE FONT SCALE */
+                font-size: calc(16px * var(--fit)) !important;
                 display: block !important;
                 margin: 0 !important;
                 box-shadow: none !important;
@@ -54,130 +45,117 @@
                 top: 0;
                 left: 0;
             }
+            .q-d { font-size: 2.3em !important; }
+            .h-title { font-size: 4.5em !important; }
+            .clk { font-size: 1.4em !important; }
         }
 
-        /* [ANCHOR: LIVE PREVIEW CANVAS]
-           This section updates in real-time as you move the slider.
-        */
-        #render-sheet {
+        /* LIVE PREVIEW CANVAS */
+        #sheet {
             background: #fff;
             width: 8.5in;
             min-height: 11in;
-            padding: var(--margin-lock);
+            padding: var(--m);
             margin: 2rem auto;
             box-shadow: 0 40px 100px rgba(0,0,0,0.1);
             color: #000;
-            /* LIVE SCALING LOGIC */
-            font-size: calc(16px * var(--fit-multiplier));
-            transition: font-size 0.1s ease-out;
-            transform-origin: top center;
+            /* DYNAMIC SCALE LINK */
+            font-size: calc(16px * var(--fit)) !important;
+            transition: none !important; /* Instant response */
         }
 
-        /* [ANCHOR: MONOCHROME DESIGN] */
-        .h-main { font-size: 4.5em; font-weight: 950; line-height: 0.8; text-transform: uppercase; letter-spacing: -0.06em; }
-        .s-title { font-size: 1.5em; font-weight: 950; border-bottom: 4px solid #000; margin-top: 1.5em; margin-bottom: 0.5em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: flex-end; }
-        .row-set { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #eee; }
-        .qty-dist-size { font-size: 2.3em; font-weight: 950; line-height: 1; }
-        .time-text { font-family: monospace; font-weight: 950; font-size: 1.45em; }
+        /* MONOCHROME TYPOGRAPHY WITH SCALE OVERRIDES */
+        .h-title { font-size: 4.5em !important; font-weight: 950 !important; line-height: 0.8 !important; text-transform: uppercase !important; letter-spacing: -0.06em !important; }
+        .s-bar { font-size: 1.5em !important; font-weight: 950 !important; border-bottom: 4px solid #000 !important; margin-top: 1.5em !important; margin-bottom: 0.5em !important; text-transform: uppercase !important; display: flex !important; justify-content: space-between !important; align-items: flex-end !important; }
+        .s-line { display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 4px 0 !important; border-bottom: 1px solid #eee !important; }
+        .q-d { font-size: 2.3em !important; font-weight: 950 !important; line-height: 1 !important; }
+        .clk { font-family: monospace !important; font-weight: 950 !important; font-size: 1.4em !important; }
 
-        /* [ANCHOR: DASHBOARD INTERFACE] */
-        .ui-wrapper { max-width: 1400px; margin: 20px auto; display: flex; gap: 25px; padding: 0 25px; }
-        .editor-container { flex: 2; background: #fff; border-radius: 40px; padding: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
-        .inspector-panel { flex: 1; background: #000; color: #fff; border-radius: 40px; padding: 40px; position: sticky; top: 20px; height: fit-content; }
+        /* DASHBOARD LAYOUT */
+        .dash-ui { max-width: 1400px; margin: 20px auto; display: flex; gap: 20px; padding: 0 20px; }
+        .edit-panel { flex: 2; background: #fff; border-radius: 30px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .stat-panel { flex: 1; background: #000; color: #fff; border-radius: 30px; padding: 30px; height: fit-content; position: sticky; top: 20px; }
         
-        .btn-inspect { width: 100%; text-align: left; background: rgba(255,255,255,0.1); padding: 14px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s; }
-        .btn-inspect:hover { background: rgba(255,255,255,0.2); transform: translateX(4px); }
+        .inspect-btn { width: 100%; text-align: left; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; }
+        .inspect-btn:hover { background: rgba(255,255,255,0.2); }
 
-        .scale-slider { -webkit-appearance: none; width: 100%; height: 14px; border-radius: 10px; background: #e2e8f0; outline: none; }
-        .scale-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 36px; height: 36px; border-radius: 50%; background: #000; border: 5px solid #fff; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-
-        /* [STRUCTURAL PADDING - UNROLLED TO 1000+ LINES] */
-        /* ...................................................................... */
+        .f-slider { -webkit-appearance: none; width: 100%; height: 12px; border-radius: 10px; background: #e2e8f0; outline: none; }
+        .f-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 34px; height: 34px; border-radius: 50%; background: #000; border: 4px solid #fff; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div id="app" v-cloak :style="{'--fit-multiplier': fitMultiplier}">
+    <div id="app" v-cloak :style="{'--fit': fitMultiplier}">
         
-        <div class="no-print ui-wrapper">
-            <div class="editor-container space-y-6">
-                <input v-model="workoutName" class="text-4xl font-black w-full border-b-4 border-slate-50 p-2 outline-none uppercase" placeholder="PRACTICE TITLE">
-                
-                <div class="grid grid-cols-2 gap-6">
-                    <input v-model="activeGroup" class="border-2 p-3 rounded-2xl font-bold uppercase text-xs" placeholder="GROUP NAME">
-                    <input v-model="activeTeam" class="border-2 p-3 rounded-2xl font-bold uppercase text-xs" placeholder="TEAM NAME">
+        <div class="no-print dash-ui">
+            <div class="edit-panel space-y-6">
+                <input v-model="workoutName" class="text-3xl font-black w-full border-b-2 p-2 outline-none uppercase" placeholder="WORKOUT TITLE">
+                <div class="grid grid-cols-2 gap-4">
+                    <input v-model="activeGroup" class="border rounded p-3 text-xs font-bold uppercase" placeholder="GROUP">
+                    <input v-model="activeTeam" class="border rounded p-3 text-xs font-bold uppercase" placeholder="TEAM">
                 </div>
-
-                <div class="grid grid-cols-2 gap-8 pt-4 border-t border-slate-50">
-                    <div class="flex flex-col">
-                        <label class="text-[10px] font-black uppercase text-slate-400">Clock Start</label>
-                        <input type="time" v-model="startTime" class="w-full border-2 rounded-2xl p-4 font-black">
+                <div class="grid grid-cols-2 gap-6 border-t pt-4 mt-4">
+                    <div>
+                        <label class="text-[10px] font-black uppercase">Clock Start</label>
+                        <input type="time" v-model="startTime" class="w-full border rounded p-2 font-black">
                     </div>
-                    <div class="flex flex-col">
-                        <label class="text-[10px] font-black uppercase text-blue-600">Live Scale Factor: {{ Math.round(fitMultiplier * 100) }}%</label>
-                        <input type="range" min="0.05" max="1.1" step="0.01" v-model="fitMultiplier" class="scale-slider mt-3">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-blue-600">Force Scale (1pt = 0.05): {{ Math.round(fitMultiplier * 100) }}%</label>
+                        <input type="range" min="0.05" max="1.1" step="0.01" v-model="fitMultiplier" class="f-slider mt-2">
                     </div>
                 </div>
-
-                <textarea v-model="input" class="w-full h-[500px] border-2 p-8 rounded-[2.5rem] font-mono text-sm outline-none shadow-inner" placeholder="Paste Workout Logic..."></textarea>
-                
-                <button @click="triggerPrint" class="w-full bg-black text-white p-8 rounded-[2.5rem] font-black uppercase shadow-2xl text-xl tracking-widest hover:bg-slate-800 transition-all active:scale-95">
-                    Generate Clipboard Sheet
-                </button>
+                <textarea v-model="input" class="w-full h-80 border-2 p-6 rounded-3xl font-mono text-sm outline-none shadow-inner" placeholder="Paste Set..."></textarea>
+                <button @click="triggerPrint" class="w-full bg-black text-white p-5 rounded-2xl font-black uppercase shadow-lg text-lg tracking-widest">Generate Clipboard Sheet</button>
             </div>
 
-            <div class="inspector-panel space-y-8">
+            <div class="stat-panel space-y-8">
                 <div class="text-center">
-                    <div class="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mb-2">Practice Volume</div>
-                    <div class="text-8xl font-black leading-none mb-1">{{ totalYards }}y</div>
-                    <div class="text-[10px] font-black uppercase bg-white/10 px-4 py-1.5 rounded-full inline-block">Master Engine v13.0</div>
+                    <div class="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mb-2">Total Volume</div>
+                    <div class="text-7xl font-black leading-none mb-1">{{ totalYards }}y</div>
                 </div>
-
                 <div class="space-y-4">
-                    <div class="text-[10px] font-black uppercase tracking-widest opacity-40 border-b border-white/20 pb-2">Section Inspector (Click Title)</div>
+                    <div class="text-[10px] font-black uppercase tracking-widest opacity-40 border-b border-white/20 pb-2">Set Inspector (Click to Verify)</div>
                     <div v-for="sec in parsedWorkout" :key="sec.title">
-                        <button @click="inspectSet(sec)" class="btn-inspect flex justify-between items-center group">
-                            <span class="text-[10px] font-black uppercase group-hover:text-emerald-400">{{ sec.title }}</span>
-                            <span class="text-[11px] font-black tabular-nums">{{ sec.secYds }}y</span>
+                        <button @click="inspect(sec)" class="inspect-btn flex justify-between">
+                            <span class="text-[10px] font-black uppercase">{{ sec.title }}</span>
+                            <span class="text-[11px] font-black">{{ sec.secYds }}y</span>
                         </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="render-sheet">
-            <div class="flex justify-between items-end border-b-[10px] border-black pb-4 mb-10">
-                <div class="w-2/3">
-                    <div class="h-main">{{ workoutName }}</div>
-                    <div class="text-[12px] font-black uppercase tracking-widest opacity-60 mt-2">{{ date }} — {{ activeTeam }} — {{ activeGroup }}</div>
-                </div>
-                <div class="text-right">
-                    <div class="text-[10px] font-black uppercase opacity-40 mb-1">Total Yards</div>
-                    <div class="text-7xl font-black leading-none">{{ totalYards }}y</div>
+        <div id="sheet">
+            <div class="master-header">
+                <div class="flex justify-between items-end border-b-[10px] border-black pb-4 mb-10">
+                    <div class="w-2/3">
+                        <div class="h-title">{{ workoutName }}</div>
+                        <div class="text-[12px] font-black uppercase tracking-widest opacity-60 mt-2">{{ date }} — {{ activeTeam }} — {{ activeGroup }}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-[10px] font-black uppercase opacity-40 mb-1">Total Yards</div>
+                        <div class="text-7xl font-black leading-none">{{ totalYards }}y</div>
+                    </div>
                 </div>
             </div>
 
             <div v-for="sec in parsedWorkout" :key="sec.title" class="mb-10">
-                <div class="s-title">
+                <div class="s-bar">
                     <span>{{ sec.title }}</span>
                     <span class="text-[11px] font-black tracking-widest">SECTION: {{ sec.secYds }}Y</span>
                 </div>
-                
                 <div v-for="block in sec.blocks" :key="block.id">
-                    <div v-if="block.rounds > 1" class="text-[12px] font-black uppercase mb-2 flex items-center gap-3">
-                        <span class="w-6 h-1.5 bg-black"></span> {{ block.rounds }} ROUNDS COMPLETE
-                    </div>
-
-                    <div v-for="set in block.sets" :key="set.id" class="row-set" :class="{'border-l-[6px] border-black pl-6 ml-1': block.rounds > 1}">
+                    <div v-if="block.rounds > 1" class="text-[12px] font-black uppercase mb-2">● {{ block.rounds }} ROUNDS COMPLETE</div>
+                    <div v-for="set in block.sets" :key="set.id" class="s-line" :class="{'border-l-[6px] border-black pl-6 ml-1': block.rounds > 1}">
                         <div class="flex items-center">
-                            <div v-if="set.isRest" class="font-black uppercase text-[1.1em] tracking-tight">RECOVERY: {{ set.val }}</div>
+                            <div v-if="set.isRest" class="font-black uppercase text-[1.1em]">RECOVERY: {{ set.val }}</div>
                             <div v-else>
-                                <div class="flex items-baseline"><span class="qty-dist-size">{{ set.qty }} x {{ set.dist }}</span><span class="ml-4 font-black italic text-lg opacity-30">@ {{ set.pace }}</span></div>
-                                <div v-if="set.note" class="font-black text-[0.85em] uppercase mt-1">{{ set.note }}</div>
+                                <div class="flex items-baseline"><span class="q-d">{{ set.qty }} x {{ set.dist }}</span><span class="ml-4 font-black italic text-lg opacity-30">@ {{ set.pace }}</span></div>
+                                <div v-if="set.note" class="font-black text-[0.8em] uppercase mt-1">{{ set.note }}</div>
                             </div>
                         </div>
                         <div class="text-right leading-none">
-                            <div class="time-text">{{ set.time }}</div>
-                            <div class="text-[0.8em] font-black italic opacity-40 mt-1">{{ set.runYds }}y Cumulative</div>
+                            <div class="clk">{{ set.time }}</div>
+                            <div class="text-[0.8em] font-black italic opacity-40 mt-1">{{ set.runYds }}y Total</div>
                         </div>
                     </div>
                 </div>
@@ -193,15 +171,13 @@
                 const activeGroup = ref("SENIOR ELITE");
                 const activeTeam = ref("SOFLO");
                 const startTime = ref("17:45");
-                const fitMultiplier = ref(0.75); // MASTER SCALE
+                const fitMultiplier = ref(0.75);
                 const input = ref("WARMUP:\n4x100 75 free/25 rev Im\n4x75 k/d/s\n4x50 scull/swim\n4x25 variable speed\n8:00\n\nMAIN SET:\n1x\n4x200 @ 2:40\n1x100 @ 3:00 Easy\n6x100 @ 1:20\n8x50 @ 0:40");
                 const date = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: '2-digit', year: '2-digit' }).toUpperCase();
-
                 const parsedWorkout = computed(() => {
                     let yAcc = 0; let mClock = (parseInt(startTime.value.split(':')[0])*3600)+(parseInt(startTime.value.split(':')[1])*60);
                     const lines = input.value.split('\n').map(l => l.trim()).filter(l => l !== "");
                     let sections = []; let curSec = { title: "PRACTICE", blocks: [], secYds: 0 };
-
                     for (let i = 0; i < lines.length; i++) {
                         let l = lines[i];
                         if (l.endsWith(':')) {
@@ -210,9 +186,7 @@
                         }
                         let roundMatch = l.match(/^(\d+)\s*x$/i);
                         if (roundMatch) {
-                            let rounds = parseInt(roundMatch[1]);
-                            let block = { rounds, sets: [], id: i + '-' + Date.now() };
-                            let nIdx = i + 1;
+                            let rounds = parseInt(roundMatch[1]); let block = { rounds, sets: [], id: i + '-' + Date.now() }; let nIdx = i + 1;
                             while (nIdx < lines.length && !lines[nIdx].endsWith(':') && !lines[nIdx].match(/^(\d+)\s*x$/i)) {
                                 let set = parseSetLogic(lines[nIdx]);
                                 if (set) {
@@ -235,7 +209,6 @@
                         }
                     } sections.push(curSec); return sections;
                 });
-
                 function parseSetLogic(str) {
                     let rm = str.match(/^(\d+):(\d+)$/); if (rm) return { isRest: true, qty: 0, dist: 0, dur: (parseInt(rm[1])*60)+parseInt(rm[2]), val: str };
                     const xm = str.match(/(\d+)\s*x\s*(\d+)/i); const sm = str.match(/^(\d+)\s+/);
@@ -245,8 +218,7 @@
                     let note = str.replace(/(\d+)\s*x\s*(\d+)/i, '').replace(/^(\d+)\s+/, '').replace(/[@|on|at]\s*(\d+):(\d+)/, '').trim();
                     return { isRest: false, qty: q, dist: d, dur: dur, pace, note };
                 }
-
-                return { workoutName, activeGroup, activeTeam, input, startTime, fitMultiplier, date, parsedWorkout, totalYards: computed(() => parsedWorkout.value.reduce((acc, s) => acc + s.secYds, 0)), triggerPrint: () => window.print(), inspectSet: (s) => alert(`VOLUME CHECK: ${s.title} is ${s.secYds} yards.`) };
+                return { workoutName, activeGroup, activeTeam, input, startTime, fitMultiplier, date, parsedWorkout, totalYards: computed(() => parsedWorkout.value.reduce((acc, s) => acc + s.secYds, 0)), triggerPrint: () => window.print(), inspect: (s) => alert(`${s.title}: ${s.secYds}y`) };
             }
         }).mount('#app');
     </script>
