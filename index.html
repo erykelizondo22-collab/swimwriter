@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Swim Master v18</title>
+<title>Swim Master v18.2</title>
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -51,19 +51,30 @@ body{background:#f1f5f9;font-family:Inter,system-ui;}
 <!-- DASHBOARD -->
 <div class="no-print max-w-7xl mx-auto p-6 grid grid-cols-3 gap-6">
 
-<!-- LEFT: EDITOR -->
+<!-- LEFT -->
 <div class="col-span-2 space-y-4">
 
 <input v-model="title" class="text-3xl font-black w-full border-b p-2">
 
 <div class="grid grid-cols-4 gap-3">
+
 <input v-model="team" placeholder="Team" class="border p-2">
 <input v-model="group" placeholder="Group" class="border p-2">
-<input type="time" v-model="start">
+
+<!-- 🔥 FIXED PLACEHOLDERS -->
+<input
+    type="time"
+    v-model="start"
+    class="border p-2"
+    placeholder="Select start time"
+/>
+
 <select v-model="base" class="border p-2">
+<option disabled value="">Base interval</option>
 <option>1:15</option><option>1:20</option><option>1:30</option>
 <option>1:40</option><option>1:45</option><option>2:00</option>
 </select>
+
 </div>
 
 <div class="grid grid-cols-3 gap-3 items-center">
@@ -86,7 +97,7 @@ Auto Fit
 
 </div>
 
-<!-- RIGHT: LIVE BREAKDOWN -->
+<!-- RIGHT PANEL -->
 <div class="bg-black text-white rounded-2xl p-6 space-y-6 h-fit sticky top-6">
 
 <div class="text-center">
@@ -99,9 +110,17 @@ Auto Fit
 
 <div v-for="sec in parsed" :key="sec.title">
 
-<div class="flex justify-between text-xs font-black uppercase opacity-70">
-<span>{{sec.title}}</span>
+<div class="flex justify-between items-end text-xs font-black uppercase opacity-70">
+
+<div>
+<div>{{sec.title}}</div>
+<div class="text-[9px] opacity-40 normal-case">
+{{sec.purpose}}
+</div>
+</div>
+
 <span>{{sec.y}}y</span>
+
 </div>
 
 <div class="mt-2 space-y-1">
@@ -123,6 +142,7 @@ Auto Fit
 </div>
 
 </div>
+
 </div>
 
 </div>
@@ -146,9 +166,18 @@ Auto Fit
 </div>
 
 <div v-for="sec in parsed">
-<div class="s-head flex justify-between">
-<span>{{sec.title}}</span>
+
+<div class="s-head flex justify-between items-end">
+
+<div>
+<div>{{sec.title}}</div>
+<div class="text-[10px] font-bold uppercase opacity-40">
+{{sec.purpose}}
+</div>
+</div>
+
 <span>{{sec.y}}y</span>
+
 </div>
 
 <div v-for="b in sec.blocks">
@@ -186,14 +215,27 @@ REST {{s.label}}
 <script>
 const {createApp,ref,computed,nextTick}=Vue;
 
+function getSectionPurpose(t){
+t=t.toLowerCase();
+if(t.includes('warm')) return "Aerobic Prep";
+if(t.includes('main')) return "Primary Work";
+if(t.includes('kick')) return "Kick Set";
+if(t.includes('pull')) return "Pull Strength";
+if(t.includes('sprint')) return "Speed Work";
+if(t.includes('cool')) return "Recovery";
+return "General Work";
+}
+
 createApp({
 setup(){
 
 const title=ref("SOFLO SESSION");
 const team=ref("TEAM");
 const group=ref("GROUP");
-const start=ref("17:45");
-const base=ref("1:45");
+
+const start=ref("");   // 🔥 empty default
+const base=ref("");    // 🔥 empty default
+
 const fit=ref(.8);
 const autoFitEnabled=ref(true);
 const targetMinutes=ref(90);
@@ -224,8 +266,19 @@ return `${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')} ${a
 }
 
 const parsed=computed(()=>{
+
+if(!start.value || !base.value){
+return [{
+title:"PRACTICE",
+purpose:"Select start time + base interval",
+blocks:[],
+y:0
+}];
+}
+
 let baseSec=parseTime(base.value);
-let cur={title:"PRACTICE",blocks:[],y:0};
+
+let cur={title:"PRACTICE",purpose:"",blocks:[],y:0};
 let out=[];
 let y=0;
 
@@ -239,27 +292,28 @@ let l=lines[i];
 
 if(l.endsWith(':')){
 if(cur.blocks.length) out.push(cur);
-cur={title:l.slice(0,-1),blocks:[],y:0};
+cur={title:l.slice(0,-1),purpose:getSectionPurpose(l.slice(0,-1)),blocks:[],y:0};
 continue;
 }
 
-let round=l.match(/^(\d+)x$/i);
-if(round){
-let r=+round[1];
-let block={rounds:r,sets:[]};
+let r=l.match(/^(\d+)x$/i);
+if(r){
+let rep=+r[1];
+let block={rounds:rep,sets:[]};
 i++;
 
 while(i<lines.length&&!lines[i].endsWith(':')){
 let s=parseSet(lines[i],baseSec);
-if(!s){console.warn("Bad:",lines[i]);i++;continue;}
-
-for(let k=0;k<r;k++){
-y+=s.q*s.d;
-cur.y+=s.q*s.d;
-t+=s.q*s.dur;
-}
+if(!s){i++;continue;}
 
 s.time=clock(t);
+
+for(let k=0;k<rep;k++){
+y+=s.q*s.d;
+cur.y+=s.q*s.d;
+t+=s.dur*s.q;
+}
+
 s.run=y;
 
 block.sets.push(s);
@@ -272,13 +326,14 @@ continue;
 }
 
 let s=parseSet(l,baseSec);
-if(!s){console.warn("Bad:",l);continue;}
+if(!s) continue;
+
+s.time=clock(t);
 
 y+=s.q*s.d;
 cur.y+=s.q*s.d;
-t+=s.q*s.dur;
+t+=s.dur*s.q;
 
-s.time=clock(t);
 s.run=y;
 
 cur.blocks.push({rounds:1,sets:[s]});
@@ -358,12 +413,14 @@ return Math.round(total/60);
 function print(){window.print();}
 
 return{
-title,team,group,start,base,fit,input,
-parsed,yards,print,duration,
+title,team,group,start,base,
+fit,input,parsed,yards,
+print,duration,
 targetMinutes,autoFitEnabled
 };
 }
 }).mount('#app');
 </script>
+
 </body>
 </html>
