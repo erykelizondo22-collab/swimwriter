@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Swim Master v21.2 - COACH FORMAT</title>
+<title>Swim Master v22 - COACH SECTION MODE</title>
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -149,7 +149,7 @@ Scale {{Math.round(fit*100)}}%
 
 </div>
 
-<!-- SHEET -->
+<!-- PRINT SHEET -->
 <div id="render-sheet">
 
 <div class="flex justify-between border-b-4 pb-2 mb-3">
@@ -166,49 +166,45 @@ Scale {{Math.round(fit*100)}}%
 
 </div>
 
+<!-- SECTIONS -->
 <div v-for="sec in parsed">
 
-<!-- SECTION HEADER -->
+<!-- SECTION HEADER ONLY (START TIME ONLY) -->
 <div class="s-head flex justify-between">
   <div>
-    {{sec.title}}
-    <span class="text-xs opacity-60 ml-2">
-      START {{sec.startTime}}
-    </span>
+    {{sec.title}} — START {{sec.startTime}}
   </div>
   <div>{{sec.y}}y</div>
 </div>
 
 <!-- BLOCKS -->
-<div v-for="b in sec.blocks" class="mt-1">
+<div v-for="b in sec.blocks" class="mt-2">
 
-<!-- COACH FORMAT HEADER -->
-<div v-if="b.rep>1" class="text-[11px] font-black uppercase opacity-60 mb-1">
-  {{b.rep}}x SET
-</div>
+  <!-- COACH BLOCK HEADER -->
+  <div v-if="b.rep > 1" class="text-[11px] font-black uppercase opacity-60 mb-1">
+    {{b.rep}}x (
+    {{b.sets.map(s => s.q + 'x' + s.d + (s.p ? ' @ ' + s.p : '')).join(' + ')}}
+    )
+  </div>
 
-<div v-for="s in b.sets" class="set-row">
+  <!-- SET LIST (NO TIMES) -->
+  <div v-for="s in b.sets" class="set-row">
 
-<div>
+    <div>
+      <div v-if="s.rest" class="text-sm font-black opacity-70">
+        REST {{s.label}}
+      </div>
 
-<div v-if="s.rest" class="text-sm font-black opacity-70">
-REST {{s.label}}
-</div>
+      <div v-else class="qty">
+        {{s.q}}x{{s.d}} @ {{s.p}}
+      </div>
+    </div>
 
-<div v-else class="qty">
-  <span v-if="b.rep>1">{{b.rep}}x (</span>
-  {{s.q}}x{{s.d}} @ {{s.p}}
-  <span v-if="b.rep>1">)</span>
-</div>
+    <div class="clk">
+      {{s.run}}y
+    </div>
 
-</div>
-
-<div class="clk">
-{{s.time}}<br>
-{{s.run}}y
-</div>
-
-</div>
+  </div>
 
 </div>
 
@@ -217,7 +213,7 @@ REST {{s.label}}
 </div>
 
 <script>
-const {createApp,ref,computed,nextTick}=Vue;
+const {createApp,ref,computed}=Vue;
 
 function parseTime(t){
 let [m,s]=t.split(":").map(Number);
@@ -292,18 +288,14 @@ while(i<lines.length&&!lines[i].endsWith(":")){
 let s=parse(lines[i],baseSec);
 if(!s){i++;continue;}
 
-s.time=clock(t);
-
 for(let k=0;k<rep;k++){
 if(!s.rest){
 y+=s.q*s.d;
 cur.y+=s.q*s.d;
 }
-t+=s.rest ? s.dur : s.dur*s.q;
 }
 
 s.run=y;
-
 block.sets.push(s);
 i++;
 }
@@ -316,14 +308,10 @@ continue;
 let s=parse(l,baseSec);
 if(!s)continue;
 
-s.time=clock(t);
-
 if(!s.rest){
 y+=s.q*s.d;
 cur.y+=s.q*s.d;
 }
-
-t+=s.rest ? s.dur : s.dur*s.q;
 
 s.run=y;
 
@@ -353,7 +341,6 @@ if(m){q=+m[1];d=+m[2];}
 else if(/^\d+/.test(str)) d=parseInt(str);
 else return null;
 
-/* SPACE SAFE @ */
 let i=str.match(/@\s*(\d+)\s*:\s*(\d+)/);
 
 let dur;
@@ -367,9 +354,7 @@ dur=Math.round(d/100*baseSec);
 
 let pace=i?`${i[1]}:${i[2]}`:`${Math.floor(dur/60)}:${(dur%60).toString().padStart(2,"0")}`;
 
-let note=str.replace(/(\d+)x(\d+)/i,"").replace(/@\s*\d+\s*:\s*\d+/,"").trim();
-
-return{rest:false,q,d,dur,p:pace,note};
+return{rest:false,q,d,dur,p:pace};
 }
 
 const yards=computed(()=>parsed.value.reduce((a,s)=>a+s.y,0));
