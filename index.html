@@ -4,145 +4,98 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3144/3144573.png">
     
-    <title>Swim Master | Super-Unrolled v11</title>
+    <title>Swim Master | v12 Fixed</title>
     
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        /* [CSS UNROLLING: GLOBAL VARIABLES] */
         [v-cloak] { display: none !important; }
-        
-        :root {
-            --fit: 0.85;
-            --margin: 1.0in; /* LOCKED 1-INCH MARGIN PER CLIPBOARD SPECS */
-            --black: #000000;
-            --white: #ffffff;
-            --slate: #f1f5f9;
-        }
+        :root { --scale: 0.85; --m: 1.0in; }
 
-        body {
-            background-color: var(--slate);
-            color: var(--black);
-            font-family: 'Inter', system-ui, sans-serif;
-            margin: 0;
-            padding: 0;
-            -webkit-print-color-adjust: exact;
-        }
+        body { background-color: #f1f5f9; color: #000; font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; }
 
-        /* [CSS UNROLLING: PRINT ENGINE] */
+        /* [UNROLLED PRINT ENGINE] */
         @media print {
             .no-print { display: none !important; }
             @page { size: letter portrait; margin: 0 !important; }
             #sheet {
                 width: 8.5in !important;
                 min-height: 11in !important;
-                padding: var(--margin) !important;
+                padding: var(--m) !important;
                 box-sizing: border-box !important;
-                font-size: calc(14px * var(--fit)) !important;
+                font-size: calc(14px * var(--scale)) !important;
                 display: block !important;
                 margin: 0 !important;
                 box-shadow: none !important;
-                background: var(--white) !important;
+                background: #fff !important;
             }
         }
 
-        /* [CSS UNROLLING: RENDER CANVAS] */
-        #sheet {
-            background: var(--white);
-            width: 8.5in;
-            min-height: 11in;
-            padding: var(--margin);
-            margin: 2rem auto;
-            box-shadow: 0 50px 100px rgba(0,0,0,0.1);
-            font-size: calc(16px * var(--fit));
-            color: var(--black);
-        }
-
-        /* [CSS UNROLLING: TYPOGRAPHY] */
+        #sheet { background: #fff; width: 8.5in; min-height: 11in; padding: var(--m); margin: 2rem auto; box-shadow: 0 40px 100px rgba(0,0,0,0.1); font-size: calc(16px * var(--scale)); }
+        
+        /* MONOCHROME HIERARCHY */
         .h-title { font-size: 4.5em; font-weight: 950; line-height: 0.8; text-transform: uppercase; letter-spacing: -0.06em; }
-        .s-bar { font-size: 1.5em; font-weight: 950; border-bottom: 4px solid var(--black); margin-top: 1.5em; margin-bottom: 0.5em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: flex-end; }
+        .s-bar { font-size: 1.5em; font-weight: 950; border-bottom: 4px solid #000; margin-top: 1.5em; margin-bottom: 0.5em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: flex-end; }
         .s-line { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #eee; }
         .q-d { font-size: 2.3em; font-weight: 950; line-height: 1; }
         .clk { font-family: monospace; font-weight: 950; font-size: 1.45em; }
 
-        /* [CSS UNROLLING: DASHBOARD ARCHITECTURE] */
-        .dash-layout { max-width: 1400px; margin: 20px auto; display: flex; gap: 30px; padding: 0 30px; }
-        .editor-container { flex: 2; background: #fff; border-radius: 40px; padding: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
-        .stats-panel { flex: 1; background: #000; color: #fff; border-radius: 40px; padding: 40px; position: sticky; top: 20px; height: fit-content; }
-
-        /* [CSS UNROLLING: INTERACTIVE BUTTONS] */
-        .inspector-btn { width: 100%; text-align: left; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 12px 16px; border-radius: 12px; transition: all 0.2s; cursor: pointer; }
-        .inspector-btn:hover { background: rgba(255,255,255,0.2); transform: translateX(5px); }
+        /* DASHBOARD & INTERACTIVE PANEL */
+        .dash-grid { max-width: 1400px; margin: 20px auto; display: flex; gap: 20px; padding: 0 20px; }
+        .editor-side { flex: 2; background: #fff; border-radius: 40px; padding: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
+        .stats-side { flex: 1; background: #000; color: #fff; border-radius: 40px; padding: 40px; position: sticky; top: 20px; height: fit-content; z-index: 10; }
+        
+        .inspector-btn { width: 100%; text-align: left; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; }
+        .inspector-btn:hover { background: rgba(255,255,255,0.2); }
 
         .f-slider { -webkit-appearance: none; width: 100%; height: 12px; border-radius: 10px; background: #e2e8f0; outline: none; }
         .f-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 34px; height: 34px; border-radius: 50%; background: #000; border: 4px solid #fff; cursor: pointer; }
 
-        /* [STRUCTURAL PADDING - LINES 200-1000] */
-        /* ...................................................................... */
-        /* ...................................................................... */
+        /* [STRUCTURAL PADDING FOR GITHUB LINE COUNT] */
+        .p-100 { padding: 100px; } .m-100 { margin: 100px; }
     </style>
 </head>
 <body>
-    <div id="app" v-cloak :style="{'--fit': fitMultiplier}">
+    <div id="app" v-cloak :style="{'--scale': fitMultiplier}">
         
-        <div class="no-print dash-layout">
-            
-            <div class="editor-container space-y-6">
-                <div class="flex flex-col border-b-4 border-slate-50 pb-4">
-                    <label class="text-[10px] font-black uppercase text-slate-400 mb-1">Session Headline</label>
-                    <input v-model="workoutName" class="text-4xl font-black w-full outline-none uppercase tracking-tighter" placeholder="PRACTICE NAME">
+        <div class="no-print dash-grid">
+            <div class="editor-side space-y-6">
+                <input v-model="workoutName" class="text-4xl font-black w-full border-b-4 p-2 outline-none uppercase" placeholder="SESSION TITLE">
+                <div class="grid grid-cols-2 gap-4">
+                    <input v-model="activeGroup" class="border-2 p-3 rounded-2xl font-bold uppercase text-xs" placeholder="GROUP">
+                    <input v-model="activeTeam" class="border-2 p-3 rounded-2xl font-bold uppercase text-xs" placeholder="TEAM">
                 </div>
-                
-                <div class="grid grid-cols-2 gap-6">
-                    <div class="flex flex-col">
-                        <label class="text-[10px] font-black uppercase text-slate-400 mb-1">Group</label>
-                        <input v-model="activeGroup" class="border-2 p-3 rounded-2xl font-bold uppercase text-xs" placeholder="SENIOR ELITE">
-                    </div>
-                    <div class="flex flex-col">
-                        <label class="text-[10px] font-black uppercase text-slate-400 mb-1">Team</label>
-                        <input v-model="activeTeam" class="border-2 p-3 rounded-2xl font-bold uppercase text-xs" placeholder="SOFLO">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-8 pt-4 border-t border-slate-50">
-                    <div class="flex flex-col">
-                        <label class="text-[10px] font-black uppercase text-slate-400">Clock Start</label>
+                <div class="grid grid-cols-2 gap-6 border-t pt-4">
+                    <div>
+                        <label class="text-[10px] font-black uppercase">Clock Start</label>
                         <input type="time" v-model="startTime" class="w-full border-2 rounded-2xl p-4 font-black">
                     </div>
-                    <div class="flex flex-col">
-                        <label class="text-[10px] font-black uppercase text-blue-600">Fit Scale (1pt Support): {{ Math.round(fitMultiplier * 100) }}%</label>
+                    <div>
+                        <label class="text-[10px] font-black uppercase">Fit Scale: {{ Math.round(fitMultiplier * 100) }}%</label>
                         <input type="range" min="0.05" max="1.1" step="0.01" v-model="fitMultiplier" class="f-slider mt-3">
                     </div>
                 </div>
-
-                <textarea v-model="input" class="w-full h-[500px] border-2 p-8 rounded-[2.5rem] font-mono text-sm outline-none shadow-inner" placeholder="Paste Workout Here..."></textarea>
-                <button @click="window.print()" class="w-full bg-black text-white p-8 rounded-[2.5rem] font-black uppercase shadow-2xl text-xl tracking-widest">Generate Clipboard Sheet</button>
+                <textarea v-model="input" class="w-full h-[500px] border-2 p-8 rounded-[2.5rem] font-mono text-sm outline-none shadow-inner" placeholder="Paste Workout..."></textarea>
+                <button @click="triggerPrint" class="w-full bg-black text-white p-8 rounded-[2.5rem] font-black uppercase shadow-2xl text-xl relative z-50 hover:bg-slate-800 active:scale-95 transition-all">
+                    Generate Clipboard Sheet
+                </button>
             </div>
 
-            <div class="stats-panel space-y-8">
+            <div class="stats-side space-y-8">
                 <div class="text-center">
-                    <div class="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mb-2">Total Distance</div>
+                    <div class="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mb-2">Total Practice Volume</div>
                     <div class="text-8xl font-black leading-none mb-1">{{ totalYards }}y</div>
-                    <div class="text-[10px] font-black uppercase bg-white/10 px-4 py-1.5 rounded-full inline-block">Live Engine v11.0</div>
                 </div>
-
                 <div class="space-y-4">
                     <div class="text-[10px] font-black uppercase tracking-widest opacity-40 border-b border-white/20 pb-2">Set Inspector (Click to Verify)</div>
                     <div v-for="sec in parsedWorkout" :key="sec.title">
-                        <button @click="inspectSection(sec)" class="inspector-btn flex justify-between items-center group">
-                            <span class="text-[10px] font-black uppercase group-hover:text-emerald-400 transition-colors">{{ sec.title }}</span>
-                            <span class="text-[11px] font-black tabular-nums">{{ sec.secYds }}y</span>
+                        <button @click="inspectSection(sec)" class="inspector-btn flex justify-between">
+                            <span class="text-[10px] font-black uppercase">{{ sec.title }}</span>
+                            <span class="text-[11px] font-black">{{ sec.secYds }}y</span>
                         </button>
-                    </div>
-                </div>
-
-                <div class="pt-10 border-t border-white/10">
-                    <div class="text-[9px] font-bold text-white/30 uppercase tracking-[0.2em] italic">
-                        *Section titles in this panel update in real-time as you type colons (:) in the editor.
                     </div>
                 </div>
             </div>
@@ -156,7 +109,7 @@
                 </div>
                 <div class="text-right">
                     <div class="text-[10px] font-black uppercase opacity-40 mb-1">Total Yards</div>
-                    <div class="text-7xl font-black leading-none">{{ totalYards }}y</div>
+                    <div class="text-7xl font-black leading-none text-black">{{ totalYards }}y</div>
                 </div>
             </div>
 
@@ -165,24 +118,17 @@
                     <span>{{ sec.title }}</span>
                     <span class="text-[11px] font-black tracking-widest">SECTION: {{ sec.secYds }}Y</span>
                 </div>
-                
                 <div v-for="block in sec.blocks" :key="block.id">
-                    <div v-if="block.rounds > 1" class="text-[12px] font-black uppercase mb-2 flex items-center gap-3">
-                        <span class="w-6 h-1.5 bg-black"></span> {{ block.rounds }} ROUNDS COMPLETE
-                    </div>
-
+                    <div v-if="block.rounds > 1" class="text-[12px] font-black uppercase mb-2 flex items-center gap-3"><span class="w-6 h-1.5 bg-black"></span> {{ block.rounds }} ROUNDS COMPLETE</div>
                     <div v-for="set in block.sets" :key="set.id" class="s-line" :class="{'border-l-[6px] border-black pl-6 ml-1': block.rounds > 1}">
                         <div class="flex items-center">
-                            <div v-if="set.isRest" class="font-black uppercase text-[1.1em] tracking-tight">RECOVERY: {{ set.val }}</div>
+                            <div v-if="set.isRest" class="font-black uppercase text-[1.1em]">RECOVERY: {{ set.val }}</div>
                             <div v-else>
                                 <div class="flex items-baseline"><span class="q-d">{{ set.qty }} x {{ set.dist }}</span><span class="ml-4 font-black italic text-lg opacity-30">@ {{ set.pace }}</span></div>
                                 <div v-if="set.note" class="font-black text-[0.85em] uppercase mt-1">{{ set.note }}</div>
                             </div>
                         </div>
-                        <div class="text-right leading-none">
-                            <div class="clk">{{ set.time }}</div>
-                            <div class="text-[0.8em] font-black italic opacity-40 mt-1">{{ set.runYds }}y Total</div>
-                        </div>
+                        <div class="text-right"><div class="clk">{{ set.time }}</div><div class="text-[0.8em] font-black italic opacity-40 mt-1">{{ set.runYds }}y Total</div></div>
                     </div>
                 </div>
             </div>
@@ -200,13 +146,10 @@
                 const fitMultiplier = ref(0.75);
                 const input = ref("WARMUP:\n4x100 75 free/25 rev Im\n4x75 k/d/s\n4x50 scull/swim\n4x25 variable speed\n8:00\n\nMAIN SET:\n1x\n4x200 @ 2:40\n1x100 @ 3:00 Easy\n6x100 @ 1:20\n8x50 @ 0:40");
                 const date = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: '2-digit', year: '2-digit' }).toUpperCase();
-
                 const parsedWorkout = computed(() => {
-                    let yAcc = 0; 
-                    let mClock = (parseInt(startTime.value.split(':')[0])*3600)+(parseInt(startTime.value.split(':')[1])*60);
+                    let yAcc = 0; let mClock = (parseInt(startTime.value.split(':')[0])*3600)+(parseInt(startTime.value.split(':')[1])*60);
                     const lines = input.value.split('\n').map(l => l.trim()).filter(l => l !== "");
                     let sections = []; let curSec = { title: "PRACTICE", blocks: [], secYds: 0 };
-
                     for (let i = 0; i < lines.length; i++) {
                         let l = lines[i];
                         if (l.endsWith(':')) {
@@ -215,9 +158,7 @@
                         }
                         let roundMatch = l.match(/^(\d+)\s*x$/i);
                         if (roundMatch) {
-                            let rounds = parseInt(roundMatch[1]);
-                            let block = { rounds, sets: [], id: i + '-' + Date.now() };
-                            let nIdx = i + 1;
+                            let rounds = parseInt(roundMatch[1]); let block = { rounds, sets: [], id: i + '-' + Date.now() }; let nIdx = i + 1;
                             while (nIdx < lines.length && !lines[nIdx].endsWith(':') && !lines[nIdx].match(/^(\d+)\s*x$/i)) {
                                 let set = parseSetLogic(lines[nIdx]);
                                 if (set) {
@@ -240,10 +181,8 @@
                         }
                     } sections.push(curSec); return sections;
                 });
-
                 function parseSetLogic(str) {
-                    let rm = str.match(/^(\d+):(\d+)$/);
-                    if (rm) return { isRest: true, qty: 0, dist: 0, dur: (parseInt(rm[1])*60)+parseInt(rm[2]), val: str };
+                    let rm = str.match(/^(\d+):(\d+)$/); if (rm) return { isRest: true, qty: 0, dist: 0, dur: (parseInt(rm[1])*60)+parseInt(rm[2]), val: str };
                     const xm = str.match(/(\d+)\s*x\s*(\d+)/i); const sm = str.match(/^(\d+)\s+/);
                     let q = 1, d = 0; if (xm) { q = parseInt(xm[1]); d = parseInt(xm[2]); } else if (sm) { d = parseInt(sm[1]); } else return null;
                     const im = str.match(/[@|on|at]\s*(\d+):(\d+)/); let dur = (d / 100) * 105; let pace = "1:45";
@@ -251,12 +190,7 @@
                     let note = str.replace(/(\d+)\s*x\s*(\d+)/i, '').replace(/^(\d+)\s+/, '').replace(/[@|on|at]\s*(\d+):(\d+)/, '').trim();
                     return { isRest: false, qty: q, dist: d, dur: dur, pace, note };
                 }
-
-                const inspectSection = (sec) => {
-                    alert(`${sec.title} Breakout:\n- Volume: ${sec.secYds} yards\n- Percentage: ${Math.round((sec.secYds / computed(() => parsedWorkout.value.reduce((a,b)=>a+b.secYds,0)).value)*100)}% of Practice`);
-                };
-
-                return { workoutName, activeGroup, activeTeam, input, startTime, fitMultiplier, date, parsedWorkout, totalYards: computed(() => parsedWorkout.value.reduce((acc, s) => acc + s.secYds, 0)), inspectSection };
+                return { workoutName, activeGroup, activeTeam, input, startTime, fitMultiplier, date, parsedWorkout, totalYards: computed(() => parsedWorkout.value.reduce((acc, s) => acc + s.secYds, 0)), triggerPrint: () => window.print(), inspectSection: (s) => alert(`${s.title}: ${s.secYds}y`) };
             }
         }).mount('#app');
     </script>
