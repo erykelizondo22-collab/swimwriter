@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Swim Master v17.1</title>
+<title>Swim Master v18</title>
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -48,7 +48,11 @@ body{background:#f1f5f9;font-family:Inter,system-ui;}
 <body>
 <div id="app" v-cloak :style="{'--fit':fit}">
 
-<div class="no-print max-w-6xl mx-auto p-6 space-y-4">
+<!-- DASHBOARD -->
+<div class="no-print max-w-7xl mx-auto p-6 grid grid-cols-3 gap-6">
+
+<!-- LEFT: EDITOR -->
+<div class="col-span-2 space-y-4">
 
 <input v-model="title" class="text-3xl font-black w-full border-b p-2">
 
@@ -66,7 +70,7 @@ body{background:#f1f5f9;font-family:Inter,system-ui;}
 <input v-model.number="targetMinutes" placeholder="Target Minutes" class="border p-2">
 
 <div>
-<label class="text-xs font-bold">Text Scale {{Math.round(fit*100)}}%</label>
+<label class="text-xs font-bold">Scale {{Math.round(fit*100)}}%</label>
 <input type="range" min="0.5" max="1.1" step="0.01" v-model="fit">
 </div>
 
@@ -76,12 +80,57 @@ Auto Fit
 </label>
 </div>
 
-<textarea v-model="input" class="w-full h-64 border p-4 font-mono"></textarea>
+<textarea v-model="input" class="w-full h-[500px] border p-4 font-mono"></textarea>
 
 <button @click="print" class="bg-black text-white p-4 w-full">PRINT</button>
 
 </div>
 
+<!-- RIGHT: LIVE BREAKDOWN -->
+<div class="bg-black text-white rounded-2xl p-6 space-y-6 h-fit sticky top-6">
+
+<div class="text-center">
+<div class="text-xs opacity-50 uppercase">Total Volume</div>
+<div class="text-6xl font-black">{{yards}}y</div>
+<div class="text-xs mt-1">{{duration}} min</div>
+</div>
+
+<div class="border-t border-white/20 pt-4 space-y-4">
+
+<div v-for="sec in parsed" :key="sec.title">
+
+<div class="flex justify-between text-xs font-black uppercase opacity-70">
+<span>{{sec.title}}</span>
+<span>{{sec.y}}y</span>
+</div>
+
+<div class="mt-2 space-y-1">
+
+<div v-for="b in sec.blocks">
+<div v-for="s in b.sets" class="flex justify-between text-[11px]">
+
+<span v-if="!s.rest">
+{{s.q}}x{{s.d}}
+</span>
+
+<span v-else class="opacity-50">REST</span>
+
+<span class="font-bold">
+{{s.run}}y
+</span>
+
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+<!-- PRINT SHEET -->
 <div id="render-sheet">
 
 <div class="flex justify-between border-b-4 pb-4 mb-6">
@@ -133,7 +182,6 @@ REST {{s.label}}
 </div>
 
 </div>
-</div>
 
 <script>
 const {createApp,ref,computed,nextTick}=Vue;
@@ -181,8 +229,8 @@ let cur={title:"PRACTICE",blocks:[],y:0};
 let out=[];
 let y=0;
 
-let parts=start.value.split(':');
-let t=parseInt(parts[0])*3600+parseInt(parts[1])*60;
+let [sh,sm]=start.value.split(':').map(Number);
+let t=sh*3600+sm*60;
 
 const lines=input.value.split('\n').map(l=>l.trim()).filter(Boolean);
 
