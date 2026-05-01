@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Swim Master v20 - HARD REST SYSTEM</title>
+<title>Swim Master v21 - BASE FIX</title>
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -34,7 +34,6 @@ body{
   overflow:hidden;
 }
 
-/* PRINT */
 @media print{
   .no-print{display:none!important;}
   @page{margin:0;}
@@ -94,6 +93,7 @@ body{
   <input v-model="team" placeholder="Team" class="border p-2">
   <input v-model="group" placeholder="Group" class="border p-2">
   <input type="time" v-model="start" class="border p-2">
+
   <select v-model="base" class="border p-2">
     <option disabled value="">Base</option>
     <option>1:15</option>
@@ -182,12 +182,10 @@ Scale {{Math.round(fit*100)}}%
 
 <div>
 
-<!-- REST -->
 <div v-if="s.rest" class="text-sm font-black opacity-70">
 REST {{s.label}}
 </div>
 
-<!-- SWIM -->
 <div v-else class="qty">
 {{s.q}}x{{s.d}} @ {{s.p}}
 </div>
@@ -210,14 +208,24 @@ REST {{s.label}}
 <script>
 const {createApp,ref,computed,nextTick}=Vue;
 
-/* PURPOSE */
-function purpose(t){
-t=t.toLowerCase();
-if(t.includes("warm"))return"Aerobic Prep";
-if(t.includes("main"))return"Main Set";
-if(t.includes("kick"))return"Kick Set";
-if(t.includes("cool"))return"Recovery";
-return"Work";
+/* CLOCK */
+function parseTime(t){
+let [m,s]=t.split(":").map(Number);
+return m*60+s;
+}
+
+function clock(sec){
+let h24=Math.floor(sec/3600);
+let h=h24%12||12;
+let m=Math.floor(sec%3600/60);
+let s=sec%60;
+let ap=h24>=12?"pm":"am";
+return `${h}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")} ${ap}`;
+}
+
+/* REST DETECTION */
+function isRestTime(str){
+return /^\d+:\d{2}$/.test(str.trim());
 }
 
 createApp({
@@ -234,31 +242,11 @@ const input=ref(`WARMUP:
 4x100 free
 8:00
 4x50 kick
-3:30
 
 MAIN:
+6x100
 6x100 @ 1:20
 2:00`);
-
-function parseTime(t){
-let [m,s]=t.split(":").map(Number);
-return m*60+s;
-}
-
-/* CLOCK */
-function clock(sec){
-let h24=Math.floor(sec/3600);
-let h=h24%12||12;
-let m=Math.floor(sec%3600/60);
-let s=sec%60;
-let ap=h24>=12?"pm":"am";
-return `${h}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")} ${ap}`;
-}
-
-/* HARD REST RULE */
-function isRestTime(str){
-return /^\d+:\d{2}$/.test(str.trim());
-}
 
 /* PARSER */
 const parsed=computed(()=>{
@@ -289,7 +277,7 @@ cur={title:l.slice(0,-1),y:0,blocks:[]};
 continue;
 }
 
-/* REPEATS */
+/* REPEAT BLOCK */
 let r=l.match(/^(\d+)x$/i);
 if(r){
 let rep=+r[1];
@@ -303,7 +291,6 @@ if(!s){i++;continue;}
 
 s.time=clock(t);
 
-/* ADVANCE */
 for(let k=0;k<rep;k++){
 if(!s.rest){
 y+=s.q*s.d;
@@ -343,11 +330,12 @@ cur.blocks.push({sets:[s]});
 
 out.push(cur);
 
-/* ONE PAGE FORCE */
+/* FIT TO PAGE */
 nextTick(()=>{
 let el=document.getElementById("render-sheet");
 let f=1;
 fit.value=f;
+
 while(el.scrollHeight>1056&&f>0.2){
 f-=0.01;
 fit.value=f;
@@ -357,10 +345,10 @@ fit.value=f;
 return out;
 });
 
-/* SET PARSER */
+/* PARSE SET */
 function parse(str,baseSec){
 
-/* ANY mm:ss = REST */
+/* REST */
 if(isRestTime(str)){
 return{
 rest:true,
@@ -371,6 +359,7 @@ label:str
 };
 }
 
+/* SWIM SET */
 let m=str.match(/(\d+)x(\d+)/i);
 let q=1,d=0;
 
@@ -378,11 +367,16 @@ if(m){q=+m[1];d=+m[2];}
 else if(/^\d+/.test(str)) d=parseInt(str);
 else return null;
 
+/* BASE vs OVERRIDE FIX */
 let i=str.match(/@(\d+):(\d+)/);
 
-let dur=i
-? parseTime(i[1]+":"+i[2])
-: Math.round(d/100*baseSec);
+let dur;
+
+if(i){
+dur=parseTime(i[1]+":"+i[2]); // override
+}else{
+dur=Math.round(d/100*baseSec); // base fallback
+}
 
 let pace=i
 ? `${i[1]}:${i[2]}`
@@ -410,10 +404,7 @@ t+=s.dur*(s.q||1);
 return Math.round(t/60);
 });
 
-return{
-title,team,group,start,base,fit,input,
-parsed,yards,duration
-};
+return{title,team,group,start,base,fit,input,parsed,yards,duration};
 }
 }).mount("#app");
 </script>
