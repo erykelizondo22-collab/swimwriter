@@ -1,226 +1,264 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3144/3144573.png">
-    <title>Swim Master | v14 Force-Scale</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swim Master v17</title>
 
-    <style>
-        [v-cloak] { display: none !important; }
-        
-        /* THE ROOT SCALE CONTROLLER */
-        :root {
-            --fit: 0.85;
-            --m: 1.0in; /* LOCKED 1-INCH MARGIN */
-        }
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
 
-        body {
-            background-color: #f1f5f9;
-            color: #000;
-            font-family: 'Inter', system-ui, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
+<style>
+[v-cloak]{display:none!important;}
+:root{--fit:0.8;--m-lock:1in;}
 
-        /* FORCE SCALE PRINT ENGINE */
-        @media print {
-            .no-print { display: none !important; }
-            @page { size: letter portrait; margin: 0 !important; }
-            #sheet {
-                width: 8.5in !important;
-                min-height: 11in !important;
-                padding: var(--m) !important;
-                box-sizing: border-box !important;
-                /* FORCE FONT SCALE */
-                font-size: calc(16px * var(--fit)) !important;
-                display: block !important;
-                margin: 0 !important;
-                box-shadow: none !important;
-                background: #fff !important;
-                position: absolute;
-                top: 0;
-                left: 0;
-            }
-            .q-d { font-size: 2.3em !important; }
-            .h-title { font-size: 4.5em !important; }
-            .clk { font-size: 1.4em !important; }
-        }
+body{background:#f1f5f9;font-family:Inter,system-ui;}
 
-        /* LIVE PREVIEW CANVAS */
-        #sheet {
-            background: #fff;
-            width: 8.5in;
-            min-height: 11in;
-            padding: var(--m);
-            margin: 2rem auto;
-            box-shadow: 0 40px 100px rgba(0,0,0,0.1);
-            color: #000;
-            /* DYNAMIC SCALE LINK */
-            font-size: calc(16px * var(--fit)) !important;
-            transition: none !important; /* Instant response */
-        }
+#render-sheet{
+    width:8.5in;
+    min-height:11in;
+    padding:var(--m-lock);
+    margin:2rem auto;
+    background:#fff;
+    box-shadow:0 40px 100px rgba(0,0,0,.1);
+    font-size:calc(16px * var(--fit));
+    overflow:hidden;
+}
 
-        /* MONOCHROME TYPOGRAPHY WITH SCALE OVERRIDES */
-        .h-title { font-size: 4.5em !important; font-weight: 950 !important; line-height: 0.8 !important; text-transform: uppercase !important; letter-spacing: -0.06em !important; }
-        .s-bar { font-size: 1.5em !important; font-weight: 950 !important; border-bottom: 4px solid #000 !important; margin-top: 1.5em !important; margin-bottom: 0.5em !important; text-transform: uppercase !important; display: flex !important; justify-content: space-between !important; align-items: flex-end !important; }
-        .s-line { display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 4px 0 !important; border-bottom: 1px solid #eee !important; }
-        .q-d { font-size: 2.3em !important; font-weight: 950 !important; line-height: 1 !important; }
-        .clk { font-family: monospace !important; font-weight: 950 !important; font-size: 1.4em !important; }
+@media print{
+    .no-print{display:none!important;}
+    @page{margin:0;}
+    #render-sheet{
+        margin:0;
+        box-shadow:none;
+        position:absolute;
+        top:0;
+        left:0;
+    }
+}
 
-        /* DASHBOARD LAYOUT */
-        .dash-ui { max-width: 1400px; margin: 20px auto; display: flex; gap: 20px; padding: 0 20px; }
-        .edit-panel { flex: 2; background: #fff; border-radius: 30px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .stat-panel { flex: 1; background: #000; color: #fff; border-radius: 30px; padding: 30px; height: fit-content; position: sticky; top: 20px; }
-        
-        .inspect-btn { width: 100%; text-align: left; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; }
-        .inspect-btn:hover { background: rgba(255,255,255,0.2); }
-
-        .f-slider { -webkit-appearance: none; width: 100%; height: 12px; border-radius: 10px; background: #e2e8f0; outline: none; }
-        .f-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 34px; height: 34px; border-radius: 50%; background: #000; border: 4px solid #fff; cursor: pointer; }
-    </style>
+.h-main{font-size:4em;font-weight:900;}
+.s-head{font-weight:900;border-bottom:4px solid #000;margin-top:1.5em;}
+.set-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee;}
+.qty-text{font-size:2em;font-weight:900;}
+.clk{font-family:monospace;font-weight:900;}
+</style>
 </head>
+
 <body>
-    <div id="app" v-cloak :style="{'--fit': fitMultiplier}">
-        
-        <div class="no-print dash-ui">
-            <div class="edit-panel space-y-6">
-                <input v-model="workoutName" class="text-3xl font-black w-full border-b-2 p-2 outline-none uppercase" placeholder="WORKOUT TITLE">
-                <div class="grid grid-cols-2 gap-4">
-                    <input v-model="activeGroup" class="border rounded p-3 text-xs font-bold uppercase" placeholder="GROUP">
-                    <input v-model="activeTeam" class="border rounded p-3 text-xs font-bold uppercase" placeholder="TEAM">
-                </div>
-                <div class="grid grid-cols-2 gap-6 border-t pt-4 mt-4">
-                    <div>
-                        <label class="text-[10px] font-black uppercase">Clock Start</label>
-                        <input type="time" v-model="startTime" class="w-full border rounded p-2 font-black">
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-black uppercase text-blue-600">Force Scale (1pt = 0.05): {{ Math.round(fitMultiplier * 100) }}%</label>
-                        <input type="range" min="0.05" max="1.1" step="0.01" v-model="fitMultiplier" class="f-slider mt-2">
-                    </div>
-                </div>
-                <textarea v-model="input" class="w-full h-80 border-2 p-6 rounded-3xl font-mono text-sm outline-none shadow-inner" placeholder="Paste Set..."></textarea>
-                <button @click="triggerPrint" class="w-full bg-black text-white p-5 rounded-2xl font-black uppercase shadow-lg text-lg tracking-widest">Generate Clipboard Sheet</button>
-            </div>
+<div id="app" v-cloak :style="{'--fit':fit}">
 
-            <div class="stat-panel space-y-8">
-                <div class="text-center">
-                    <div class="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mb-2">Total Volume</div>
-                    <div class="text-7xl font-black leading-none mb-1">{{ totalYards }}y</div>
-                </div>
-                <div class="space-y-4">
-                    <div class="text-[10px] font-black uppercase tracking-widest opacity-40 border-b border-white/20 pb-2">Set Inspector (Click to Verify)</div>
-                    <div v-for="sec in parsedWorkout" :key="sec.title">
-                        <button @click="inspect(sec)" class="inspect-btn flex justify-between">
-                            <span class="text-[10px] font-black uppercase">{{ sec.title }}</span>
-                            <span class="text-[11px] font-black">{{ sec.secYds }}y</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="no-print max-w-6xl mx-auto p-6 space-y-4">
+<input v-model="title" class="text-3xl font-black w-full border-b p-2">
 
-        <div id="sheet">
-            <div class="master-header">
-                <div class="flex justify-between items-end border-b-[10px] border-black pb-4 mb-10">
-                    <div class="w-2/3">
-                        <div class="h-title">{{ workoutName }}</div>
-                        <div class="text-[12px] font-black uppercase tracking-widest opacity-60 mt-2">{{ date }} — {{ activeTeam }} — {{ activeGroup }}</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-[10px] font-black uppercase opacity-40 mb-1">Total Yards</div>
-                        <div class="text-7xl font-black leading-none">{{ totalYards }}y</div>
-                    </div>
-                </div>
-            </div>
+<div class="grid grid-cols-4 gap-3">
+<input v-model="team" placeholder="Team" class="border p-2">
+<input v-model="group" placeholder="Group" class="border p-2">
+<input type="time" v-model="start">
+<select v-model="base" class="border p-2">
+<option>1:15</option><option>1:20</option><option>1:30</option>
+<option>1:40</option><option>1:45</option><option>2:00</option>
+</select>
+</div>
 
-            <div v-for="sec in parsedWorkout" :key="sec.title" class="mb-10">
-                <div class="s-bar">
-                    <span>{{ sec.title }}</span>
-                    <span class="text-[11px] font-black tracking-widest">SECTION: {{ sec.secYds }}Y</span>
-                </div>
-                <div v-for="block in sec.blocks" :key="block.id">
-                    <div v-if="block.rounds > 1" class="text-[12px] font-black uppercase mb-2">● {{ block.rounds }} ROUNDS COMPLETE</div>
-                    <div v-for="set in block.sets" :key="set.id" class="s-line" :class="{'border-l-[6px] border-black pl-6 ml-1': block.rounds > 1}">
-                        <div class="flex items-center">
-                            <div v-if="set.isRest" class="font-black uppercase text-[1.1em]">RECOVERY: {{ set.val }}</div>
-                            <div v-else>
-                                <div class="flex items-baseline"><span class="q-d">{{ set.qty }} x {{ set.dist }}</span><span class="ml-4 font-black italic text-lg opacity-30">@ {{ set.pace }}</span></div>
-                                <div v-if="set.note" class="font-black text-[0.8em] uppercase mt-1">{{ set.note }}</div>
-                            </div>
-                        </div>
-                        <div class="text-right leading-none">
-                            <div class="clk">{{ set.time }}</div>
-                            <div class="text-[0.8em] font-black italic opacity-40 mt-1">{{ set.runYds }}y Total</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="grid grid-cols-2 gap-3">
+<input v-model.number="targetMinutes" placeholder="Target Minutes" class="border p-2">
+<input type="range" min="0.4" max="1.1" step="0.01" v-model="fit">
+</div>
 
-    <script>
-        const { createApp, ref, computed } = Vue;
-        createApp({
-            setup() {
-                const workoutName = ref("SOFLO ELITE SESSION");
-                const activeGroup = ref("SENIOR ELITE");
-                const activeTeam = ref("SOFLO");
-                const startTime = ref("17:45");
-                const fitMultiplier = ref(0.75);
-                const input = ref("WARMUP:\n4x100 75 free/25 rev Im\n4x75 k/d/s\n4x50 scull/swim\n4x25 variable speed\n8:00\n\nMAIN SET:\n1x\n4x200 @ 2:40\n1x100 @ 3:00 Easy\n6x100 @ 1:20\n8x50 @ 0:40");
-                const date = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: '2-digit', year: '2-digit' }).toUpperCase();
-                const parsedWorkout = computed(() => {
-                    let yAcc = 0; let mClock = (parseInt(startTime.value.split(':')[0])*3600)+(parseInt(startTime.value.split(':')[1])*60);
-                    const lines = input.value.split('\n').map(l => l.trim()).filter(l => l !== "");
-                    let sections = []; let curSec = { title: "PRACTICE", blocks: [], secYds: 0 };
-                    for (let i = 0; i < lines.length; i++) {
-                        let l = lines[i];
-                        if (l.endsWith(':')) {
-                            if (curSec.blocks.length > 0) sections.push(JSON.parse(JSON.stringify(curSec)));
-                            curSec = { title: l.slice(0, -1), blocks: [], secYds: 0 }; continue;
-                        }
-                        let roundMatch = l.match(/^(\d+)\s*x$/i);
-                        if (roundMatch) {
-                            let rounds = parseInt(roundMatch[1]); let block = { rounds, sets: [], id: i + '-' + Date.now() }; let nIdx = i + 1;
-                            while (nIdx < lines.length && !lines[nIdx].endsWith(':') && !lines[nIdx].match(/^(\d+)\s*x$/i)) {
-                                let set = parseSetLogic(lines[nIdx]);
-                                if (set) {
-                                    for (let r = 0; r < rounds; r++) {
-                                        yAcc += (set.qty * set.dist); curSec.secYds += (set.qty * set.dist); mClock += (set.qty * set.dur);
-                                        if (r === 0) {
-                                            const h = Math.floor(mClock / 3600) % 12 || 12; const m = Math.floor((mClock % 3600) / 60);
-                                            block.sets.push({ ...set, runYds: yAcc, time: `${h}:${m.toString().padStart(2,'0')} pm` });
-                                        }
-                                    }
-                                } nIdx++;
-                            } curSec.blocks.push(block); i = nIdx - 1;
-                        } else {
-                            let set = parseSetLogic(l);
-                            if (set) {
-                                yAcc += (set.qty * set.dist); curSec.secYds += (set.qty * set.dist); mClock += (set.qty * set.dur);
-                                const h = Math.floor(mClock / 3600) % 12 || 12; const m = Math.floor((mClock % 3600) / 60);
-                                curSec.blocks.push({ rounds: 1, id: 's-' + i, sets: [{ ...set, runYds: yAcc, time: `${h}:${m.toString().padStart(2,'0')} pm` }] });
-                            }
-                        }
-                    } sections.push(curSec); return sections;
-                });
-                function parseSetLogic(str) {
-                    let rm = str.match(/^(\d+):(\d+)$/); if (rm) return { isRest: true, qty: 0, dist: 0, dur: (parseInt(rm[1])*60)+parseInt(rm[2]), val: str };
-                    const xm = str.match(/(\d+)\s*x\s*(\d+)/i); const sm = str.match(/^(\d+)\s+/);
-                    let q = 1, d = 0; if (xm) { q = parseInt(xm[1]); d = parseInt(xm[2]); } else if (sm) { d = parseInt(sm[1]); } else return null;
-                    const im = str.match(/[@|on|at]\s*(\d+):(\d+)/); let dur = (d / 100) * 105; let pace = "1:45";
-                    if (im) { dur = (parseInt(im[1])*60) + parseInt(im[2]); pace = im[1] + ":" + im[2]; }
-                    let note = str.replace(/(\d+)\s*x\s*(\d+)/i, '').replace(/^(\d+)\s+/, '').replace(/[@|on|at]\s*(\d+):(\d+)/, '').trim();
-                    return { isRest: false, qty: q, dist: d, dur: dur, pace, note };
-                }
-                return { workoutName, activeGroup, activeTeam, input, startTime, fitMultiplier, date, parsedWorkout, totalYards: computed(() => parsedWorkout.value.reduce((acc, s) => acc + s.secYds, 0)), triggerPrint: () => window.print(), inspect: (s) => alert(`${s.title}: ${s.secYds}y`) };
-            }
-        }).mount('#app');
-    </script>
+<textarea v-model="input" class="w-full h-64 border p-4 font-mono"></textarea>
+
+<button @click="print" class="bg-black text-white p-4 w-full">PRINT</button>
+</div>
+
+<div id="render-sheet">
+<div class="flex justify-between border-b-4 pb-4 mb-6">
+<div>
+<div class="h-main">{{title}}</div>
+<div class="text-xs font-bold">{{team}} — {{group}}</div>
+</div>
+<div class="text-right">
+<div class="text-5xl font-black">{{yards}}y</div>
+<div class="text-xs">{{duration}} min</div>
+</div>
+</div>
+
+<div v-for="sec in parsed">
+<div class="s-head flex justify-between">
+<span>{{sec.title}}</span>
+<span>{{sec.y}}y</span>
+</div>
+
+<div v-for="b in sec.blocks">
+<div v-if="b.rounds>1" class="text-xs font-bold">{{b.rounds}} ROUNDS</div>
+
+<div v-for="s in b.sets" class="set-row">
+<div>
+<div v-if="s.rest" class="bg-black text-white px-2 py-1 inline-block">
+REST {{s.label}}
+</div>
+
+<div v-else>
+<div><span class="qty-text">{{s.q}}x{{s.d}}</span> @ {{s.p}}</div>
+<div class="text-xs">{{s.note}}</div>
+</div>
+</div>
+
+<div class="clk">{{s.time}}</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+const {createApp,ref,computed,nextTick}=Vue;
+
+createApp({
+setup(){
+
+const title=ref("SOFLO SESSION");
+const team=ref("TEAM");
+const group=ref("GROUP");
+const start=ref("17:45");
+const base=ref("1:45");
+const fit=ref(.8);
+const targetMinutes=ref(90);
+
+const input=ref(`WARMUP:
+4x100 free
+4x50 kick
+4:00
+
+MAIN:
+2x
+4x200 @ 2:40
+4x100 @ 1:20
+`);
+
+function parseTime(t){
+let [m,s]=t.split(':').map(Number);
+return m*60+s;
+}
+
+function clock(sec){
+let h=Math.floor(sec/3600)%12||12;
+let m=Math.floor(sec%3600/60);
+let s=sec%60;
+return `${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+}
+
+const parsed=computed(()=>{
+let baseSec=parseTime(base.value);
+let cur={title:"PRACTICE",blocks:[],y:0};
+let out=[];
+let y=0;
+let t=parseTime(start.value.split(':')[1])+parseInt(start.value)*3600;
+
+const lines=input.value.split('\n').map(l=>l.trim()).filter(Boolean);
+
+for(let i=0;i<lines.length;i++){
+let l=lines[i];
+
+if(l.endsWith(':')){
+if(cur.blocks.length) out.push(cur);
+cur={title:l.slice(0,-1),blocks:[],y:0};
+continue;
+}
+
+let round=l.match(/^(\d+)x$/i);
+if(round){
+let r=+round[1];
+let block={rounds:r,sets:[]};
+i++;
+while(i<lines.length&&!lines[i].endsWith(':')){
+let s=parseSet(lines[i],baseSec);
+if(!s){console.warn("Bad:",lines[i]);i++;continue;}
+for(let k=0;k<r;k++){
+y+=s.q*s.d;
+cur.y+=s.q*s.d;
+t+=s.q*s.dur;
+}
+s.time=clock(t);
+block.sets.push(s);
+i++;
+}
+i--;
+cur.blocks.push(block);
+continue;
+}
+
+let s=parseSet(l,baseSec);
+if(!s){console.warn("Bad:",l);continue;}
+y+=s.q*s.d;
+cur.y+=s.q*s.d;
+t+=s.q*s.dur;
+s.time=clock(t);
+cur.blocks.push({rounds:1,sets:[s]});
+}
+
+out.push(cur);
+
+nextTick(autoFit);
+
+return out;
+});
+
+function parseSet(str,baseSec){
+
+let rest=str.match(/^(\d+):(\d+)$/);
+if(rest){
+return {rest:true,label:str,q:0,d:0,dur:parseTime(str)};
+}
+
+let m=str.match(/(\d+)x(\d+)/i);
+let q=1,d=0;
+if(m){q=+m[1];d=+m[2];}
+else if(/^\d+/.test(str)){d=parseInt(str);}
+else return null;
+
+let int=str.match(/(?:@|on|at)\s*(\d+):(\d+)/i);
+
+let dur=int?parseTime(int[1]+":"+int[2]):Math.round(d/100*baseSec);
+let pace=int?`${int[1]}:${int[2]}`:`${Math.floor(dur/60)}:${(dur%60).toString().padStart(2,'0')}`;
+
+let note=str
+.replace(/(\d+)x(\d+)/i,'')
+.replace(/^\d+/,'')
+.replace(/(?:@|on|at)\s*(\d+):(\d+)/i,'')
+.trim();
+
+return {rest:false,q,d,dur,p:pace,note};
+}
+
+function autoFit(){
+let el=document.getElementById('render-sheet');
+if(!el)return;
+let max=11*96;
+let f=1;
+while(el.scrollHeight>max&&f>.5){
+f-=.01;
+fit.value=f;
+}
+}
+
+const yards=computed(()=>parsed.value.reduce((a,s)=>a+s.y,0));
+
+const duration=computed(()=>{
+let total=0;
+parsed.value.forEach(sec=>{
+sec.blocks.forEach(b=>{
+b.sets.forEach(s=>total+=s.dur*s.q);
+});
+});
+return Math.round(total/60);
+});
+
+function print(){window.print();}
+
+return{title,team,group,start,base,fit,input,parsed,yards,print,duration,targetMinutes};
+}
+}).mount('#app');
+</script>
 </body>
 </html>
