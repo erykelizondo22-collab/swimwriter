@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Swim Master v17</title>
+<title>Swim Master v17.1</title>
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -49,6 +49,7 @@ body{background:#f1f5f9;font-family:Inter,system-ui;}
 <div id="app" v-cloak :style="{'--fit':fit}">
 
 <div class="no-print max-w-6xl mx-auto p-6 space-y-4">
+
 <input v-model="title" class="text-3xl font-black w-full border-b p-2">
 
 <div class="grid grid-cols-4 gap-3">
@@ -61,22 +62,34 @@ body{background:#f1f5f9;font-family:Inter,system-ui;}
 </select>
 </div>
 
-<div class="grid grid-cols-2 gap-3">
+<div class="grid grid-cols-3 gap-3 items-center">
 <input v-model.number="targetMinutes" placeholder="Target Minutes" class="border p-2">
-<input type="range" min="0.4" max="1.1" step="0.01" v-model="fit">
+
+<div>
+<label class="text-xs font-bold">Text Scale {{Math.round(fit*100)}}%</label>
+<input type="range" min="0.5" max="1.1" step="0.01" v-model="fit">
+</div>
+
+<label class="flex items-center gap-2 text-sm font-bold">
+<input type="checkbox" v-model="autoFitEnabled">
+Auto Fit
+</label>
 </div>
 
 <textarea v-model="input" class="w-full h-64 border p-4 font-mono"></textarea>
 
 <button @click="print" class="bg-black text-white p-4 w-full">PRINT</button>
+
 </div>
 
 <div id="render-sheet">
+
 <div class="flex justify-between border-b-4 pb-4 mb-6">
 <div>
 <div class="h-main">{{title}}</div>
 <div class="text-xs font-bold">{{team}} — {{group}}</div>
 </div>
+
 <div class="text-right">
 <div class="text-5xl font-black">{{yards}}y</div>
 <div class="text-xs">{{duration}} min</div>
@@ -90,24 +103,35 @@ body{background:#f1f5f9;font-family:Inter,system-ui;}
 </div>
 
 <div v-for="b in sec.blocks">
-<div v-if="b.rounds>1" class="text-xs font-bold">{{b.rounds}} ROUNDS</div>
+
+<div v-if="b.rounds>1" class="text-xs font-bold mb-1">
+{{b.rounds}} ROUNDS
+</div>
 
 <div v-for="s in b.sets" class="set-row">
+
 <div>
 <div v-if="s.rest" class="bg-black text-white px-2 py-1 inline-block">
 REST {{s.label}}
 </div>
 
 <div v-else>
-<div><span class="qty-text">{{s.q}}x{{s.d}}</span> @ {{s.p}}</div>
+<div>
+<span class="qty-text">{{s.q}}x{{s.d}}</span> @ {{s.p}}
+</div>
 <div class="text-xs">{{s.note}}</div>
 </div>
 </div>
 
+<div class="text-right">
 <div class="clk">{{s.time}}</div>
+<div class="text-xs font-bold opacity-50">{{s.run}}y</div>
+</div>
+
 </div>
 </div>
 </div>
+
 </div>
 </div>
 
@@ -123,6 +147,7 @@ const group=ref("GROUP");
 const start=ref("17:45");
 const base=ref("1:45");
 const fit=ref(.8);
+const autoFitEnabled=ref(true);
 const targetMinutes=ref(90);
 
 const input=ref(`WARMUP:
@@ -142,10 +167,12 @@ return m*60+s;
 }
 
 function clock(sec){
-let h=Math.floor(sec/3600)%12||12;
+let h24=Math.floor(sec/3600);
+let h=h24%12||12;
 let m=Math.floor(sec%3600/60);
 let s=sec%60;
-return `${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+let ampm=h24>=12?'pm':'am';
+return `${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')} ${ampm}`;
 }
 
 const parsed=computed(()=>{
@@ -153,7 +180,9 @@ let baseSec=parseTime(base.value);
 let cur={title:"PRACTICE",blocks:[],y:0};
 let out=[];
 let y=0;
-let t=parseTime(start.value.split(':')[1])+parseInt(start.value)*3600;
+
+let parts=start.value.split(':');
+let t=parseInt(parts[0])*3600+parseInt(parts[1])*60;
 
 const lines=input.value.split('\n').map(l=>l.trim()).filter(Boolean);
 
@@ -171,18 +200,24 @@ if(round){
 let r=+round[1];
 let block={rounds:r,sets:[]};
 i++;
+
 while(i<lines.length&&!lines[i].endsWith(':')){
 let s=parseSet(lines[i],baseSec);
 if(!s){console.warn("Bad:",lines[i]);i++;continue;}
+
 for(let k=0;k<r;k++){
 y+=s.q*s.d;
 cur.y+=s.q*s.d;
 t+=s.q*s.dur;
 }
+
 s.time=clock(t);
+s.run=y;
+
 block.sets.push(s);
 i++;
 }
+
 i--;
 cur.blocks.push(block);
 continue;
@@ -190,16 +225,22 @@ continue;
 
 let s=parseSet(l,baseSec);
 if(!s){console.warn("Bad:",l);continue;}
+
 y+=s.q*s.d;
 cur.y+=s.q*s.d;
 t+=s.q*s.dur;
+
 s.time=clock(t);
+s.run=y;
+
 cur.blocks.push({rounds:1,sets:[s]});
 }
 
 out.push(cur);
 
-nextTick(autoFit);
+nextTick(()=>{
+if(autoFitEnabled.value) autoFit();
+});
 
 return out;
 });
@@ -213,14 +254,20 @@ return {rest:true,label:str,q:0,d:0,dur:parseTime(str)};
 
 let m=str.match(/(\d+)x(\d+)/i);
 let q=1,d=0;
+
 if(m){q=+m[1];d=+m[2];}
 else if(/^\d+/.test(str)){d=parseInt(str);}
 else return null;
 
 let int=str.match(/(?:@|on|at)\s*(\d+):(\d+)/i);
 
-let dur=int?parseTime(int[1]+":"+int[2]):Math.round(d/100*baseSec);
-let pace=int?`${int[1]}:${int[2]}`:`${Math.floor(dur/60)}:${(dur%60).toString().padStart(2,'0')}`;
+let dur=int
+? parseTime(int[1]+":"+int[2])
+: Math.round(d/100*baseSec);
+
+let pace=int
+? `${int[1]}:${int[2]}`
+: `${Math.floor(dur/60)}:${(dur%60).toString().padStart(2,'0')}`;
 
 let note=str
 .replace(/(\d+)x(\d+)/i,'')
@@ -232,10 +279,14 @@ return {rest:false,q,d,dur,p:pace,note};
 }
 
 function autoFit(){
-let el=document.getElementById('render-sheet');
+const el=document.getElementById('render-sheet');
 if(!el)return;
-let max=11*96;
+
 let f=1;
+fit.value=f;
+
+const max=11*96;
+
 while(el.scrollHeight>max&&f>.5){
 f-=.01;
 fit.value=f;
@@ -248,7 +299,9 @@ const duration=computed(()=>{
 let total=0;
 parsed.value.forEach(sec=>{
 sec.blocks.forEach(b=>{
-b.sets.forEach(s=>total+=s.dur*s.q);
+b.sets.forEach(s=>{
+total+=s.dur*s.q;
+});
 });
 });
 return Math.round(total/60);
@@ -256,7 +309,11 @@ return Math.round(total/60);
 
 function print(){window.print();}
 
-return{title,team,group,start,base,fit,input,parsed,yards,print,duration,targetMinutes};
+return{
+title,team,group,start,base,fit,input,
+parsed,yards,print,duration,
+targetMinutes,autoFitEnabled
+};
 }
 }).mount('#app');
 </script>
