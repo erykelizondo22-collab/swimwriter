@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Swim Master v22 - COACH SECTION MODE</title>
+<title>Swim Master v23 - COACH TIMING MODE</title>
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -110,7 +110,7 @@ Scale {{Math.round(fit*100)}}%
 
 </div>
 
-<!-- SIDE -->
+<!-- SIDE PANEL -->
 <div class="side text-xs space-y-4">
 
 <div class="text-center">
@@ -169,10 +169,10 @@ Scale {{Math.round(fit*100)}}%
 <!-- SECTIONS -->
 <div v-for="sec in parsed">
 
-<!-- SECTION HEADER ONLY (START TIME ONLY) -->
+<!-- SECTION HEADER -->
 <div class="s-head flex justify-between">
   <div>
-    {{sec.title}} — START {{sec.startTime}}
+    {{sec.title}} — START {{formatTime(sec.startTimeRaw)}}
   </div>
   <div>{{sec.y}}y</div>
 </div>
@@ -180,31 +180,32 @@ Scale {{Math.round(fit*100)}}%
 <!-- BLOCKS -->
 <div v-for="b in sec.blocks" class="mt-2">
 
-  <!-- COACH BLOCK HEADER -->
-  <div v-if="b.rep > 1" class="text-[11px] font-black uppercase opacity-60 mb-1">
-    {{b.rep}}x (
-    {{b.sets.map(s => s.q + 'x' + s.d + (s.p ? ' @ ' + s.p : '')).join(' + ')}}
-    )
+<!-- COACH BLOCK HEADER -->
+<div v-if="b.rep > 1" class="text-[11px] font-black uppercase opacity-60 mb-1">
+  {{b.rep}}x (
+  {{b.sets.map(s => s.q + 'x' + s.d + (s.p ? ' @ ' + s.p : '')).join(' + ')}}
+  )
+</div>
+
+<!-- SETS -->
+<div v-for="s in b.sets" class="set-row">
+
+<div>
+  <div v-if="s.rest" class="text-sm font-black opacity-70">
+    REST {{s.label}}
   </div>
 
-  <!-- SET LIST (NO TIMES) -->
-  <div v-for="s in b.sets" class="set-row">
-
-    <div>
-      <div v-if="s.rest" class="text-sm font-black opacity-70">
-        REST {{s.label}}
-      </div>
-
-      <div v-else class="qty">
-        {{s.q}}x{{s.d}} @ {{s.p}}
-      </div>
-    </div>
-
-    <div class="clk">
-      {{s.run}}y
-    </div>
-
+  <div v-else class="qty">
+    {{s.q}}x{{s.d}} @ {{s.p}}
   </div>
+</div>
+
+<div class="clk">
+  {{formatTime(s.start)}}<br>
+  {{s.run}}y
+</div>
+
+</div>
 
 </div>
 
@@ -259,11 +260,11 @@ return [{title:"SET START + BASE",y:0,blocks:[]}];
 let baseSec=parseTime(base.value);
 
 let out=[];
-let cur={title:"PRACTICE",y:0,blocks:[],startTime:""};
+let cur={title:"PRACTICE",y:0,blocks:[],startTimeRaw:0};
 let y=0;
 
-let [sh,sm]=start.value.split(":").map(Number);
-let t=sh*3600+sm*60;
+let t=parseTime(start.value.split(":")[0]+":"+start.value.split(":")[1]);
+cur.startTimeRaw=t;
 
 let lines=input.value.split("\n").map(l=>l.trim()).filter(Boolean);
 
@@ -273,7 +274,7 @@ let l=lines[i];
 
 if(l.endsWith(":")){
 if(cur.blocks.length)out.push(cur);
-cur={title:l.slice(0,-1),y:0,blocks:[],startTime:clock(t)};
+cur={title:l.slice(0,-1),y:0,blocks:[],startTimeRaw:t};
 continue;
 }
 
@@ -289,14 +290,20 @@ let s=parse(lines[i],baseSec);
 if(!s){i++;continue;}
 
 for(let k=0;k<rep;k++){
+
 if(!s.rest){
 y+=s.q*s.d;
 cur.y+=s.q*s.d;
+s.start=t;
+t+=s.dur*s.q;
+}else{
+s.start=t;
+t+=s.dur;
 }
 }
 
 s.run=y;
-block.sets.push(s);
+block.sets.push({...s});
 i++;
 }
 
@@ -311,6 +318,11 @@ if(!s)continue;
 if(!s.rest){
 y+=s.q*s.d;
 cur.y+=s.q*s.d;
+s.start=t;
+t+=s.dur*s.q;
+}else{
+s.start=t;
+t+=s.dur;
 }
 
 s.run=y;
@@ -371,7 +383,10 @@ t+=s.dur*(s.q||1);
 return Math.round(t/60);
 });
 
-return{title,team,group,start,base,fit,input,parsed,yards,duration};
+return{
+title,team,group,start,base,fit,input,parsed,yards,duration,
+formatTime:clock
+};
 }
 }).mount("#app");
 </script>
