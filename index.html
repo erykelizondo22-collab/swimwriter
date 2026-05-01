@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Swim Master v21.1 - SMART PARSER</title>
+<title>Swim Master v21.2 - COACH FORMAT</title>
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -30,7 +30,6 @@ body{
   background:#fff;
   box-shadow:0 30px 80px rgba(0,0,0,.15);
   font-size:calc(16px * var(--fit));
-  overflow:hidden;
 }
 
 @media print{
@@ -45,10 +44,10 @@ body{
   }
 }
 
-.h-main{font-size:3.2em;font-weight:900;line-height:1;}
-.s-head{font-weight:900;border-bottom:3px solid #000;margin-top:1em;padding-bottom:2px;}
-.set-row{display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:3px 0;}
-.qty{font-size:1.4em;font-weight:900;}
+.h-main{font-size:3em;font-weight:900;line-height:1;}
+.s-head{font-weight:900;border-bottom:3px solid #000;margin-top:1em;padding-bottom:3px;}
+.set-row{display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:4px 0;}
+.qty{font-size:1.2em;font-weight:900;}
 .clk{font-family:monospace;font-weight:900;font-size:.9em;}
 
 .ui{
@@ -131,6 +130,7 @@ Scale {{Math.round(fit*100)}}%
   <div v-for="s in b.sets" class="flex justify-between text-[10px]">
 
     <div v-if="!s.rest">
+      <span v-if="b.rep>1">{{b.rep}}x </span>
       {{s.q}}x{{s.d}}
     </div>
 
@@ -168,12 +168,24 @@ Scale {{Math.round(fit*100)}}%
 
 <div v-for="sec in parsed">
 
+<!-- SECTION HEADER -->
 <div class="s-head flex justify-between">
-<div>{{sec.title}}</div>
-<div>{{sec.y}}y</div>
+  <div>
+    {{sec.title}}
+    <span class="text-xs opacity-60 ml-2">
+      START {{sec.startTime}}
+    </span>
+  </div>
+  <div>{{sec.y}}y</div>
 </div>
 
-<div v-for="b in sec.blocks">
+<!-- BLOCKS -->
+<div v-for="b in sec.blocks" class="mt-1">
+
+<!-- COACH FORMAT HEADER -->
+<div v-if="b.rep>1" class="text-[11px] font-black uppercase opacity-60 mb-1">
+  {{b.rep}}x SET
+</div>
 
 <div v-for="s in b.sets" class="set-row">
 
@@ -184,7 +196,9 @@ REST {{s.label}}
 </div>
 
 <div v-else class="qty">
-{{s.q}}x{{s.d}} @ {{s.p}}
+  <span v-if="b.rep>1">{{b.rep}}x (</span>
+  {{s.q}}x{{s.d}} @ {{s.p}}
+  <span v-if="b.rep>1">)</span>
 </div>
 
 </div>
@@ -214,9 +228,8 @@ function clock(sec){
 let h24=Math.floor(sec/3600);
 let h=h24%12||12;
 let m=Math.floor(sec%3600/60);
-let s=sec%60;
 let ap=h24>=12?"pm":"am";
-return `${h}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")} ${ap}`;
+return `${h}:${m.toString().padStart(2,"0")} ${ap}`;
 }
 
 function isRestTime(str){
@@ -234,14 +247,12 @@ const base=ref("");
 const fit=ref(0.75);
 
 const input=ref(`WARMUP:
-4x100 free
+2x
+4x100 @ 1:20
 8:00
-4x50 kick
-
 MAIN:
-6x100 @ 1:20
-6x100 @  1:20
-6x100 @0:00`);
+6x100
+6x100 @ 1:10`);
 
 const parsed=computed(()=>{
 
@@ -252,7 +263,7 @@ return [{title:"SET START + BASE",y:0,blocks:[]}];
 let baseSec=parseTime(base.value);
 
 let out=[];
-let cur={title:"PRACTICE",y:0,blocks:[]};
+let cur={title:"PRACTICE",y:0,blocks:[],startTime:""};
 let y=0;
 
 let [sh,sm]=start.value.split(":").map(Number);
@@ -266,14 +277,14 @@ let l=lines[i];
 
 if(l.endsWith(":")){
 if(cur.blocks.length)out.push(cur);
-cur={title:l.slice(0,-1),y:0,blocks:[]};
+cur={title:l.slice(0,-1),y:0,blocks:[],startTime:clock(t)};
 continue;
 }
 
 let r=l.match(/^(\d+)x$/i);
 if(r){
 let rep=+r[1];
-let block={sets:[]};
+let block={rep,sets:[]};
 i++;
 
 while(i<lines.length&&!lines[i].endsWith(":")){
@@ -316,28 +327,15 @@ t+=s.rest ? s.dur : s.dur*s.q;
 
 s.run=y;
 
-cur.blocks.push({sets:[s]});
+cur.blocks.push({rep:1,sets:[s]});
 }
 
 out.push(cur);
-
-nextTick(()=>{
-let el=document.getElementById("render-sheet");
-let f=1;
-fit.value=f;
-while(el.scrollHeight>1056&&f>0.2){
-f-=0.01;
-fit.value=f;
-}
-});
-
 return out;
 });
 
-/* SMART PARSER */
 function parse(str,baseSec){
 
-/* REST */
 if(isRestTime(str)){
 return{
 rest:true,
@@ -348,7 +346,6 @@ label:str
 };
 }
 
-/* SET */
 let m=str.match(/(\d+)x(\d+)/i);
 let q=1,d=0;
 
@@ -356,32 +353,23 @@ if(m){q=+m[1];d=+m[2];}
 else if(/^\d+/.test(str)) d=parseInt(str);
 else return null;
 
-/* FIXED @ PARSER (SPACE SAFE) */
+/* SPACE SAFE @ */
 let i=str.match(/@\s*(\d+)\s*:\s*(\d+)/);
 
-/* BASE vs OVERRIDE */
 let dur;
 
 if(i){
 dur=parseTime(i[1]+":"+i[2]);
-
-// safety for @0:00
 if(dur<=0) dur=Math.round(d/100*baseSec);
-
 }else{
 dur=Math.round(d/100*baseSec);
 }
 
-let pace=i
-? `${i[1]}:${i[2]}`
-: `${Math.floor(dur/60)}:${(dur%60).toString().padStart(2,"0")}`;
+let pace=i?`${i[1]}:${i[2]}`:`${Math.floor(dur/60)}:${(dur%60).toString().padStart(2,"0")}`;
 
 let note=str.replace(/(\d+)x(\d+)/i,"").replace(/@\s*\d+\s*:\s*\d+/,"").trim();
 
-return{
-rest:false,
-q,d,dur,p:pace,note
-};
+return{rest:false,q,d,dur,p:pace,note};
 }
 
 const yards=computed(()=>parsed.value.reduce((a,s)=>a+s.y,0));
