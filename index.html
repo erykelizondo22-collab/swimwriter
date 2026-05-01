@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Swim Master v21 - BASE FIX</title>
+<title>Swim Master v21.1 - SMART PARSER</title>
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -22,7 +22,6 @@ body{
   font-family:Inter,system-ui;
 }
 
-/* SHEET */
 #render-sheet{
   width:8.5in;
   min-height:11in;
@@ -46,14 +45,12 @@ body{
   }
 }
 
-/* TYPO */
 .h-main{font-size:3.2em;font-weight:900;line-height:1;}
 .s-head{font-weight:900;border-bottom:3px solid #000;margin-top:1em;padding-bottom:2px;}
 .set-row{display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:3px 0;}
 .qty{font-size:1.4em;font-weight:900;}
 .clk{font-family:monospace;font-weight:900;font-size:.9em;}
 
-/* UI */
 .ui{
   max-width:1400px;
   margin:10px auto;
@@ -208,7 +205,6 @@ REST {{s.label}}
 <script>
 const {createApp,ref,computed,nextTick}=Vue;
 
-/* CLOCK */
 function parseTime(t){
 let [m,s]=t.split(":").map(Number);
 return m*60+s;
@@ -223,7 +219,6 @@ let ap=h24>=12?"pm":"am";
 return `${h}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")} ${ap}`;
 }
 
-/* REST DETECTION */
 function isRestTime(str){
 return /^\d+:\d{2}$/.test(str.trim());
 }
@@ -244,11 +239,10 @@ const input=ref(`WARMUP:
 4x50 kick
 
 MAIN:
-6x100
 6x100 @ 1:20
-2:00`);
+6x100 @  1:20
+6x100 @0:00`);
 
-/* PARSER */
 const parsed=computed(()=>{
 
 if(!start.value||!base.value){
@@ -270,14 +264,12 @@ for(let i=0;i<lines.length;i++){
 
 let l=lines[i];
 
-/* SECTION */
 if(l.endsWith(":")){
 if(cur.blocks.length)out.push(cur);
 cur={title:l.slice(0,-1),y:0,blocks:[]};
 continue;
 }
 
-/* REPEAT BLOCK */
 let r=l.match(/^(\d+)x$/i);
 if(r){
 let rep=+r[1];
@@ -310,7 +302,6 @@ cur.blocks.push(block);
 continue;
 }
 
-/* NORMAL */
 let s=parse(l,baseSec);
 if(!s)continue;
 
@@ -330,12 +321,10 @@ cur.blocks.push({sets:[s]});
 
 out.push(cur);
 
-/* FIT TO PAGE */
 nextTick(()=>{
 let el=document.getElementById("render-sheet");
 let f=1;
 fit.value=f;
-
 while(el.scrollHeight>1056&&f>0.2){
 f-=0.01;
 fit.value=f;
@@ -345,7 +334,7 @@ fit.value=f;
 return out;
 });
 
-/* PARSE SET */
+/* SMART PARSER */
 function parse(str,baseSec){
 
 /* REST */
@@ -359,7 +348,7 @@ label:str
 };
 }
 
-/* SWIM SET */
+/* SET */
 let m=str.match(/(\d+)x(\d+)/i);
 let q=1,d=0;
 
@@ -367,22 +356,27 @@ if(m){q=+m[1];d=+m[2];}
 else if(/^\d+/.test(str)) d=parseInt(str);
 else return null;
 
-/* BASE vs OVERRIDE FIX */
-let i=str.match(/@(\d+):(\d+)/);
+/* FIXED @ PARSER (SPACE SAFE) */
+let i=str.match(/@\s*(\d+)\s*:\s*(\d+)/);
 
+/* BASE vs OVERRIDE */
 let dur;
 
 if(i){
-dur=parseTime(i[1]+":"+i[2]); // override
+dur=parseTime(i[1]+":"+i[2]);
+
+// safety for @0:00
+if(dur<=0) dur=Math.round(d/100*baseSec);
+
 }else{
-dur=Math.round(d/100*baseSec); // base fallback
+dur=Math.round(d/100*baseSec);
 }
 
 let pace=i
 ? `${i[1]}:${i[2]}`
 : `${Math.floor(dur/60)}:${(dur%60).toString().padStart(2,"0")}`;
 
-let note=str.replace(/(\d+)x(\d+)/i,"").replace(/@\d+:\d+/,"").trim();
+let note=str.replace(/(\d+)x(\d+)/i,"").replace(/@\s*\d+\s*:\s*\d+/,"").trim();
 
 return{
 rest:false,
