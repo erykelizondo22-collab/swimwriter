@@ -1,57 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Swim Master - Clean Cloud Build</title>
+<title>Swim Master FULL vFINAL</title>
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body{margin:0;font-family:system-ui;background:#f1f5f9;}
+body{margin:0;font-family:system-ui;background:#eef2f7;}
 [v-cloak]{display:none;}
-.ui{max-width:1100px;margin:auto;padding:20px;display:grid;grid-template-columns:2fr 1fr;gap:12px;}
+
+.app{
+  max-width:1500px;
+  margin:auto;
+  padding:10px;
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:12px;
+}
+
 .card{background:white;padding:14px;border-radius:12px;}
-textarea,input{width:100%;padding:8px;margin-top:6px;border:1px solid #ddd;border-radius:8px;}
-button{padding:8px;border-radius:8px;border:none;cursor:pointer;}
-.side{background:#111;color:white;padding:12px;border-radius:12px;}
-.set{border-bottom:1px solid #eee;padding:6px 0;display:flex;justify-content:space-between;}
-.small{font-size:12px;opacity:0.7;}
+.side{background:#111;color:white;padding:12px;border-radius:12px;max-height:90vh;overflow:auto;}
+
+textarea,input,select{
+  width:100%;
+  padding:8px;
+  margin-top:6px;
+  border-radius:8px;
+  border:1px solid #ddd;
+}
+
+button{
+  padding:8px;
+  border-radius:8px;
+  border:none;
+  cursor:pointer;
+}
+
+.print{
+  width:8.5in;
+  background:white;
+  margin:auto;
+  padding:0.75in;
+  box-shadow:0 20px 60px rgba(0,0,0,.2);
+}
+
+.section-title{
+  font-weight:900;
+  border-bottom:2px solid #000;
+  margin-top:10px;
+  padding-bottom:4px;
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  border-bottom:1px solid #eee;
+  padding:4px 0;
+}
+
+.qty{font-weight:800;}
+.note{font-size:11px;opacity:.6;}
+.clock{font-family:monospace;font-weight:800;}
 </style>
 </head>
 
 <body>
 
-<div id="app" v-cloak class="ui">
+<div id="app" v-cloak class="app">
 
 <!-- LEFT -->
 <div class="card">
 
-<h2 class="font-bold text-xl">Swim Master</h2>
-
-<div v-if="!user" class="mt-3">
-  <input v-model="email" placeholder="Enter email" />
+<div v-if="!user">
+  <input v-model="email" placeholder="Email login"/>
   <button @click="login" class="bg-blue-600 text-white w-full mt-2">
     Send Login Link
   </button>
 </div>
 
-<div v-else class="text-sm mt-2">
+<div v-else class="text-sm">
   Logged in: <b>{{ user.email }}</b>
   <button @click="logout" class="ml-2 bg-black text-white px-2">Logout</button>
 </div>
 
 <hr class="my-3">
 
-<input v-model="title" placeholder="Workout Title" />
-<input v-model="group" placeholder="Group" />
+<input v-model="title" placeholder="Workout Title"/>
+<input v-model="group" placeholder="Group"/>
 
-<textarea v-model="input" rows="10"></textarea>
+<textarea v-model="input" rows="14"></textarea>
+
+<div class="grid grid-cols-2 gap-2 mt-2">
+  <select v-model="base">
+    <option>1:15</option>
+    <option>1:20</option>
+    <option>1:30</option>
+    <option>1:40</option>
+    <option>1:45</option>
+    <option>2:00</option>
+  </select>
+
+  <input v-model="start" placeholder="Start HH:MM"/>
+</div>
 
 <button @click="saveWorkout" class="bg-green-600 text-white w-full mt-2">
 Save Workout
+</button>
+
+<button onclick="window.print()" class="bg-gray-800 text-white w-full mt-2">
+Print
 </button>
 
 </div>
@@ -59,14 +120,59 @@ Save Workout
 <!-- RIGHT -->
 <div class="side">
 
-<h3 class="font-bold">Workouts</h3>
-
 <div v-for="w in workouts" :key="w.id"
-     class="mt-2 p-2 bg-white/10 rounded cursor-pointer"
+     class="p-2 bg-white/10 rounded mt-2 cursor-pointer"
      @click="loadWorkout(w)">
 
-<div class="text-sm font-bold">{{ w.title }}</div>
-<div class="small">{{ w.group_name }}</div>
+<div class="font-bold">{{ w.title }}</div>
+<div class="text-xs opacity-60">{{ w.group_name }}</div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- PRINT -->
+<div class="print">
+
+<div class="text-3xl font-black">{{ title }}</div>
+<div class="text-sm">{{ group }}</div>
+
+<div v-for="sec in parsed">
+
+<div class="section-title">
+{{ sec.title }} — {{ sec.yards }}y
+</div>
+
+<div v-for="b in sec.blocks">
+
+<!-- ROUND DISPLAY -->
+<div v-if="b.rep > 1" class="text-xs font-bold opacity-60 mt-2">
+  {{ b.rep }}x (round)
+</div>
+
+<div v-for="s in b.sets" class="row">
+
+<div>
+  <div v-if="s.rest" class="qty">
+    REST {{ s.label }}
+  </div>
+
+  <div v-else class="qty">
+    {{ s.q }}x{{ s.d }} @ {{ s.p }}
+  </div>
+
+  <div v-if="s.label && !s.rest" class="note">
+    {{ s.label }}
+  </div>
+</div>
+
+<div class="clock">
+  {{ s.time }}
+</div>
+
+</div>
 
 </div>
 
@@ -75,93 +181,225 @@ Save Workout
 </div>
 
 <script>
-const {createApp,ref,onMounted} = Vue;
+const {createApp,ref,onMounted,computed} = Vue;
 
 const SUPABASE_URL = "https://nzrzcbxxqxwktocrmplg.supabase.co";
 const SUPABASE_KEY = "sb_publishable_IENWSv_n2kZ1yR2-VmV8ew_pljwvLdt";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+function parseClock(t){
+  if(!t) return 0;
+  let [h,m]=t.split(":");
+  return (+h*3600)+(+m*60);
+}
+
+function fmt(sec){
+  let m=Math.floor(sec/60);
+  let s=sec%60;
+  return `${m}:${s.toString().padStart(2,"0")}`;
+}
+
 createApp({
 setup(){
 
-const email = ref("");
-const user = ref(null);
+const email=ref("");
+const user=ref(null);
 
-const title = ref("");
-const group = ref("");
-const input = ref("");
+const title=ref("SESSION");
+const group=ref("SOFLO");
+const input=ref("");
+const base=ref("1:30");
+const start=ref("0:00");
 
-const workouts = ref([]);
+const workouts=ref([]);
 
-// 🔐 LOGIN
+/* AUTH */
 async function login(){
   const { error } = await supabaseClient.auth.signInWithOtp({
     email: email.value,
-    options: {
-      emailRedirectTo: window.location.origin
-    }
+    options:{ emailRedirectTo: window.location.origin }
   });
   if(error) alert(error.message);
-  else alert("Check your email");
 }
 
-// 🚪 LOGOUT
 async function logout(){
   await supabaseClient.auth.signOut();
-  user.value = null;
+  user.value=null;
 }
 
-// 💾 SAVE
+/* SAVE */
 async function saveWorkout(){
-  if(!user.value) return alert("Login first");
-
   const { error } = await supabaseClient.from("workouts").insert([{
-    title: title.value,
-    group_name: group.value,
-    content: input.value,
-    coach_name: user.value.email,
-    team_id: "SOFLO",
-    total_yards: 0
+    title:title.value,
+    group_name:group.value,
+    content:input.value,
+    coach_name:user.value?.email || "anon",
+    team_id:"SOFLO",
+    base_interval:base.value
   }]);
 
   if(error) alert(error.message);
   else loadWorkouts();
 }
 
-// 📥 LOAD
+/* LOAD */
 async function loadWorkouts(){
-  const { data } = await supabaseClient
-    .from("workouts")
+  const { data } = await supabaseClient.from("workouts")
     .select("*")
     .order("created_at",{ascending:false});
 
   workouts.value = data || [];
 }
 
-// 📂 LOAD ONE
 function loadWorkout(w){
-  title.value = w.title;
-  group.value = w.group_name;
-  input.value = w.content;
+  title.value=w.title;
+  group.value=w.group_name;
+  input.value=w.content;
 }
 
-// 🔁 SESSION
-onMounted(async () => {
-  const { data } = await supabaseClient.auth.getSession();
-  user.value = data.session?.user || null;
+/* =========================
+   FULL PARSER (ROUND + INTERVAL + TIMELINE)
+========================= */
 
-  supabaseClient.auth.onAuthStateChange((_, session) => {
-    user.value = session?.user || null;
-    loadWorkouts();
+const parsed = computed(()=>{
+
+let lines=input.value.split("\n").map(l=>l.trim()).filter(Boolean);
+
+let out=[];
+let sec={title:"WORKOUT",yards:0,blocks:[]};
+
+let t=parseClock(start.value);
+let running=0;
+
+for(let i=0;i<lines.length;i++){
+
+let l=lines[i];
+
+// SECTION
+if(l.endsWith(":")){
+  if(sec.blocks.length) out.push(sec);
+  sec={title:l.replace(":",""),yards:0,blocks:[]};
+  continue;
+}
+
+// REST
+if(/^\d+:\d{2}$/.test(l)){
+  sec.blocks.push({
+    sets:[{
+      rest:true,
+      label:l,
+      time:fmt(t)
+    }]
   });
+  t+=parseClock(l);
+  continue;
+}
 
-  loadWorkouts();
+/* ROUND BLOCK */
+let round=l.match(/^(\d+)x$/);
+if(round){
+  let reps=+round[1];
+  let block={rep:reps,sets:[]};
+
+  let j=i+1;
+  let sub=[];
+
+  while(j<lines.length && !lines[j].endsWith(":") && !/^(\d+)x$/.test(lines[j])){
+    sub.push(lines[j]);
+    j++;
+  }
+
+  for(let r=0;r<reps;r++){
+    sub.forEach(line=>{
+      let s=parseLine(line);
+      if(!s) return;
+
+      sec.yards += s.d;
+
+      let inst={...s};
+      inst.time=fmt(t);
+
+      if(!s.rest) t += parseClock(s.p || base.value);
+      else t += s.dur;
+
+      block.sets.push(inst);
+    });
+  }
+
+  sec.blocks.push(block);
+  i=j-1;
+  continue;
+}
+
+/* NORMAL LINE */
+let s=parseLine(l);
+if(!s) continue;
+
+sec.yards += s.d;
+
+let inst={...s,time:fmt(t)};
+
+if(!s.rest) t += parseClock(s.p || base.value);
+else t += s.dur;
+
+sec.blocks.push({rep:1,sets:[inst]});
+
+}
+
+out.push(sec);
+return out;
+
+});
+
+/* PARSER */
+function parseLine(str){
+
+if(/^\d+:\d{2}$/.test(str)){
+  return {rest:true,label:str,d:0,dur:parseClock(str)};
+}
+
+let m=str.match(/(\d+)x(\d+)(?:\s*@\s*(\d+:\d+))?/i);
+
+if(m){
+  return {
+    q:+m[1],
+    d:+m[2],
+    p:m[3]||base.value,
+    label:str.replace(m[0],"").trim(),
+    rest:false
+  };
+}
+
+if(/^\d+$/.test(str)){
+  return {
+    q:1,
+    d:+str,
+    p:base.value,
+    label:"",
+    rest:false
+  };
+}
+
+return null;
+}
+
+onMounted(async()=>{
+
+const { data } = await supabaseClient.auth.getSession();
+user.value=data.session?.user || null;
+
+supabaseClient.auth.onAuthStateChange((_,session)=>{
+  user.value=session?.user || null;
+});
+
+loadWorkouts();
+
 });
 
 return {
-email,user,title,group,input,
-workouts,
+email,user,title,group,input,base,start,
+workouts,parsed,
 login,logout,saveWorkout,loadWorkout
 };
 
