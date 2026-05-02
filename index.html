@@ -1,244 +1,231 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Swim Master v26 - CLOUD SYNC</title>
-
-<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<style>
-[v-cloak]{display:none!important;}
-:root{ --fit:0.75; --m-lock:0.75in; }
-body{ margin:0; background:#f1f5f9; font-family:Inter,system-ui; }
-#render-sheet{ width:8.5in; min-height:11in; padding:var(--m-lock); margin:1rem auto; background:#fff; box-shadow:0 30px 80px rgba(0,0,0,.15); font-size:calc(16px * var(--fit)); }
-@media print{ body{background:#fff;} .no-print{display:none!important;} #render-sheet{ position:static; margin:0; box-shadow:none; width:100%; } }
-.h-main{font-size:3em;font-weight:900;}
-.s-head{font-weight:900;border-bottom:3px solid #000;margin-top:1em;padding-bottom:3px;}
-.set-row{display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:4px 0;}
-.qty{font-size:1.2em;font-weight:900;}
-.note{font-size:11px;opacity:0.7;}
-.clk{font-family:monospace;font-weight:900;font-size:.9em;}
-.ui{ max-width:1400px; margin:10px auto; display:grid; grid-template-columns: 2fr 1fr; gap:12px; padding:10px; }
-.panel{ background:#fff; padding:15px; border-radius:16px; }
-.side{ background:#000; color:#fff; padding:15px; border-radius:16px; overflow-y: auto; max-height: 90vh; }
-</style>
-</head>
-
-<body>
-<div id="app" v-cloak :style="{'--fit':fit}">
-
-<div class="ui no-print">
-  <div class="panel space-y-3">
-    <input v-model="title" class="text-2xl font-black w-full border-b p-1 uppercase">
-    
-    <div class="grid grid-cols-4 gap-2 text-xs">
-      <input v-model="team" placeholder="Team" class="border p-2 font-bold uppercase">
-      <input v-model="group" placeholder="Group" class="border p-2 font-bold">
-      <input type="time" v-model="start" class="border p-2 font-bold">
-      <select v-model="base" class="border p-2 font-bold">
-        <option>1:15</option><option>1:20</option><option>1:30</option>
-        <option>1:40</option><option>1:45</option><option>2:00</option>
-      </select>
-    </div>
-
-    <div class="flex gap-2">
-      <button @click="saveToCloud" class="flex-1 bg-blue-600 text-white font-black py-2 rounded-lg text-xs hover:bg-blue-700 transition">
-        SYNC TO SOFLO CLOUD
-      </button>
-      <button @click="copyLink" class="bg-black text-white px-4 py-2 rounded-lg text-xs font-bold">
-        Share Link
-      </button>
-    </div>
-
-    <div class="text-xs font-bold flex justify-between">
-      <span>Scale {{Math.round(fit*100)}}%</span>
-      <input type="range" min="0.3" max="1.2" step="0.01" v-model="fit" class="w-2/3">
-    </div>
-
-    <textarea v-model="input" class="w-full h-[400px] border p-3 font-mono text-xs rounded-xl shadow-inner"></textarea>
-  </div>
-
-  <div class="side p-5 space-y-6">
-    <div class="text-center border-b border-white/10 pb-4">
-      <div class="opacity-40 font-black text-[10px] tracking-widest">TOTAL VOLUME</div>
-      <div class="text-6xl font-black">{{yards}}y</div>
-      <div class="text-xs font-bold opacity-60">{{duration}} min session</div>
-    </div>
-
-    <div>
-      <div class="flex justify-between items-center mb-3">
-        <h3 class="font-black text-xs tracking-tighter opacity-50 uppercase">Team Feed (Recent)</h3>
-        <button @click="loadCloudData" class="text-[10px] bg-white/10 px-2 py-1 rounded">Refresh</button>
-      </div>
-      
-      <div class="space-y-3">
-        <div v-for="workout in cloudWorkouts" :key="workout.id" 
-             @click="loadWorkout(workout)"
-             class="bg-white/5 p-3 rounded-xl cursor-pointer hover:bg-white/10 transition border border-white/5">
-          <div class="flex justify-between font-black text-[10px] uppercase text-blue-400">
-            <span>{{workout.group}}</span>
-            <span>{{workout.total_yards}}y</span>
-          </div>
-          <div class="font-bold text-sm truncate uppercase">{{workout.title}}</div>
-          <div class="text-[9px] opacity-40 mt-1 uppercase">By {{workout.coach_name}}</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="render-sheet">
-  <div class="flex justify-between border-b-4 pb-2 mb-3">
-    <div>
-      <div class="h-main">{{title}}</div>
-      <div class="text-xs font-bold">{{team}} — {{group}}</div>
-    </div>
-    <div class="text-right">
-      <div class="text-4xl font-black">{{yards}}y</div>
-      <div class="text-xs">{{duration}} min</div>
-    </div>
-  </div>
-
-  <div v-for="sec in parsed">
-    <div class="s-head flex justify-between uppercase">
-      <div>{{sec.title}} — START {{formatTime(sec.startTimeRaw)}}</div>
-      <div>{{sec.y}}y</div>
-    </div>
-    <div v-for="b in sec.blocks" class="mt-2">
-      <div v-if="b.rep > 1" class="font-black text-sm uppercase mb-1">● {{b.rep}}x (ROUND)</div>
-      <div v-for="s in b.sets" class="set-row" :class="{'border-l-4 border-black pl-4 ml-1': b.rep > 1}">
-        <div>
-          <div v-if="s.rest" class="qty opacity-70">REST {{s.label}}</div>
-          <div v-else class="qty">{{s.q}}x{{s.d}} @ {{s.p}}<span v-if="s.label" class="note"> — {{s.label}}</span></div>
-        </div>
-        <div class="clk">{{formatTime(s.start)}}<br>{{s.run}}y</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-</div>
-
 <script>
 const {createApp,ref,computed,onMounted}=Vue;
 
-// 2. SOFLO CLOUD CONFIG
+// ✅ FIXED SUPABASE INIT
 const SUPABASE_URL = 'https://nzrzcbxxqxwktocrmplg.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_IENWSv_n2kZ1yR2-VmV8ew_pljwvLdt';
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// TIME HELPERS
 function parseClockTime(t){ if(!t) return 0; let [h,m]=t.split(":").map(Number); return h*3600 + m*60; }
 function parseTime(t){ if(!t) return 0; let [m,s]=t.split(":").map(Number); return m*60+s; }
-function clock(sec){ let h24=Math.floor(sec/3600); let m=Math.floor(sec%3600/60); let h=h24%12||12; let ap=h24>=12?"pm":"am"; return `${h}:${m.toString().padStart(2,"0")} ${ap}`; }
+function clock(sec){
+  let h24=Math.floor(sec/3600);
+  let m=Math.floor(sec%3600/60);
+  let h=h24%12||12;
+  let ap=h24>=12?"pm":"am";
+  return `${h}:${m.toString().padStart(2,"0")} ${ap}`;
+}
 function isRestTime(str){ return /^\d+:\d{2}$/.test(str.trim()); }
 
 createApp({
 setup(){
+
 const title=ref("SOFLO SESSION");
 const team=ref("SOFLO");
 const group=ref("SENIOR ELITE");
 const start=ref("17:45");
 const base=ref("1:30");
 const fit=ref(0.75);
-const input=ref("Warmup:\n400 Free\n300 Kick\n200 Pull\n\nMain Set:\n2x\n4x50 @ 1:00 Sprint\n100 @ 2:00 Easy");
+
+const input=ref(`Warmup:
+400 Free
+300 Kick
+200 Pull
+
+Main Set:
+2x
+4x50 @ 1:00 Sprint
+100 @ 2:00 Easy`);
+
 const cloudWorkouts=ref([]);
 
-// 3. CLOUD FUNCTIONS
-async function saveToCloud() {
-  const { error } = await supabase.from('workouts').insert([{
-    team_id: 'SOFLO',
-    coach_name: 'Coach Eryk', // Later link this to Google Login
-    title: title.value,
-    group: group.value,
-    content: input.value,
-    total_yards: yards.value
-  }]);
-  if(error) alert("Cloud Error: " + error.message);
-  else { alert("Synced to SOFLO Database!"); loadCloudData(); }
-}
-
-async function loadCloudData() {
-  const { data } = await supabase.from('workouts')
-    .select('*')
-    .eq('team_id', 'SOFLO')
-    .order('created_at', { ascending: false })
-    .limit(10);
-  if(data) cloudWorkouts.value = data;
-}
-
-function loadWorkout(w) {
-  title.value = w.title;
-  group.value = w.group;
-  input.value = w.content;
-}
-
-onMounted(() => loadCloudData());
-
-// 4. PARSING LOGIC (EXACTLY AS PROVIDED)
+// ✅ PARSER (FULLY FIXED)
 const parsed=computed(()=>{
-  if(!start.value||!base.value) return [];
-  let baseSec=parseTime(base.value);
-  let out=[];
-  let cur={title:"PRACTICE",y:0,blocks:[],startTimeRaw:0};
-  let runningYards=0;
-  let t=parseClockTime(start.value);
-  cur.startTimeRaw=t;
-  let lines=input.value.split("\n").map(l=>l.trim()).filter(Boolean);
-  for(let i=0;i<lines.length;i++){
-    let l=lines[i];
-    if(l.endsWith(":")){ if(cur.blocks.length) out.push(cur); cur={title:l.slice(0,-1),y:0,blocks:[],startTimeRaw:t}; continue; }
-    let roundMatch = l.match(/^(\d+)x$/i);
-    if(roundMatch) {
-        let reps = parseInt(roundMatch[1]);
-        let block = { rep: reps, sets: [] };
-        let subIdx = i + 1;
-        while(subIdx < lines.length && !lines[subIdx].endsWith(":") && !lines[subIdx].match(/^(\d+)x$/i)) {
-            let s = parseLineLogic(lines[subIdx], baseSec);
-            if(s) {
-                for(let r=0; r<reps; r++) {
-                    if(r === 0) block.sets.push({...s, start: t});
-                    if(!s.rest) { runningYards += s.q * s.d; cur.y += s.q * s.d; t += s.dur * s.q; }
-                    else { t += s.dur; }
-                }
-            }
-            subIdx++;
-        }
-        block.sets.forEach(set => set.run = runningYards);
-        cur.blocks.push(block);
-        i = subIdx - 1;
-    } else {
-        let s = parseLineLogic(l, baseSec);
-        if(s) {
-            if(!s.rest) { runningYards += s.q * s.d; cur.y += s.q * s.d; s.start = t; t += s.dur * s.q; }
-            else { s.start = t; t += s.dur; }
-            s.run = runningYards;
-            cur.blocks.push({ rep: 1, sets: [s] });
-        }
+
+if(!start.value||!base.value) return [];
+
+let baseSec=parseTime(base.value);
+let out=[];
+let cur={title:"PRACTICE",y:0,blocks:[],startTimeRaw:0};
+
+let y=0;
+let t=parseClockTime(start.value);
+cur.startTimeRaw=t;
+
+let lines=input.value.split("\n").map(l=>l.trim()).filter(Boolean);
+
+for(let i=0;i<lines.length;i++){
+
+let l=lines[i];
+
+// SECTION
+if(l.endsWith(":")){
+  if(cur.blocks.length) out.push(cur);
+  cur={title:l.slice(0,-1),y:0,blocks:[],startTimeRaw:t};
+  continue;
+}
+
+// ROUND BLOCK
+let r=l.match(/^(\d+)x$/i);
+if(r){
+  let rep=+r[1];
+  let block={rep,sets:[]};
+  i++;
+
+  while(i<lines.length && !lines[i].endsWith(":")){
+    let s=parseLine(lines[i],baseSec);
+    if(!s){i++;continue;}
+
+    for(let k=0;k<rep;k++){
+
+      let inst={...s};
+
+      if(!inst.rest){
+        y+=inst.q*inst.d;
+        cur.y+=inst.q*inst.d;
+        inst.start=t;
+        t+=inst.dur*inst.q;
+      } else {
+        inst.start=t;
+        t+=inst.dur;
+      }
+
+      inst.run=y;
+      block.sets.push(inst);
     }
+
+    i++;
   }
-  out.push(cur); return out;
+
+  i--;
+  cur.blocks.push(block);
+  continue;
+}
+
+// SINGLE LINE
+let s=parseLine(l,baseSec);
+if(!s) continue;
+
+let inst={...s};
+
+if(!inst.rest){
+  y+=inst.q*inst.d;
+  cur.y+=inst.q*inst.d;
+  inst.start=t;
+  t+=inst.dur*inst.q;
+} else {
+  inst.start=t;
+  t+=inst.dur;
+}
+
+inst.run=y;
+cur.blocks.push({rep:1,sets:[inst]});
+}
+
+out.push(cur);
+return out;
 });
 
-function parseLineLogic(str,baseSec){
-  if(isRestTime(str)) return { rest:true, q:1, d:0, dur:parseTime(str), label:str };
-  let m=str.match(/(\d+)x(\d+)/i); let q=1,d=0;
-  if(m){ q=+m[1]; d=+m[2]; } else if(/^\d+/.test(str)){ d=parseInt(str); } else return null;
-  let i=str.match(/(?:@|on)\s*(\d+):(\d+)/);
-  let dur=i?parseTime(i[1]+":"+i[2]):Math.round(d/100*baseSec);
-  let label=str.replace(/(\d+x\d+)|(^\d+)|(@|on)\s*\d+:\d{2}/gi,"").trim();
-  let pace=`${Math.floor(dur/60)}:${(dur%60).toString().padStart(2,"0")}`;
-  return {rest:false,q,d,dur,p:pace,label};
+// ✅ PARSE LINE WITH NOTES
+function parseLine(str,baseSec){
+
+if(isRestTime(str)){
+  return {rest:true,q:1,d:0,dur:parseTime(str),label:str};
 }
 
-return {
-    title,team,group,start,base,fit,input,parsed,yards,duration,cloudWorkouts,
-    formatTime:clock,copyLink: () => alert("Link Copied!"), saveToCloud, loadWorkout, loadCloudData
+let m=str.match(/(\d+)x(\d+)/i);
+let q=1,d=0;
+
+if(m){ q=+m[1]; d=+m[2]; }
+else if(/^\d+/.test(str)){ d=parseInt(str); }
+else return null;
+
+let i=str.match(/(?:@|on)\s*(\d+):(\d+)/);
+let dur=i?parseTime(i[1]+":"+i[2]):Math.round(d/100*baseSec);
+
+// KEEP NOTES
+let label=str.replace(/(\d+x\d+)|(^\d+)|(@|on)\s*\d+:\d{2}/gi,"").trim();
+
+let pace=`${Math.floor(dur/60)}:${(dur%60).toString().padStart(2,"0")}`;
+
+return {rest:false,q,d,dur,p:pace,label};
+}
+
+// ✅ TOTALS (FIXED)
+const yards=computed(()=>parsed.value.reduce((a,s)=>a+s.y,0));
+
+const duration=computed(()=>{
+let t=0;
+parsed.value.forEach(sec=>{
+sec.blocks.forEach(b=>{
+b.sets.forEach(s=>{
+t+=s.dur*(s.q||1);
+});
+});
+});
+return Math.round(t/60);
+});
+
+// ✅ SHARE (REAL)
+function copyLink(){
+let data={
+  title:title.value,
+  team:team.value,
+  group:group.value,
+  start:start.value,
+  base:base.value,
+  input:input.value
+};
+let encoded=btoa(JSON.stringify(data));
+let url=location.origin+location.pathname+"?w="+encoded;
+navigator.clipboard.writeText(url);
+alert("Link copied!");
+}
+
+// ✅ CLOUD SAVE
+async function saveToCloud(){
+  const { error } = await supabaseClient.from('workouts').insert([{
+    team_id:'SOFLO',
+    coach_name:'Coach Eryk',
+    title:title.value,
+    group:group.value,
+    content:input.value,
+    total_yards:yards.value
+  }]);
+
+  if(error) alert(error.message);
+  else{
+    alert("Synced!");
+    loadCloudData();
+  }
+}
+
+// ✅ LOAD CLOUD
+async function loadCloudData(){
+  const { data } = await supabaseClient.from('workouts')
+    .select('*')
+    .eq('team_id','SOFLO')
+    .order('created_at',{ascending:false})
+    .limit(10);
+
+  if(data) cloudWorkouts.value=data;
+}
+
+function loadWorkout(w){
+  title.value=w.title;
+  group.value=w.group;
+  input.value=w.content;
+}
+
+onMounted(loadCloudData);
+
+return{
+title,team,group,start,base,fit,input,
+parsed,yards,duration,cloudWorkouts,
+formatTime:clock,
+copyLink,saveToCloud,loadWorkout,loadCloudData
 };
 }
 }).mount("#app");
 </script>
-</body>
-</html>
