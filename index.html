@@ -3,250 +3,174 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Swim Master v28 - FIXED CLOUD</title>
+<title>Swim Master - Email Auth + Sync</title>
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-[v-cloak]{display:none!important;}
-:root{ --fit:0.75; --m-lock:0.75in; }
-body{ margin:0; background:#f1f5f9; font-family:Inter,system-ui; }
-#render-sheet{ width:8.5in; min-height:11in; padding:var(--m-lock); margin:1rem auto; background:#fff; box-shadow:0 30px 80px rgba(0,0,0,.15); font-size:calc(16px * var(--fit)); }
-@media print{ .no-print{display:none!important;} #render-sheet{ margin:0; box-shadow:none; width:100%; } }
-.h-main{font-size:3em;font-weight:900;}
-.s-head{font-weight:900;border-bottom:3px solid #000;margin-top:1em;padding-bottom:3px;}
-.set-row{display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:4px 0;}
-.qty{font-size:1.2em;font-weight:900;}
-.note{font-size:11px;opacity:0.7;}
-.clk{font-family:monospace;font-weight:900;font-size:.9em;}
-.ui{ max-width:1400px; margin:10px auto; display:grid; grid-template-columns:2fr 1fr; gap:12px; padding:10px; }
-.panel{ background:#fff; padding:15px; border-radius:16px; }
-.side{ background:#000; color:#fff; padding:15px; border-radius:16px; overflow-y:auto; max-height:90vh; }
+body{margin:0;font-family:system-ui;background:#f1f5f9;}
+[v-cloak]{display:none;}
+.ui{max-width:1000px;margin:auto;padding:20px;}
+.card{background:white;padding:16px;border-radius:12px;margin-bottom:12px;}
+textarea,input{width:100%;padding:8px;margin-top:6px;border:1px solid #ddd;border-radius:8px;}
+button{padding:10px;border-radius:8px;border:none;cursor:pointer;}
 </style>
 </head>
 
 <body>
-<div id="app" v-cloak :style="{'--fit':fit}">
 
-<div class="ui no-print">
+<div id="app" v-cloak class="ui">
 
-<div class="panel space-y-3">
+<!-- LOGIN -->
+<div class="card" v-if="!user">
+  <h2 class="font-bold text-lg">Coach Login</h2>
 
-<input v-model="title" class="text-2xl font-black w-full border-b p-1">
+  <input v-model="email" placeholder="Enter email">
 
-<div class="grid grid-cols-4 gap-2 text-xs">
-  <input v-model="team" placeholder="Team" class="border p-2">
-  <input v-model="group" placeholder="Group" class="border p-2">
-  <input type="time" v-model="start" class="border p-2">
-  <select v-model="base" class="border p-2">
-    <option>1:15</option><option>1:20</option><option>1:30</option>
-    <option>1:40</option><option>1:45</option><option>2:00</option>
-  </select>
-</div>
-
-<div class="flex gap-2">
-  <button @click="saveToCloud" class="flex-1 bg-blue-600 text-white py-2 rounded text-xs font-bold">
-    SYNC
-  </button>
-  <button @click="loadCloudData" class="bg-gray-800 text-white px-3 py-2 rounded text-xs">
-    LOAD
-  </button>
-  <button @click="testConnection" class="bg-red-600 text-white px-3 py-2 rounded text-xs">
-    TEST
+  <button @click="sendMagicLink"
+          style="background:#2563eb;color:white;margin-top:10px;width:100%;">
+    Send Login Link
   </button>
 </div>
 
-<textarea v-model="input" class="w-full h-[350px] border p-2 font-mono text-xs"></textarea>
-
+<!-- LOGGED IN -->
+<div v-else class="card">
+  <div class="flex justify-between">
+    <div>Logged in as: <b>{{ user.email }}</b></div>
+    <button @click="logout" style="background:black;color:white;">Logout</button>
+  </div>
 </div>
 
-<div class="side">
+<!-- WORKOUT EDITOR -->
+<div v-if="user" class="card">
+  <h2 class="font-bold text-lg">Workout Editor</h2>
 
-<div class="text-center mb-4">
-  <div class="text-4xl font-black">{{yards}}y</div>
-  <div>{{duration}} min</div>
+  <input v-model="title" placeholder="Workout title">
+  <input v-model="group" placeholder="Group / Set">
+  <textarea v-model="input" rows="10"></textarea>
+
+  <button @click="saveWorkout"
+          style="background:green;color:white;margin-top:10px;width:100%;">
+    Save Workout
+  </button>
 </div>
 
-<div v-for="w in cloudWorkouts" :key="w.id"
-     @click="loadWorkout(w)"
-     class="bg-white/10 p-2 mb-2 cursor-pointer">
+<!-- WORKOUT FEED -->
+<div v-if="user" class="card">
+  <h2 class="font-bold text-lg">Shared Workouts</h2>
 
-  <div class="text-xs text-blue-300">{{w.group}} • {{w.total_yards}}y</div>
-  <div class="font-bold">{{w.title}}</div>
+  <div v-for="w in workouts" :key="w.id"
+       class="card" style="border:1px solid #eee;cursor:pointer"
+       @click="loadWorkout(w)">
 
-</div>
-
-</div>
-</div>
-
-<div id="render-sheet">
-<div v-for="sec in parsed">
-<div class="s-head">{{sec.title}}</div>
-
-<div v-for="b in sec.blocks">
-<div v-for="s in b.sets" class="set-row">
-
-<div>
-<div v-if="s.rest">REST {{s.label}}</div>
-<div v-else>
-{{s.q}}x{{s.d}} @ {{s.p}}
-<span v-if="s.label" class="note"> — {{s.label}}</span>
-</div>
-</div>
-
-<div class="clk">{{formatTime(s.start)}}</div>
-
-</div>
-</div>
-</div>
+    <b>{{ w.title }}</b>
+    <div style="font-size:12px;opacity:0.7;">
+      {{ w.group_name }} • {{ w.coach_name }}
+    </div>
+  </div>
 </div>
 
 </div>
 
 <script>
-const {createApp,ref,computed,onMounted}=Vue;
+const {createApp,ref,onMounted} = Vue;
 
-// ✅ CORRECT SUPABASE SETUP
-const SUPABASE_URL = 'https://nzrzcbxxqxwktocrmplg.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_IENWSv_n2kZ1yR2-VmV8ew_pljwvLdt';
+// 🔥 SUPABASE CONNECTION
+const SUPABASE_URL = "https://nzrzcbxxqxwktocrmplg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_IENWSv_n2kZ1yR2-VmV8ew_pljwvLdt";
+
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// TIME HELPERS
-function parseClockTime(t){ if(!t) return 0; let [h,m]=t.split(":"); return h*3600 + m*60; }
-function parseTime(t){ let [m,s]=t.split(":"); return m*60+s; }
-function clock(sec){ let h=Math.floor(sec/3600)%12||12; let m=Math.floor(sec%3600/60); return `${h}:${m.toString().padStart(2,"0")}`; }
-function isRestTime(str){ return /^\d+:\d{2}$/.test(str); }
 
 createApp({
 setup(){
 
-const title=ref("SESSION");
-const team=ref("SOFLO");
-const group=ref("SENIOR");
-const start=ref("17:30");
-const base=ref("1:30");
-const fit=ref(0.75);
+const email = ref("");
+const user = ref(null);
 
-const input=ref(`Warmup:
-400 Free
-300 Kick
-200 Pull`);
+const title = ref("");
+const group = ref("");
+const input = ref("");
+const workouts = ref([]);
 
-const cloudWorkouts=ref([]);
+// 🔐 LOGIN (EMAIL MAGIC LINK)
+async function sendMagicLink(){
+  const { error } = await supabaseClient.auth.signInWithOtp({
+    email: email.value,
+    options: {
+      emailRedirectTo: window.location.origin
+    }
+  });
 
-// PARSER
-const parsed=computed(()=>{
-let baseSec=parseTime(base.value);
-let out=[];
-let cur={title:"PRACTICE",y:0,blocks:[],startTimeRaw:0};
-let y=0;
-let t=parseClockTime(start.value);
-
-let lines=input.value.split("\n").map(l=>l.trim()).filter(Boolean);
-
-for(let l of lines){
-
-if(l.endsWith(":")){
-  if(cur.blocks.length) out.push(cur);
-  cur={title:l.slice(0,-1),y:0,blocks:[],startTimeRaw:t};
-  continue;
-}
-
-let s=parseLine(l,baseSec);
-if(!s) continue;
-
-if(!s.rest){
-  y+=s.q*s.d;
-  cur.y+=s.q*s.d;
-  s.start=t;
-  t+=s.dur*s.q;
-}else{
-  s.start=t;
-  t+=s.dur;
-}
-
-s.run=y;
-cur.blocks.push({rep:1,sets:[s]});
-}
-
-out.push(cur);
-return out;
-});
-
-function parseLine(str,baseSec){
-if(isRestTime(str)) return {rest:true,q:1,d:0,dur:parseTime(str),label:str};
-
-let m=str.match(/(\d+)x(\d+)/);
-let q=1,d=0;
-
-if(m){q=+m[1];d=+m[2];}
-else if(/^\d+/.test(str)){d=parseInt(str);}
-else return null;
-
-let i=str.match(/(\d+):(\d+)/);
-let dur=i?parseTime(i[0]):Math.round(d/100*baseSec);
-
-let label=str.replace(/(\d+x\d+)|(^\d+)|(\d+:\d+)/g,"").trim();
-
-return{rest:false,q,d,dur,p:`${Math.floor(dur/60)}:${(dur%60).toString().padStart(2,"0")}`,label};
-}
-
-// TOTALS
-const yards=computed(()=>parsed.value.reduce((a,s)=>a+s.y,0));
-const duration=computed(()=>Math.round(parsed.value.reduce((t,s)=>t+s.y/100*(parseTime(base.value)/60),0)));
-
-// 🔥 TEST CONNECTION
-async function testConnection(){
-  const { data, error } = await supabaseClient.from('workouts').select('*').limit(1);
-  console.log(data,error);
   if(error) alert(error.message);
-  else alert("Connected to Supabase!");
+  else alert("Check your email for login link");
 }
 
-// SAVE
-async function saveToCloud(){
-  const { error } = await supabaseClient.from('workouts').insert([{
-    team_id:team.value,
-    coach_name:"Coach",
-    title:title.value,
-    group:group.value,
-    content:input.value,
-    total_yards:yards.value
+// 🚪 LOGOUT
+async function logout(){
+  await supabaseClient.auth.signOut();
+  user.value = null;
+}
+
+// 💾 SAVE WORKOUT
+async function saveWorkout(){
+  if(!user.value){
+    alert("Login first");
+    return;
+  }
+
+  const { error } = await supabaseClient.from("workouts").insert([{
+    title: title.value,
+    group_name: group.value,
+    content: input.value,
+    coach_name: user.value.email,
+    team_id: "SOFLO",
+    total_yards: 0
   }]);
 
   if(error) alert(error.message);
-  else{
+  else {
     alert("Saved!");
-    loadCloudData();
+    loadWorkouts();
   }
 }
 
-// LOAD
-async function loadCloudData(){
-  const { data } = await supabaseClient.from('workouts')
-    .select('*')
-    .order('created_at',{ascending:false})
-    .limit(10);
+// 📥 LOAD WORKOUTS
+async function loadWorkouts(){
+  const { data, error } = await supabaseClient
+    .from("workouts")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-  cloudWorkouts.value=data||[];
+  if(!error) workouts.value = data;
 }
 
+// 📂 LOAD ONE WORKOUT
 function loadWorkout(w){
-  title.value=w.title;
-  group.value=w.group;
-  input.value=w.content;
+  title.value = w.title;
+  group.value = w.group_name;
+  input.value = w.content;
 }
 
-onMounted(loadCloudData);
+// 🔁 SESSION RESTORE
+onMounted(async () => {
+  const { data } = await supabaseClient.auth.getSession();
+  user.value = data.session?.user || null;
 
-return{
-title,team,group,start,base,fit,input,
-parsed,yards,duration,cloudWorkouts,
-formatTime:clock,
-saveToCloud,loadCloudData,testConnection,loadWorkout
+  supabaseClient.auth.onAuthStateChange((_, session) => {
+    user.value = session?.user || null;
+    if(user.value) loadWorkouts();
+  });
+
+  loadWorkouts();
+});
+
+return {
+  email,user,title,group,input,workouts,
+  sendMagicLink,logout,saveWorkout,loadWorkout
 };
+
 }
 }).mount("#app");
 </script>
