@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Swim Master v23 - COACH TIMING MODE</title>
+<title>Swim Master v24 - FIXED</title>
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -33,18 +33,20 @@ body{
 }
 
 @media print{
+  body{background:#fff;}
+
   .no-print{display:none!important;}
-  @page{margin:0;}
+
   #render-sheet{
+    position:static;
     margin:0;
     box-shadow:none;
-    position:absolute;
-    top:0;
-    left:0;
+    width:100%;
+    min-height:auto;
   }
 }
 
-.h-main{font-size:3em;font-weight:900;line-height:1;}
+.h-main{font-size:3em;font-weight:900;}
 .s-head{font-weight:900;border-bottom:3px solid #000;margin-top:1em;padding-bottom:3px;}
 .set-row{display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:4px 0;}
 .qty{font-size:1.2em;font-weight:900;}
@@ -106,6 +108,10 @@ Scale {{Math.round(fit*100)}}%
 <input type="range" min="0.3" max="1.2" step="0.01" v-model="fit">
 </div>
 
+<button @click="copyLink" class="bg-black text-white px-3 py-1 rounded text-xs">
+  Copy Share Link
+</button>
+
 <textarea v-model="input" class="w-full h-[420px] border p-2 font-mono text-xs"></textarea>
 
 </div>
@@ -149,7 +155,7 @@ Scale {{Math.round(fit*100)}}%
 
 </div>
 
-<!-- PRINT SHEET -->
+<!-- PRINT -->
 <div id="render-sheet">
 
 <div class="flex justify-between border-b-4 pb-2 mb-3">
@@ -166,28 +172,19 @@ Scale {{Math.round(fit*100)}}%
 
 </div>
 
-<!-- SECTIONS -->
 <div v-for="sec in parsed">
 
-<!-- SECTION HEADER -->
 <div class="s-head flex justify-between">
-  <div>
-    {{sec.title}} — START {{formatTime(sec.startTimeRaw)}}
-  </div>
+  <div>{{sec.title}} — START {{formatTime(sec.startTimeRaw)}}</div>
   <div>{{sec.y}}y</div>
 </div>
 
-<!-- BLOCKS -->
 <div v-for="b in sec.blocks" class="mt-2">
 
-<!-- COACH BLOCK HEADER -->
 <div v-if="b.rep > 1" class="text-[11px] font-black uppercase opacity-60 mb-1">
-  {{b.rep}}x (
-  {{b.sets.map(s => s.q + 'x' + s.d + (s.p ? ' @ ' + s.p : '')).join(' + ')}}
-  )
+  {{b.rep}}x block
 </div>
 
-<!-- SETS -->
 <div v-for="s in b.sets" class="set-row">
 
 <div>
@@ -216,21 +213,27 @@ Scale {{Math.round(fit*100)}}%
 <script>
 const {createApp,ref,computed}=Vue;
 
+// FIXED CLOCK TIME
+function parseClockTime(t){
+  let [h,m]=t.split(":").map(Number);
+  return h*3600 + m*60;
+}
+
 function parseTime(t){
-let [m,s]=t.split(":").map(Number);
-return m*60+s;
+  let [m,s]=t.split(":").map(Number);
+  return m*60+s;
 }
 
 function clock(sec){
-let h24=Math.floor(sec/3600);
-let h=h24%12||12;
-let m=Math.floor(sec%3600/60);
-let ap=h24>=12?"pm":"am";
-return `${h}:${m.toString().padStart(2,"0")} ${ap}`;
+  let h24=Math.floor(sec/3600);
+  let m=Math.floor(sec%3600/60);
+  let h=h24%12||12;
+  let ap=h24>=12?"pm":"am";
+  return `${h}:${m.toString().padStart(2,"0")} ${ap}`;
 }
 
 function isRestTime(str){
-return /^\d+:\d{2}$/.test(str.trim());
+  return /^\d+:\d{2}$/.test(str.trim());
 }
 
 createApp({
@@ -251,19 +254,31 @@ MAIN:
 6x100
 6x100 @ 1:10`);
 
+// LOAD FROM SHARE LINK
+let params=new URLSearchParams(location.search);
+let w=params.get("w");
+if(w){
+  let data=JSON.parse(atob(w));
+  title.value=data.title;
+  team.value=data.team;
+  group.value=data.group;
+  start.value=data.start;
+  base.value=data.base;
+  input.value=data.input;
+}
+
 const parsed=computed(()=>{
 
 if(!start.value||!base.value){
-return [{title:"SET START + BASE",y:0,blocks:[]}];
+  return [{title:"SET START + BASE",y:0,blocks:[]}];
 }
 
 let baseSec=parseTime(base.value);
-
 let out=[];
 let cur={title:"PRACTICE",y:0,blocks:[],startTimeRaw:0};
 let y=0;
 
-let t=parseTime(start.value.split(":")[0]+":"+start.value.split(":")[1]);
+let t=parseClockTime(start.value);
 cur.startTimeRaw=t;
 
 let lines=input.value.split("\n").map(l=>l.trim()).filter(Boolean);
@@ -273,61 +288,65 @@ for(let i=0;i<lines.length;i++){
 let l=lines[i];
 
 if(l.endsWith(":")){
-if(cur.blocks.length)out.push(cur);
-cur={title:l.slice(0,-1),y:0,blocks:[],startTimeRaw:t};
-continue;
+  if(cur.blocks.length)out.push(cur);
+  cur={title:l.slice(0,-1),y:0,blocks:[],startTimeRaw:t};
+  continue;
 }
 
 let r=l.match(/^(\d+)x$/i);
 if(r){
-let rep=+r[1];
-let block={rep,sets:[]};
-i++;
+  let rep=+r[1];
+  let block={rep,sets:[]};
+  i++;
 
-while(i<lines.length&&!lines[i].endsWith(":")){
+  while(i<lines.length&&!lines[i].endsWith(":")){
 
-let s=parse(lines[i],baseSec);
-if(!s){i++;continue;}
+    let s=parse(lines[i],baseSec);
+    if(!s){i++;continue;}
 
-for(let k=0;k<rep;k++){
+    for(let k=0;k<rep;k++){
 
-if(!s.rest){
-y+=s.q*s.d;
-cur.y+=s.q*s.d;
-s.start=t;
-t+=s.dur*s.q;
-}else{
-s.start=t;
-t+=s.dur;
-}
-}
+      let inst={...s};
 
-s.run=y;
-block.sets.push({...s});
-i++;
-}
+      if(!inst.rest){
+        y+=inst.q*inst.d;
+        cur.y+=inst.q*inst.d;
+        inst.start=t;
+        t+=inst.dur*inst.q;
+      }else{
+        inst.start=t;
+        t+=inst.dur;
+      }
 
-i--;
-cur.blocks.push(block);
-continue;
+      inst.run=y;
+      block.sets.push(inst);
+    }
+
+    i++;
+  }
+
+  i--;
+  cur.blocks.push(block);
+  continue;
 }
 
 let s=parse(l,baseSec);
 if(!s)continue;
 
-if(!s.rest){
-y+=s.q*s.d;
-cur.y+=s.q*s.d;
-s.start=t;
-t+=s.dur*s.q;
+let inst={...s};
+
+if(!inst.rest){
+  y+=inst.q*inst.d;
+  cur.y+=inst.q*inst.d;
+  inst.start=t;
+  t+=inst.dur*inst.q;
 }else{
-s.start=t;
-t+=s.dur;
+  inst.start=t;
+  t+=inst.dur;
 }
 
-s.run=y;
-
-cur.blocks.push({rep:1,sets:[s]});
+inst.run=y;
+cur.blocks.push({rep:1,sets:[inst]});
 }
 
 out.push(cur);
@@ -337,13 +356,13 @@ return out;
 function parse(str,baseSec){
 
 if(isRestTime(str)){
-return{
-rest:true,
-q:1,
-d:0,
-dur:parseTime(str),
-label:str
-};
+  return{
+    rest:true,
+    q:1,
+    d:0,
+    dur:parseTime(str),
+    label:str
+  };
 }
 
 let m=str.match(/(\d+)x(\d+)/i);
@@ -353,18 +372,11 @@ if(m){q=+m[1];d=+m[2];}
 else if(/^\d+/.test(str)) d=parseInt(str);
 else return null;
 
-let i=str.match(/@\s*(\d+)\s*:\s*(\d+)/);
+let i=str.match(/(?:@|on)\s*(\d+):(\d+)/);
 
-let dur;
+let dur=i?parseTime(i[1]+":"+i[2]):Math.round(d/100*baseSec);
 
-if(i){
-dur=parseTime(i[1]+":"+i[2]);
-if(dur<=0) dur=Math.round(d/100*baseSec);
-}else{
-dur=Math.round(d/100*baseSec);
-}
-
-let pace=i?`${i[1]}:${i[2]}`:`${Math.floor(dur/60)}:${(dur%60).toString().padStart(2,"0")}`;
+let pace=`${Math.floor(dur/60)}:${(dur%60).toString().padStart(2,"0")}`;
 
 return{rest:false,q,d,dur,p:pace};
 }
@@ -383,9 +395,26 @@ t+=s.dur*(s.q||1);
 return Math.round(t/60);
 });
 
+function copyLink(){
+let data={
+  title:title.value,
+  team:team.value,
+  group:group.value,
+  start:start.value,
+  base:base.value,
+  input:input.value
+};
+
+let encoded=btoa(JSON.stringify(data));
+let url=location.origin+location.pathname+"?w="+encoded;
+
+navigator.clipboard.writeText(url);
+alert("Link copied!");
+}
+
 return{
 title,team,group,start,base,fit,input,parsed,yards,duration,
-formatTime:clock
+formatTime:clock,copyLink
 };
 }
 }).mount("#app");
