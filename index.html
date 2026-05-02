@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Swim Master - Email Auth + Sync</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Swim Master - Clean Cloud Build</title>
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -12,10 +12,13 @@
 <style>
 body{margin:0;font-family:system-ui;background:#f1f5f9;}
 [v-cloak]{display:none;}
-.ui{max-width:1000px;margin:auto;padding:20px;}
-.card{background:white;padding:16px;border-radius:12px;margin-bottom:12px;}
+.ui{max-width:1100px;margin:auto;padding:20px;display:grid;grid-template-columns:2fr 1fr;gap:12px;}
+.card{background:white;padding:14px;border-radius:12px;}
 textarea,input{width:100%;padding:8px;margin-top:6px;border:1px solid #ddd;border-radius:8px;}
-button{padding:10px;border-radius:8px;border:none;cursor:pointer;}
+button{padding:8px;border-radius:8px;border:none;cursor:pointer;}
+.side{background:#111;color:white;padding:12px;border-radius:12px;}
+.set{border-bottom:1px solid #eee;padding:6px 0;display:flex;justify-content:space-between;}
+.small{font-size:12px;opacity:0.7;}
 </style>
 </head>
 
@@ -23,53 +26,50 @@ button{padding:10px;border-radius:8px;border:none;cursor:pointer;}
 
 <div id="app" v-cloak class="ui">
 
-<!-- LOGIN -->
-<div class="card" v-if="!user">
-  <h2 class="font-bold text-lg">Coach Login</h2>
+<!-- LEFT -->
+<div class="card">
 
-  <input v-model="email" placeholder="Enter email">
+<h2 class="font-bold text-xl">Swim Master</h2>
 
-  <button @click="sendMagicLink"
-          style="background:#2563eb;color:white;margin-top:10px;width:100%;">
+<div v-if="!user" class="mt-3">
+  <input v-model="email" placeholder="Enter email" />
+  <button @click="login" class="bg-blue-600 text-white w-full mt-2">
     Send Login Link
   </button>
 </div>
 
-<!-- LOGGED IN -->
-<div v-else class="card">
-  <div class="flex justify-between">
-    <div>Logged in as: <b>{{ user.email }}</b></div>
-    <button @click="logout" style="background:black;color:white;">Logout</button>
-  </div>
+<div v-else class="text-sm mt-2">
+  Logged in: <b>{{ user.email }}</b>
+  <button @click="logout" class="ml-2 bg-black text-white px-2">Logout</button>
 </div>
 
-<!-- WORKOUT EDITOR -->
-<div v-if="user" class="card">
-  <h2 class="font-bold text-lg">Workout Editor</h2>
+<hr class="my-3">
 
-  <input v-model="title" placeholder="Workout title">
-  <input v-model="group" placeholder="Group / Set">
-  <textarea v-model="input" rows="10"></textarea>
+<input v-model="title" placeholder="Workout Title" />
+<input v-model="group" placeholder="Group" />
 
-  <button @click="saveWorkout"
-          style="background:green;color:white;margin-top:10px;width:100%;">
-    Save Workout
-  </button>
+<textarea v-model="input" rows="10"></textarea>
+
+<button @click="saveWorkout" class="bg-green-600 text-white w-full mt-2">
+Save Workout
+</button>
+
 </div>
 
-<!-- WORKOUT FEED -->
-<div v-if="user" class="card">
-  <h2 class="font-bold text-lg">Shared Workouts</h2>
+<!-- RIGHT -->
+<div class="side">
 
-  <div v-for="w in workouts" :key="w.id"
-       class="card" style="border:1px solid #eee;cursor:pointer"
-       @click="loadWorkout(w)">
+<h3 class="font-bold">Workouts</h3>
 
-    <b>{{ w.title }}</b>
-    <div style="font-size:12px;opacity:0.7;">
-      {{ w.group_name }} • {{ w.coach_name }}
-    </div>
-  </div>
+<div v-for="w in workouts" :key="w.id"
+     class="mt-2 p-2 bg-white/10 rounded cursor-pointer"
+     @click="loadWorkout(w)">
+
+<div class="text-sm font-bold">{{ w.title }}</div>
+<div class="small">{{ w.group_name }}</div>
+
+</div>
+
 </div>
 
 </div>
@@ -77,11 +77,10 @@ button{padding:10px;border-radius:8px;border:none;cursor:pointer;}
 <script>
 const {createApp,ref,onMounted} = Vue;
 
-// 🔥 SUPABASE CONNECTION
 const SUPABASE_URL = "https://nzrzcbxxqxwktocrmplg.supabase.co";
 const SUPABASE_KEY = "sb_publishable_IENWSv_n2kZ1yR2-VmV8ew_pljwvLdt";
 
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 createApp({
 setup(){
@@ -92,19 +91,19 @@ const user = ref(null);
 const title = ref("");
 const group = ref("");
 const input = ref("");
+
 const workouts = ref([]);
 
-// 🔐 LOGIN (EMAIL MAGIC LINK)
-async function sendMagicLink(){
+// 🔐 LOGIN
+async function login(){
   const { error } = await supabaseClient.auth.signInWithOtp({
     email: email.value,
     options: {
       emailRedirectTo: window.location.origin
     }
   });
-
   if(error) alert(error.message);
-  else alert("Check your email for login link");
+  else alert("Check your email");
 }
 
 // 🚪 LOGOUT
@@ -113,12 +112,9 @@ async function logout(){
   user.value = null;
 }
 
-// 💾 SAVE WORKOUT
+// 💾 SAVE
 async function saveWorkout(){
-  if(!user.value){
-    alert("Login first");
-    return;
-  }
+  if(!user.value) return alert("Login first");
 
   const { error } = await supabaseClient.from("workouts").insert([{
     title: title.value,
@@ -130,45 +126,43 @@ async function saveWorkout(){
   }]);
 
   if(error) alert(error.message);
-  else {
-    alert("Saved!");
-    loadWorkouts();
-  }
+  else loadWorkouts();
 }
 
-// 📥 LOAD WORKOUTS
+// 📥 LOAD
 async function loadWorkouts(){
-  const { data, error } = await supabaseClient
+  const { data } = await supabaseClient
     .from("workouts")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("created_at",{ascending:false});
 
-  if(!error) workouts.value = data;
+  workouts.value = data || [];
 }
 
-// 📂 LOAD ONE WORKOUT
+// 📂 LOAD ONE
 function loadWorkout(w){
   title.value = w.title;
   group.value = w.group_name;
   input.value = w.content;
 }
 
-// 🔁 SESSION RESTORE
+// 🔁 SESSION
 onMounted(async () => {
   const { data } = await supabaseClient.auth.getSession();
   user.value = data.session?.user || null;
 
   supabaseClient.auth.onAuthStateChange((_, session) => {
     user.value = session?.user || null;
-    if(user.value) loadWorkouts();
+    loadWorkouts();
   });
 
   loadWorkouts();
 });
 
 return {
-  email,user,title,group,input,workouts,
-  sendMagicLink,logout,saveWorkout,loadWorkout
+email,user,title,group,input,
+workouts,
+login,logout,saveWorkout,loadWorkout
 };
 
 }
