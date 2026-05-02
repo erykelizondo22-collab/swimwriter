@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Swim Master v25 - NOTES FIX</title>
+<title>Swim Master v26 - ROUNDS FIX</title>
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -130,6 +130,7 @@ Copy Share Link
 </div>
 
 <div v-for="b in sec.blocks">
+  <div v-if="b.rep > 1" class="font-bold text-blue-400 mt-1">{{b.rep}}x (ROUND)</div>
   <div v-for="s in b.sets" class="flex justify-between text-[10px]">
 
     <div v-if="!s.rest">
@@ -151,7 +152,6 @@ Copy Share Link
 
 </div>
 
-<!-- PRINT -->
 <div id="render-sheet">
 
 <div class="flex justify-between border-b-4 pb-2 mb-3">
@@ -177,7 +177,11 @@ Copy Share Link
 
 <div v-for="b in sec.blocks" class="mt-2">
 
-<div v-for="s in b.sets" class="set-row">
+<div v-if="b.rep > 1" class="font-black text-sm uppercase mb-1">
+    ● {{b.rep}}x (ROUND)
+</div>
+
+<div v-for="s in b.sets" class="set-row" :class="{'border-l-4 border-black pl-4 ml-1': b.rep > 1}">
 
 <div>
   <div v-if="s.rest" class="qty opacity-70">
@@ -186,7 +190,7 @@ Copy Share Link
 
   <div v-else class="qty">
     {{s.q}}x{{s.d}} @ {{s.p}}
-    <span v-if="s.label"> — {{s.label}}</span>
+    <span v-if="s.label" class="note"> — {{s.label}}</span>
   </div>
 </div>
 
@@ -207,11 +211,13 @@ Copy Share Link
 const {createApp,ref,computed}=Vue;
 
 function parseClockTime(t){
+  if(!t) return 0;
   let [h,m]=t.split(":").map(Number);
   return h*3600 + m*60;
 }
 
 function parseTime(t){
+  if(!t) return 0;
   let [m,s]=t.split(":").map(Number);
   return m*60+s;
 }
@@ -235,37 +241,44 @@ const title=ref("SESSION");
 const team=ref("");
 const group=ref("");
 const start=ref("");
-const base=ref("");
+const base=ref("1:30");
 const fit=ref(0.75);
 
 const input=ref(`Warmup:
 400 Free
 300 Kick
 200 Pull
-4x25 @ 0:30 Variable speed`);
+4x25 @ 0:30 Variable speed
+
+Main:
+2x
+4x50 @ 1:00 Sprint
+100 @ 2:00 Easy`);
 
 let params=new URLSearchParams(location.search);
 let w=params.get("w");
 if(w){
-  let data=JSON.parse(atob(w));
-  title.value=data.title;
-  team.value=data.team;
-  group.value=data.group;
-  start.value=data.start;
-  base.value=data.base;
-  input.value=data.input;
+  try {
+    let data=JSON.parse(atob(w));
+    title.value=data.title;
+    team.value=data.team;
+    group.value=data.group;
+    start.value=data.start;
+    base.value=data.base;
+    input.value=data.input;
+  } catch(e) {}
 }
 
 const parsed=computed(()=>{
 
 if(!start.value||!base.value){
-  return [{title:"SET START + BASE",y:0,blocks:[]}];
+  return [];
 }
 
 let baseSec=parseTime(base.value);
 let out=[];
 let cur={title:"PRACTICE",y:0,blocks:[],startTimeRaw:0};
-let y=0;
+let runningYards=0;
 
 let t=parseClockTime(start.value);
 cur.startTimeRaw=t;
@@ -273,110 +286,129 @@ cur.startTimeRaw=t;
 let lines=input.value.split("\n").map(l=>l.trim()).filter(Boolean);
 
 for(let i=0;i<lines.length;i++){
+    let l=lines[i];
 
-let l=lines[i];
+    if(l.endsWith(":")){
+        if(cur.blocks.length) out.push(cur);
+        cur={title:l.slice(0,-1),y:0,blocks:[],startTimeRaw:t};
+        continue;
+    }
 
-if(l.endsWith(":")){
-  if(cur.blocks.length)out.push(cur);
-  cur={title:l.slice(0,-1),y:0,blocks:[],startTimeRaw:t};
-  continue;
-}
-
-let s=parse(l,baseSec);
-if(!s)continue;
-
-let inst={...s};
-
-if(!inst.rest){
-  y+=inst.q*inst.d;
-  cur.y+=inst.q*inst.d;
-  inst.start=t;
-  t+=inst.dur*inst.q;
-}else{
-  inst.start=t;
-  t+=inst.dur;
-}
-
-inst.run=y;
-cur.blocks.push({rep:1,sets:[inst]});
+    let roundMatch = l.match(/^(\d+)x$/i);
+    if(roundMatch) {
+        let reps = parseInt(roundMatch[1]);
+        let block = { rep: reps, sets: [] };
+        let subIdx = i + 1;
+        
+        while(subIdx < lines.length && !lines[subIdx].endsWith(":") && !lines[subIdx].match(/^(\d+)x$/i)) {
+            let s = parseLineLogic(lines[subIdx], baseSec);
+            if(s) {
+                // Calculation loop for time/yards
+                for(let r=0; r<reps; r++) {
+                    if(r === 0) block.sets.push({...s, start: t});
+                    if(!s.rest) {
+                        runningYards += s.q * s.d;
+                        cur.y += s.q * s.d;
+                        t += s.dur * s.q;
+                    } else {
+                        t += s.dur;
+                    }
+                }
+            }
+            subIdx++;
+        }
+        block.sets.forEach(set => set.run = runningYards);
+        cur.blocks.push(block);
+        i = subIdx - 1;
+    } else {
+        let s = parseLineLogic(l, baseSec);
+        if(s) {
+            if(!s.rest) {
+                runningYards += s.q * s.d;
+                cur.y += s.q * s.d;
+                s.start = t;
+                t += s.dur * s.q;
+            } else {
+                s.start = t;
+                t += s.dur;
+            }
+            s.run = runningYards;
+            cur.blocks.push({ rep: 1, sets: [s] });
+        }
+    }
 }
 
 out.push(cur);
 return out;
 });
 
-function parse(str,baseSec){
+function parseLineLogic(str,baseSec){
+    if(isRestTime(str)){
+      return{
+        rest:true,
+        q:1,
+        d:0,
+        dur:parseTime(str),
+        label:str
+      };
+    }
 
-if(isRestTime(str)){
-  return{
-    rest:true,
-    q:1,
-    d:0,
-    dur:parseTime(str),
-    label:str
-  };
-}
+    let m=str.match(/(\d+)x(\d+)/i);
+    let q=1,d=0;
 
-let m=str.match(/(\d+)x(\d+)/i);
-let q=1,d=0;
+    if(m){
+      q=+m[1];
+      d=+m[2];
+    }else if(/^\d+/.test(str)){
+      d=parseInt(str);
+    }else{
+      return null;
+    }
 
-if(m){
-  q=+m[1];
-  d=+m[2];
-}else if(/^\d+/.test(str)){
-  d=parseInt(str);
-}else{
-  return null;
-}
+    let i=str.match(/(?:@|on)\s*(\d+):(\d+)/);
+    let dur=i?parseTime(i[1]+":"+i[2]):Math.round(d/100*baseSec);
 
-let i=str.match(/(?:@|on)\s*(\d+):(\d+)/);
+    let label=str
+      .replace(/(\d+x\d+)|(^\d+)|(@|on)\s*\d+:\d{2}/gi,"")
+      .trim();
 
-let dur=i?parseTime(i[1]+":"+i[2]):Math.round(d/100*baseSec);
+    let pace=`${Math.floor(dur/60)}:${(dur%60).toString().padStart(2,"0")}`;
 
-// 🔥 EXTRACT LABEL
-let label=str
-  .replace(/(\d+x\d+)|(^\d+)|(@|on)\s*\d+:\d{2}/gi,"")
-  .trim();
-
-let pace=`${Math.floor(dur/60)}:${(dur%60).toString().padStart(2,"0")}`;
-
-return{rest:false,q,d,dur,p:pace,label};
+    return{rest:false,q,d,dur,p:pace,label};
 }
 
 const yards=computed(()=>parsed.value.reduce((a,s)=>a+s.y,0));
 
 const duration=computed(()=>{
-let t=0;
-parsed.value.forEach(sec=>{
-sec.blocks.forEach(b=>{
-b.sets.forEach(s=>{
-t+=s.dur*(s.q||1);
-});
-});
-});
-return Math.round(t/60);
+    let totalSec = 0;
+    parsed.value.forEach(sec => {
+        sec.blocks.forEach(b => {
+            b.sets.forEach(s => {
+                totalSec += s.dur * (s.q || 1) * (b.rep || 1);
+            });
+        });
+    });
+    return Math.round(totalSec/60);
 });
 
 function copyLink(){
-let data={
-  title:title.value,
-  team:team.value,
-  group:group.value,
-  start:start.value,
-  base:base.value,
-  input:input.value
-};
-
-let encoded=btoa(JSON.stringify(data));
-let url=location.origin+location.pathname+"?w="+encoded;
-
-navigator.clipboard.writeText(url);
-alert("Link copied!");
+    let data={
+      title:title.value,
+      team:team.value,
+      group:group.value,
+      start:start.value,
+      base:base.value,
+      input:input.value
+    };
+    let encoded=btoa(JSON.stringify(data));
+    let url=location.origin+location.pathname+"?w="+encoded;
+    navigator.clipboard.writeText(url);
+    alert("Link copied!");
 }
 
-return{
-title,team,group,start,base,fit,input,parsed,yards,duration,
-formatTime:clock,copyLink
+return {
+    title,team,group,start,base,fit,input,parsed,yards,duration,
+    formatTime:clock,copyLink
 };
 }
 }).mount("#app");
