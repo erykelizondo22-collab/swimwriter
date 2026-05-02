@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Swim Coach Platform</title>
+<title>Swim Coach Platform v26</title>
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -12,385 +12,284 @@
 <style>
 [v-cloak]{display:none}
 body{margin:0;font-family:system-ui;background:#f3f4f6}
-
-/* PRINT ONLY WORKOUT */
 @media print{
   .no-print{display:none!important;}
-  body{background:white;}
-  #sheet{box-shadow:none;margin:0;width:100%;}
+  #sheet{box-shadow:none;margin:0; width: 100%;}
 }
-
 #sheet{
-  width:8.5in;
-  min-height:11in;
-  margin:20px auto;
-  background:white;
-  padding:0.75in;
-  box-shadow:0 10px 40px rgba(0,0,0,.15);
+  width:8.5in; min-height:11in; margin:20px auto; background:white;
+  padding:0.75in; box-shadow:0 10px 40px rgba(0,0,0,.15);
 }
-
 .row{display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:4px 0}
-.block-title{font-weight:800;margin-top:10px;border-bottom:2px solid black;text-transform:uppercase}
-.mono{font-family:monospace;font-weight:700}
+.block-title{font-weight:800;margin-top:10px;border-bottom:2px solid black; text-transform: uppercase;}
+.mono{font-family:monospace; font-weight: 700;}
 </style>
 </head>
 
 <body>
 <div id="app" v-cloak>
 
-<!-- LOGIN -->
-<div v-if="!user" class="p-10 max-w-md mx-auto bg-white mt-20 rounded-xl shadow">
-  <h1 class="text-2xl font-black mb-2">Coach Login</h1>
-  <input v-model="email" placeholder="Email" class="border p-3 w-full mb-3 rounded">
-  <button @click="login" class="bg-blue-600 text-white w-full p-3 rounded font-bold">
+<div v-if="!user" class="p-10 max-w-md mx-auto bg-white mt-20 rounded-2xl shadow-xl">
+  <h1 class="text-2xl font-black mb-1">Coach Login</h1>
+  <p class="text-sm text-gray-500 mb-6">Enter email for a magic login link.</p>
+  <input v-model="email" placeholder="coach@soflo.com" class="border p-3 w-full mb-4 rounded-lg">
+  <button @click="login" class="bg-blue-600 text-white font-bold p-3 w-full rounded-lg hover:bg-blue-700 transition">
     Send Magic Link
   </button>
 </div>
 
-<!-- APP -->
 <div v-else>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4 no-print max-w-[1400px] mx-auto">
+    
+    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm space-y-4">
+      <div class="flex justify-between items-center">
+        <input v-model="title" class="text-2xl font-black w-full border-b-2 border-gray-100 focus:border-blue-500 outline-none uppercase">
+        <button @click="logout" class="text-xs font-bold text-gray-400 hover:text-red-500 ml-4">LOGOUT</button>
+      </div>
+      
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <input v-model="team" placeholder="Team (e.g. SOFLO)" class="border p-2 rounded-md text-sm">
+        <input v-model="group" placeholder="Group" class="border p-2 rounded-md text-sm">
+        <input type="time" v-model="start" class="border p-2 rounded-md text-sm font-bold">
+        <select v-model="base" class="border p-2 rounded-md text-sm">
+          <option v-for="b in ['1:15','1:20','1:30','1:40','1:45','2:00']" :key="b">{{b}}</option>
+        </select>
+      </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4 no-print max-w-[1400px] mx-auto">
+      <textarea v-model="input" class="w-full h-80 border p-4 font-mono text-sm rounded-lg bg-gray-50 focus:bg-white transition" placeholder="Paste set here..."></textarea>
 
-  <!-- EDITOR -->
-  <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow space-y-3">
-
-    <div class="flex justify-between">
-      <input v-model="title" class="text-2xl font-black w-full border-b uppercase">
-      <button @click="logout" class="text-xs text-red-500 font-bold ml-3">LOGOUT</button>
-    </div>
-
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-      <input v-model="team" placeholder="Team" class="border p-2 rounded">
-      <input v-model="group" placeholder="Group" class="border p-2 rounded">
-      <input type="time" v-model="start" class="border p-2 rounded">
-      <select v-model="base" class="border p-2 rounded">
-        <option>1:15</option><option>1:20</option><option>1:30</option>
-        <option>1:40</option><option>1:45</option><option>2:00</option>
-      </select>
-    </div>
-
-    <textarea v-model="input" class="w-full h-80 border p-3 font-mono rounded bg-gray-50"></textarea>
-
-    <div class="flex gap-2">
-      <button @click="save" class="flex-1 bg-green-600 text-white p-3 rounded font-black">
-        SAVE
-      </button>
-      <button onclick="window.print()" class="bg-black text-white px-5 rounded font-bold">
-        PRINT
-      </button>
-    </div>
-
-  </div>
-
-  <!-- FEED -->
-  <div class="space-y-3">
-
-    <div class="bg-black text-white p-6 rounded-xl text-center">
-      <div class="text-5xl font-black">{{totalYards}}y</div>
-      <div class="text-xs opacity-50">TOTAL YARDS</div>
-    </div>
-
-    <div class="bg-white p-4 rounded-xl shadow">
-      <div class="text-xs font-bold mb-2 opacity-50">WORKOUT FEED</div>
-
-      <div v-for="w in workouts" :key="w.id"
-           @click="loadWorkout(w)"
-           class="p-2 border rounded mb-2 cursor-pointer hover:bg-gray-100">
-
-        <div class="text-xs font-bold text-blue-600">
-          {{w.group}} • {{w.total_yards}}y
-        </div>
-        <div class="font-bold text-sm uppercase">{{w.title}}</div>
-
+      <div class="flex gap-2">
+        <button @click="save" class="flex-1 bg-green-600 text-white font-black py-3 rounded-xl shadow-lg hover:bg-green-700 transition">
+          SAVE TO CLOUD
+        </button>
+        <button onclick="window.print()" class="bg-black text-white px-6 py-3 rounded-xl font-bold">PRINT</button>
       </div>
     </div>
 
-  </div>
-</div>
-
-<!-- PRINT SHEET -->
-<div id="sheet">
-
-  <div class="flex justify-between border-b-4 pb-3 mb-5">
-    <div>
-      <div class="text-3xl font-black uppercase">{{title}}</div>
-      <div class="text-xs font-bold">{{team}} — {{group}}</div>
-    </div>
-    <div class="text-right">
-      <div class="text-3xl font-black">{{totalYards}}y</div>
-      <div class="text-xs">{{duration}} min</div>
-    </div>
-  </div>
-
-  <div v-for="sec in parsed" class="mb-6">
-
-    <div class="block-title flex justify-between">
-      <span>{{sec.title}}</span>
-      <span>{{sec.y}}y</span>
-    </div>
-
-    <div v-for="b in sec.blocks">
-
-      <div v-if="b.rep > 1" class="text-xs font-black mt-2">
-        {{b.rep}}x ROUND
+    <div class="space-y-4">
+      <div class="bg-black text-white p-8 rounded-2xl shadow-xl text-center">
+        <div class="text-6xl font-black">{{totalYards}}y</div>
+        <div class="text-sm font-bold opacity-50 uppercase tracking-widest mt-2">Total Volume</div>
       </div>
 
-      <div v-for="s in b.sets" class="row">
-
-        <div>
-          <div v-if="s.rest" class="opacity-50 font-bold">
-            REST {{s.label}}
-          </div>
-
-          <div v-else>
-            <span class="font-bold">{{s.q}}x{{s.d}}</span>
-            <span class="ml-2">@ {{s.p}}</span>
-            <span class="ml-2 text-xs opacity-60">{{s.label}}</span>
+      <div class="bg-white p-6 rounded-2xl shadow-sm">
+        <h3 class="font-black text-xs uppercase text-gray-400 mb-4 tracking-widest">Recent Team Feed</h3>
+        <div class="space-y-3 overflow-y-auto max-h-[400px]">
+          <div v-for="w in cloudWorkouts" :key="w.id" @click="loadWorkout(w)" class="p-3 border rounded-xl hover:bg-gray-50 cursor-pointer transition">
+            <div class="flex justify-between font-black text-[10px] text-blue-600 uppercase">
+              <span>{{w.group}}</span>
+              <span>{{w.total_yards}}y</span>
+            </div>
+            <div class="font-bold text-sm truncate uppercase">{{w.title}}</div>
           </div>
         </div>
-
-        <div class="mono text-right text-xs">
-          {{formatTime(s.start)}}<br>
-          <span class="opacity-40">{{s.run}}y</span>
-        </div>
-
       </div>
-
     </div>
-
   </div>
 
+  <div id="sheet">
+    <div class="flex justify-between border-b-[6px] border-black pb-3 mb-6">
+      <div>
+        <div class="text-4xl font-black uppercase leading-tight">{{title}}</div>
+        <div class="text-sm font-bold tracking-widest">{{team}} — {{group}}</div>
+      </div>
+      <div class="text-right">
+        <div class="text-4xl font-black">{{totalYards}}y</div>
+        <div class="text-xs font-bold opacity-60 uppercase">{{duration}} min practice</div>
+      </div>
+    </div>
+
+    <div v-for="sec in parsed" class="mb-8">
+      <div class="block-title flex justify-between">
+        <span>{{sec.title}}</span>
+        <span class="text-sm font-normal">{{sec.y}}y</span>
+      </div>
+
+      <div v-for="b in sec.blocks" class="mt-2">
+        <div v-if="b.rep > 1" class="text-[10px] font-black uppercase mb-1 flex items-center gap-2">
+           <span class="w-4 h-1 bg-black"></span> {{b.rep}}x (ROUND)
+        </div>
+        <div v-for="s in b.sets" class="row" :class="{'border-l-4 border-black pl-4 ml-1': b.rep > 1}">
+          <div class="flex items-baseline">
+            <div v-if="s.rest" class="font-black opacity-40 uppercase text-sm">REST {{s.label}}</div>
+            <div v-else class="font-bold">
+              <span class="text-lg">{{s.q}}x{{s.d}}</span> 
+              <span class="ml-2 text-sm">@ {{s.p}}</span>
+              <span v-if="s.label" class="ml-2 text-xs font-normal opacity-60">— {{s.label}}</span>
+            </div>
+          </div>
+          <div class="mono text-right text-xs">
+            {{formatTime(s.start)}}<br>
+            <span class="opacity-30">{{s.run}}y</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-</div>
 </div>
 
 <script>
-const {createApp,ref,computed,onMounted}=Vue;
+const {createApp,ref,computed,onMounted} = Vue;
 
-const supabase = supabaseClient = window.supabase.createClient(
+// FIX: Renamed variable to 'client' to avoid clashing with global 'supabase'
+const client = window.supabase.createClient(
   "https://nzrzcbxxqxwktocrmplg.supabase.co",
   "sb_publishable_IENWSv_n2kZ1yR2-VmV8ew_pljwvLdt"
 );
 
 createApp({
 setup(){
-
 const user = ref(null);
 const email = ref("");
-
-const title=ref("WORKOUT");
+const title=ref("SOFLO SESSION");
 const team=ref("SOFLO");
-const group=ref("ELITE");
-const start=ref("17:00");
+const group=ref("SENIOR ELITE");
+const start=ref("17:45");
 const base=ref("1:30");
-
-const input=ref(`Warmup:
-400 Free
-300 Kick
-200 Pull
-4x25 @ 0:30 build
-
-Main Set:
-2x
-4x50 @ 1:00 sprint
-100 easy`);
-
-const workouts = ref([]);
+const input=ref(`Warmup:\n400 Free\n300 Kick\n200 Pull\n\nMain:\n2x\n4x50 @ 1:00 Sprint\n100 Easy`);
+const cloudWorkouts = ref([]);
 
 // AUTH
 async function login(){
-  const { error } = await supabase.auth.signInWithOtp({ email: email.value });
+  const { error } = await client.auth.signInWithOtp({ email: email.value });
   if(error) alert(error.message);
-  else alert("Check your email");
+  else alert("Magic Link Sent! Check your email.");
 }
 
 async function logout(){
-  await supabase.auth.signOut();
+  await client.auth.signOut();
   location.reload();
 }
 
-// SAVE
+// CLOUD STORAGE
 async function save(){
-  const { error } = await supabase.from("workouts").insert({
+  const { error } = await client.from("workouts").insert({
     title: title.value,
     team_id: "SOFLO",
     group: group.value,
     content: input.value,
     total_yards: totalYards.value,
-    coach_name: user.value.email
+    coach_name: user.value.email.split('@')[0]
   });
-
-  if(error) alert(error.message);
-  else loadWorkouts();
+  if(error) alert("Error saving: " + error.message);
+  else { alert("Saved to SOFLO Cloud!"); loadWorkouts(); }
 }
 
-// LOAD FEED
 async function loadWorkouts(){
-  const { data } = await supabase
-    .from("workouts")
-    .select("*")
-    .order("created_at",{ascending:false})
-    .limit(10);
-
-  workouts.value = data || [];
+  const { data } = await client.from("workouts").select("*").eq('team_id', 'SOFLO').order('created_at', {ascending: false}).limit(10);
+  if(data) cloudWorkouts.value = data;
 }
 
-// SESSION PERSISTENCE
-onMounted(async ()=>{
-  const { data } = await supabase.auth.getSession();
-  user.value = data?.session?.user || null;
-  if(user.value) loadWorkouts();
+function loadWorkout(w){
+  title.value = w.title;
+  group.value = w.group;
+  input.value = w.content;
+}
 
-  supabase.auth.onAuthStateChange((_, session)=>{
-    user.value = session?.user || null;
-    if(user.value) loadWorkouts();
-  });
+onMounted(async ()=>{
+  const { data } = await client.auth.getUser();
+  user.value = data?.user;
+  if(user.value) loadWorkouts();
 });
 
-// PARSER
-function parseLine(str, baseSec){
-  if(/^\d+:\d+$/.test(str.trim()))
-    return {rest:true,dur:toSec(str),label:str,q:1,d:0};
+// PARSING LOGIC
+function timeToSec(t){
+  let [m,s]=t.split(":").map(Number);
+  return (m*60) + (s || 0);
+}
 
+function secToTime(s){
+  let m=Math.floor(s/60);
+  let sec=s%60;
+  return `${m}:${sec.toString().padStart(2,"0")}`;
+}
+
+function parseLine(str, baseSec){
+  if(/^\d+:\d+$/.test(str.trim())) return {rest:true,dur:timeToSec(str),label:str,q:1,d:0};
   let m=str.match(/(\d+)x(\d+)/i);
   let q=1,d=0;
-
-  if(m){q=+m[1];d=+m[2];}
-  else if(/^\d+/.test(str)) d=parseInt(str);
+  if(m){q=+m[1]; d=+m[2];}
+  else if(/^\d+/.test(str)){d=parseInt(str);}
   else return null;
 
-  let match=str.match(/(\d+):(\d+)/);
-  let dur = match ? (match[1]*60 + +match[2]) : Math.round((d/100)*baseSec);
-
-  let label=str.replace(/(\d+x\d+|\d+:\d+)/g,"").trim();
-
-  return {rest:false,q,d,dur,label,p:fmt(dur)};
+  let paceMatch = str.match(/[@|on]\s*(\d+):(\d+)/);
+  let dur = paceMatch ? (parseInt(paceMatch[1])*60 + parseInt(paceMatch[2])) : Math.round((d/100)*baseSec);
+  let label = str.replace(/(\d+x\d+|[@|on]\s*\d+:\d+)/g,"").trim();
+  return { rest:false, q, d, dur, label, p:secToTime(dur) };
 }
 
-function toSec(t){
-  let [m,s]=t.split(":").map(Number);
-  return m*60+s;
-}
-
-function fmt(s){
-  return `${Math.floor(s/60)}:${(s%60).toString().padStart(2,"0")}`;
-}
-
-// WORKOUT ENGINE
 const parsed = computed(()=>{
   if(!start.value || !base.value) return [];
-
-  let baseSec = toSec(base.value);
-  let t = toSec(start.value);
-
+  let baseSeconds = timeToSec(base.value);
+  let t = (parseInt(start.value.split(":")[0])*3600) + (parseInt(start.value.split(":")[1])*60);
   let out=[];
-  let sec={title:"WORKOUT",y:0,blocks:[]};
-  let runY=0;
-
-  let lines = input.value.split("\n").map(x=>x.trim()).filter(Boolean);
+  let secBlock={title:"WARMUP",blocks:[],y:0};
+  let runningYards=0;
+  let lines=input.value.split("\n").map(x=>x.trim()).filter(Boolean);
 
   for(let i=0;i<lines.length;i++){
-
     let l=lines[i];
-
     if(l.endsWith(":")){
-      if(sec.blocks.length) out.push(sec);
-      sec={title:l.slice(0,-1),y:0,blocks:[]};
+      if(secBlock.blocks.length) out.push(secBlock);
+      secBlock={title:l.replace(":",""),blocks:[],y:0};
       continue;
     }
-
-    let r=l.match(/^(\d+)x$/i);
-
-    if(r){
-      let rep=+r[1];
-      let block={rep,sets:[]};
+    let roundMatch = l.match(/^(\d+)x$/i);
+    if(roundMatch){
+      let rep = parseInt(roundMatch[1]);
+      let block = {rep, sets:[]};
       i++;
-
-      while(i<lines.length && !lines[i].endsWith(":") && !/^\d+x$/i.test(lines[i])){
-        let s=parseLine(lines[i],baseSec);
-
+      while(i<lines.length && !lines[i].endsWith(":") && !/^(\d+)x$/i.test(lines[i])){
+        let s = parseLine(lines[i], baseSeconds);
         if(s){
-          for(let k=0;k<rep;k++){
-            if(k===0) block.sets.push({...s,start:t});
-
-            if(!s.rest){
-              runY+=s.q*s.d;
-              sec.y+=s.q*s.d;
-              t+=s.dur*s.q;
-            } else {
-              t+=s.dur;
-            }
+          for(let r=0; r<rep; r++){
+            if(r===0) block.sets.push({...s, start: t});
+            if(!s.rest){ runningYards += s.q * s.d; secBlock.y += s.q * s.d; t += s.dur * s.q; }
+            else { t += s.dur; }
           }
         }
         i++;
       }
       i--;
-
-      block.sets.forEach(s=>s.run=runY);
-      sec.blocks.push(block);
+      block.sets.forEach(set => set.run = runningYards);
+      secBlock.blocks.push(block);
       continue;
     }
-
-    let s=parseLine(l,baseSec);
-    if(!s) continue;
-
-    if(!s.rest){
-      runY+=s.q*s.d;
-      sec.y+=s.q*s.d;
-      s.start=t;
-      t+=s.dur*s.q;
-    } else {
-      s.start=t;
-      t+=s.dur;
+    let s = parseLine(l, baseSeconds);
+    if(s){
+      if(!s.rest){ runningYards += s.q * s.d; secBlock.y += s.q * s.d; s.start = t; t += s.dur * s.q; }
+      else { s.start = t; t += s.dur; }
+      s.run = runningYards;
+      secBlock.blocks.push({rep:1, sets:[s]});
     }
-
-    s.run=runY;
-    sec.blocks.push({rep:1,sets:[s]});
   }
-
-  out.push(sec);
+  out.push(secBlock);
   return out;
 });
 
-// TOTALS
-const totalYards = computed(()=>parsed.value.reduce((a,b)=>a+b.y,0));
-
-const duration = computed(()=>{
-  let t=0;
-  parsed.value.forEach(s=>{
-    s.blocks.forEach(b=>{
-      b.sets.forEach(x=>{
-        t+=x.dur*(x.q||1);
-      });
-    });
-  });
-  return Math.round(t/60);
+const totalYards = computed(()=>parsed.value.reduce((a,s)=>a+s.y,0));
+const duration = computed(()=> {
+  let total = 0;
+  parsed.value.forEach(sec => sec.blocks.forEach(b => b.sets.forEach(s => total += (s.dur * (s.q || 1)))));
+  return Math.round(total/60);
 });
 
 function formatTime(sec){
   let h=Math.floor(sec/3600)%12||12;
   let m=Math.floor((sec%3600)/60);
-  let ap=Math.floor(sec/3600)>=12?"pm":"am";
+  let ap = Math.floor(sec/3600) >= 12 ? 'pm' : 'am';
   return `${h}:${m.toString().padStart(2,"0")}${ap}`;
 }
 
-async function loadWorkout(w){
-  title.value=w.title;
-  group.value=w.group;
-  input.value=w.content;
-}
-
 return {
-  email,user,login,logout,
-  title,team,group,start,base,input,
-  parsed,totalYards,duration,
-  workouts,loadWorkout,save,formatTime
+  email,user,login,logout,title,team,group,start,base,input,
+  parsed,totalYards,duration,cloudWorkouts,
+  formatTime,save,loadWorkout
 };
 }
 }).mount("#app");
 </script>
-
 </body>
 </html>
