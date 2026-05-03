@@ -220,7 +220,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
           <button @click="currentView = 'setup'" class="text-[10px] font-black bg-gray-100 text-gray-500 px-3 py-2 rounded-lg hover:bg-gray-200 transition uppercase">Edit Info</button>
         </div>
 
-        <textarea v-model="input" class="w-full flex-1 border-2 border-gray-100 p-6 font-mono text-sm rounded-xl bg-gray-50 focus:bg-white transition outline-none focus:border-blue-500 shadow-inner resize-none" placeholder="Type your sets here... (e.g. 10x100 @ 1:15)"></textarea>
+        <textarea v-model="input" :style="{ fontSize: (0.875 * zoomLevel) + 'rem' }" class="w-full flex-1 border-2 border-gray-100 p-6 font-mono rounded-xl bg-gray-50 focus:bg-white transition-colors outline-none focus:border-blue-500 shadow-inner resize-none" placeholder="Type your sets here... (e.g. 10x100 @ 1:15)"></textarea>
       </div>
 
       <div class="space-y-6">
@@ -238,6 +238,15 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
             Print Workout
           </button>
           
+          <div class="border-t border-gray-100 pt-4 mt-2 flex items-center justify-between">
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Workout Size</span>
+            <div class="flex items-center bg-gray-100 rounded-lg p-1">
+              <button @click="zoomLevel = Math.max(0.5, zoomLevel - 0.25)" class="w-8 h-8 flex items-center justify-center font-black text-gray-500 hover:text-blue-600 hover:bg-white rounded transition">-</button>
+              <span class="text-xs font-bold text-gray-700 w-12 text-center">{{Math.round(zoomLevel * 100)}}%</span>
+              <button @click="zoomLevel = Math.min(2.5, zoomLevel + 0.25)" class="w-8 h-8 flex items-center justify-center font-black text-gray-500 hover:text-blue-600 hover:bg-white rounded transition">+</button>
+            </div>
+          </div>
+
           <div class="border-t border-gray-100 pt-4 mt-2 space-y-2">
             <button @click="discardDraft" class="w-full text-xs font-bold text-gray-400 hover:text-gray-600 uppercase tracking-widest">
               Close Editor
@@ -268,7 +277,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
   </div>
 </div>
 
-<div id="sheet" style="display:none;" :class="{'no-print': !user}">
+<div id="sheet" style="display:none;" :class="{'no-print': !user}" :style="{ zoom: zoomLevel }">
   <div class="flex justify-between border-b-[6px] border-black pb-3 mb-6 mt-4">
     <div>
       <div class="text-4xl font-black uppercase leading-tight">{{title}}</div>
@@ -328,7 +337,8 @@ const teamPassword = ref("");
 const newTeamId = ref("");
 const newTeamPassword = ref("");
 
-const currentWorkoutId = ref(null); // Tracks if we are editing an existing file
+const currentWorkoutId = ref(null); 
+const zoomLevel = ref(1); // 1 = 100%
 
 const title = ref("");
 const group = ref("");
@@ -347,10 +357,11 @@ const myTeam = computed(() => {
   return user.value?.user_metadata?.team_id || null;
 });
 
-watch([title, group, start, base, input], () => {
+watch([title, group, start, base, input, zoomLevel], () => {
   if (currentView.value === 'setup' || currentView.value === 'editor') {
     const draft = {
       id: currentWorkoutId.value,
+      zoom: zoomLevel.value,
       title: title.value,
       group: group.value,
       start: start.value,
@@ -413,6 +424,7 @@ function startNewWorkout() {
     if (confirm("You have an unsaved workout draft! Do you want to recover it?")) {
       const draft = JSON.parse(savedDraft);
       currentWorkoutId.value = draft.id || null;
+      zoomLevel.value = draft.zoom || 1;
       title.value = draft.title || "";
       group.value = draft.group || "";
       start.value = draft.start || "17:00";
@@ -423,7 +435,7 @@ function startNewWorkout() {
     }
   }
   localStorage.removeItem('swimsync_draft');
-  currentWorkoutId.value = null; // Blank slate
+  currentWorkoutId.value = null; 
   title.value = "";
   group.value = "";
   input.value = "Warmup:\n\n\nMain Set:\n\n";
@@ -448,11 +460,9 @@ async function save(){
 
   let error;
   if(currentWorkoutId.value) {
-    // UPDATE existing workout
     const res = await client.from("workouts").update(payload).eq('id', currentWorkoutId.value);
     error = res.error;
   } else {
-    // INSERT new workout
     const res = await client.from("workouts").insert(payload);
     error = res.error;
   }
@@ -468,20 +478,13 @@ async function save(){
   }
 }
 
-// DELETE WORKOUT LOGIC
 async function deleteWorkout(id) {
   if(!confirm("Are you sure you want to permanently delete this workout?")) return;
-  
   const { error } = await client.from("workouts").delete().eq('id', id);
-  
-  if(error) {
-    alert("Error deleting workout: " + error.message);
-  } else {
-    loadWorkouts(); // Refresh the vault list instantly
-    // If they delete the workout while currently inside the editor viewing it:
-    if(currentView.value === 'editor' && currentWorkoutId.value === id) {
-       discardDraft();
-    }
+  if(error) alert("Error deleting workout: " + error.message);
+  else {
+    loadWorkouts(); 
+    if(currentView.value === 'editor' && currentWorkoutId.value === id) discardDraft();
   }
 }
 
@@ -492,7 +495,7 @@ async function loadWorkouts(){
 }
 
 function loadWorkout(w){
-  currentWorkoutId.value = w.id; // Lock onto this specific file
+  currentWorkoutId.value = w.id; 
   title.value = w.title;
   group.value = w.group;
   input.value = w.content;
@@ -581,7 +584,7 @@ function formatTime(sec){
 
 return {
   user,login,logout,currentView,joinCode,teamPassword,newTeamId,newTeamPassword,
-  joinTeam,createTeam,myTeam,currentWorkoutId,
+  joinTeam,createTeam,myTeam,currentWorkoutId,zoomLevel,
   title,group,start,base,input,
   parsed,totalYards,duration,cloudWorkouts,coachName,
   formatTime,save,loadWorkout,startNewWorkout,discardDraft,deleteWorkout
