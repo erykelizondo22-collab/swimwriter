@@ -12,51 +12,17 @@
 <style>
 [v-cloak]{display:none}
 body{margin:0;font-family:system-ui;background:#f8fafc}
-
 @media print{
   .no-print{display:none!important;}
   body { background: white !important; }
-  #sheet {
-    box-shadow: none !important;
-    margin: 0 !important;
-    width: 100% !important;
-    display: block !important;
-  }
+  #sheet { box-shadow: none !important; margin: 0 !important; width: 100% !important; display: block !important; }
 }
-
-#sheet {
-  width: 8.5in; 
-  min-height: 11in; 
-  margin: 20px auto; 
-  background: white;
-  padding: 0.75in; 
-  box-shadow: 0 10px 40px rgba(0,0,0,.15);
-}
-
+#sheet { width: 8.5in; min-height: 11in; margin: 20px auto; background: white; padding: 0.75in; box-shadow: 0 10px 40px rgba(0,0,0,.15); }
 .row { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 4px 0; }
 .block-title { font-weight: 800; margin-top: 10px; border-bottom: 2px solid black; text-transform: uppercase; }
 .mono { font-family: monospace; font-weight: 700; }
-
-/* Custom slider styling */
-.font-slider {
-  -webkit-appearance: none;
-  width: 100%;
-  height: 6px;
-  background: #e2e8f0;
-  border-radius: 5px;
-  outline: none;
-}
-.font-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  background: #2563eb;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 2px solid white;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
+.font-slider { -webkit-appearance: none; width: 100%; height: 6px; background: #e2e8f0; border-radius: 5px; outline: none; }
+.font-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; background: #2563eb; border-radius: 50%; cursor: pointer; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
 </style>
 </head>
 
@@ -64,24 +30,17 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
 <div id="app" v-cloak>
 
 <div v-if="!user" class="p-10 max-w-md mx-auto bg-white mt-32 rounded-2xl shadow-2xl text-center border border-gray-100">
-  <div class="mb-6">
-    <div class="w-16 h-16 bg-blue-600 text-white rounded-2xl mx-auto flex items-center justify-center text-3xl font-black shadow-lg shadow-blue-200">SS</div>
-  </div>
+  <div class="mb-6"><div class="w-16 h-16 bg-blue-600 text-white rounded-2xl mx-auto flex items-center justify-center text-3xl font-black shadow-lg shadow-blue-200">SS</div></div>
   <h1 class="text-3xl font-black mb-2 text-gray-900">SwimSync</h1>
   <p class="text-sm text-gray-500 mb-8 font-medium">Coach Access Portal</p>
-  
-  <button @click="login" class="bg-white border-2 border-gray-200 text-gray-700 font-bold p-4 w-full rounded-xl hover:bg-gray-50 hover:border-gray-300 transition flex justify-center items-center gap-3 shadow-sm">
-    <svg class="w-6 h-6" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-    </svg>
+  <button @click="login" class="bg-white border-2 border-gray-200 text-gray-700 font-bold p-4 w-full rounded-xl hover:bg-gray-50 transition flex justify-center items-center gap-3 shadow-sm">
+    <svg class="w-6 h-6" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
     Sign in with Google
   </button>
 </div>
 
 <div v-else class="no-print">
+  
   <div class="bg-white border-b px-8 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
     <div class="flex items-center gap-3 cursor-pointer" @click="currentView = myTeam ? 'dashboard' : 'onboarding'">
       <div class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center font-black">SS</div>
@@ -90,7 +49,8 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
     <div class="flex items-center gap-8" v-if="myTeam">
       <nav class="hidden md:flex gap-6">
         <button @click="currentView = 'dashboard'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'dashboard', 'text-gray-500 hover:text-gray-900': currentView !== 'dashboard'}" class="text-sm font-black uppercase tracking-widest pb-1 transition-colors">Vault</button>
-        <button @click="currentView = 'season-planning'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'season-planning', 'text-gray-500 hover:text-gray-900': currentView !== 'season-planning'}" class="text-sm font-black uppercase tracking-widest pb-1 transition-colors">Season Planner</button>
+        <button @click="currentView = 'season-planning'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'season-planning' || currentView === 'plan-builder', 'text-gray-500 hover:text-gray-900': currentView !== 'season-planning' && currentView !== 'plan-builder'}" class="text-sm font-black uppercase tracking-widest pb-1 transition-colors">Season Planner</button>
+        <button @click="currentView = 'groups'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'groups', 'text-gray-500 hover:text-gray-900': currentView !== 'groups'}" class="text-sm font-black uppercase tracking-widest pb-1 transition-colors">Groups</button>
       </nav>
       <div class="flex items-center gap-4 pl-4 border-l">
         <span class="text-xs font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-md border border-blue-100 uppercase tracking-widest">{{myTeam}}</span>
@@ -134,19 +94,62 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
        </div>
     </div>
 
-    <div v-if="currentView === 'editor'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div class="lg:col-span-2 bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col h-[78vh]">
-        <div class="mb-5 flex justify-between items-center border-b pb-5">
-            <h2 class="text-3xl font-black uppercase tracking-tight text-gray-900">{{title}}</h2>
-            <button @click="currentView = 'setup'" class="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-full hover:bg-gray-100 transition">Edit Setup</button>
+    <div v-if="currentView === 'groups'" class="max-w-3xl mx-auto space-y-6 mt-4">
+        <div class="flex justify-between items-end mb-6">
+            <div>
+               <h2 class="text-3xl font-black uppercase tracking-tight">Team Groups</h2>
+               <p class="text-gray-500 font-medium text-sm">Manage the official athlete groups for your vault.</p>
+            </div>
         </div>
-        <textarea v-model="input" :style="{ fontSize: fontSize + 'px' }" class="w-full flex-1 border-2 border-gray-50 p-6 font-mono rounded-2xl bg-gray-50 outline-none resize-none leading-relaxed transition-all focus:bg-white focus:border-blue-500" placeholder="Type sets..."></textarea>
+
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <div class="flex gap-4 mb-8 pb-8 border-b border-gray-100">
+                <input v-model="newGroupName" @keyup.enter="addGroup" placeholder="New Group Name (e.g. Age Group 1)" class="flex-1 bg-gray-50 p-4 rounded-xl font-black uppercase outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200">
+                <button @click="addGroup" class="bg-blue-600 text-white px-8 rounded-xl font-black shadow-lg uppercase tracking-widest hover:bg-blue-700 transition">Add</button>
+            </div>
+
+            <div class="space-y-3">
+                <div v-for="g in teamGroupsList" :key="g.id" class="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <span class="font-black uppercase text-gray-800 tracking-wide ml-2">{{g.name}}</span>
+                    <button @click="deleteGroup(g.id)" class="text-red-400 font-black px-4 py-2 hover:bg-red-50 hover:text-red-600 rounded-lg transition uppercase text-xs tracking-widest">Delete</button>
+                </div>
+                <div v-if="!teamGroupsList.length" class="text-center py-10 text-gray-400 font-black uppercase tracking-widest italic">
+                    No official groups created yet.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="currentView === 'editor'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2 space-y-4">
+        
+        <div v-if="activePlanContext" class="bg-blue-50 border-2 border-blue-100 p-4 rounded-2xl flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-black">W{{activePlanContext.weekNum}}</div>
+                <div>
+                    <div class="text-[10px] font-black text-blue-400 uppercase tracking-widest">{{activePlanContext.planTitle}} Sync</div>
+                    <div class="text-sm font-bold text-blue-900 uppercase">{{activePlanContext.weekData?.focus || 'No focus set for this week'}}</div>
+                </div>
+            </div>
+            <div v-if="activePlanContext.weekData?.targetYards" class="text-right">
+                <div class="text-[10px] font-black text-blue-400 uppercase tracking-widest">Weekly Target</div>
+                <div class="font-black text-blue-900">{{activePlanContext.weekData.targetYards}}y</div>
+            </div>
+        </div>
+
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col h-[70vh]">
+          <div class="mb-5 flex justify-between items-center border-b pb-5">
+              <h2 class="text-3xl font-black uppercase tracking-tight text-gray-900">{{title}}</h2>
+              <button @click="currentView = 'setup'" class="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-full hover:bg-gray-100 transition">Edit Setup</button>
+          </div>
+          <textarea v-model="input" :style="{ fontSize: fontSize + 'px' }" class="w-full flex-1 border-2 border-gray-50 p-6 font-mono rounded-2xl bg-gray-50 outline-none resize-none leading-relaxed transition-all focus:bg-white focus:border-blue-500" placeholder="Type sets..."></textarea>
+        </div>
       </div>
 
       <div class="space-y-6">
         <div class="bg-gray-900 text-white p-10 rounded-[32px] shadow-2xl text-center relative overflow-hidden">
           <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-10 -mt-10"></div>
-          <div class="text-8xl font-black tracking-tighter">{{totalYards}}y</div>
+          <div class="text-7xl font-black tracking-tighter">{{totalYards}}y</div>
           <div class="text-[10px] font-bold text-blue-400 uppercase mt-4 tracking-[0.2em]">{{duration}} MIN PRACTICE</div>
         </div>
 
@@ -180,7 +183,11 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
             </div>
             <div class="space-y-1">
                 <label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Athlete Group</label>
-                <input v-model="group" placeholder="Senior Elite" class="w-full border-2 border-gray-50 bg-gray-50 p-5 rounded-2xl font-black uppercase focus:border-blue-500 focus:bg-white transition outline-none">
+                <select v-model="group" class="w-full border-2 border-gray-50 bg-gray-50 p-5 rounded-2xl font-black uppercase focus:border-blue-500 focus:bg-white transition outline-none appearance-none">
+                    <option value="" disabled>Select Group</option>
+                    <option v-for="g in teamGroupsList" :key="g.id" :value="g.name">{{g.name}}</option>
+                </select>
+                <p v-if="!teamGroupsList.length" class="text-xs text-red-500 font-bold ml-2 mt-2">No groups exist yet. Please go to the Groups tab to create one.</p>
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div class="space-y-1">
@@ -194,9 +201,77 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
                     </select>
                 </div>
             </div>
-            <button @click="currentView = 'editor'" class="w-full bg-blue-600 text-white font-black py-6 rounded-2xl shadow-xl shadow-blue-100 uppercase tracking-widest hover:bg-blue-700 transition-all mt-4">Enter Editor</button>
+            <button @click="currentView = 'editor'" :disabled="!group" :class="{'opacity-50 cursor-not-allowed': !group}" class="w-full bg-blue-600 text-white font-black py-6 rounded-2xl shadow-xl shadow-blue-100 uppercase tracking-widest hover:bg-blue-700 transition-all mt-4">Enter Editor</button>
         </div>
     </div>
+
+    <div v-if="currentView === 'season-planning'" class="space-y-6">
+      <div class="flex justify-between items-end mb-6">
+         <div>
+            <h2 class="text-3xl font-black uppercase tracking-tight">Macrocycles</h2>
+            <p class="text-gray-500 font-medium text-sm">Design and track group season plans.</p>
+         </div>
+         <button @click="startNewPlan" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-black shadow-lg uppercase tracking-widest text-xs hover:bg-blue-700 transition">+ Build Plan</button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div v-for="plan in seasonPlans" :key="plan.id" @click="editPlan(plan)" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:border-blue-300 cursor-pointer transition group">
+              <div class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 bg-blue-50 inline-block px-2 py-1 rounded">{{plan.group_name}}</div>
+              <h3 class="text-2xl font-black uppercase tracking-tight mb-4 group-hover:text-blue-600 transition">{{plan.title}}</h3>
+              <div class="flex justify-between text-xs font-bold text-gray-400 uppercase border-t pt-4">
+                  <span>Start: {{plan.start_date}}</span>
+                  <span>{{plan.weeks.length}} Weeks</span>
+              </div>
+          </div>
+          
+          <div v-if="!seasonPlans.length" class="col-span-full text-center py-20 border-2 border-dashed rounded-3xl bg-gray-50">
+             <div class="text-gray-400 font-black text-lg uppercase tracking-widest">No Plans Active</div>
+             <p class="text-sm text-gray-400 mt-2">Click Build Plan to start your macrocycle.</p>
+          </div>
+      </div>
+    </div>
+
+    <div v-if="currentView === 'plan-builder'" class="max-w-4xl mx-auto bg-white p-10 rounded-[40px] shadow-xl border border-gray-100 mt-4">
+        <div class="flex justify-between items-center mb-8 border-b pb-6">
+            <h2 class="text-3xl font-black uppercase tracking-tight">Plan Builder</h2>
+            <button @click="currentView = 'season-planning'" class="text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-gray-600">Cancel</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="space-y-1">
+                <label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Plan Name</label>
+                <input v-model="planForm.title" placeholder="e.g. LC Champs" class="w-full bg-gray-50 p-4 rounded-xl font-black uppercase outline-none border focus:border-blue-500">
+            </div>
+            <div class="space-y-1">
+                <label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Target Group</label>
+                <select v-model="planForm.group_name" class="w-full bg-gray-50 p-4 rounded-xl font-black uppercase outline-none border focus:border-blue-500 appearance-none">
+                    <option value="" disabled>Select Group</option>
+                    <option v-for="g in teamGroupsList" :key="g.id" :value="g.name">{{g.name}}</option>
+                </select>
+            </div>
+            <div class="space-y-1">
+                <label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Cycle Start Date</label>
+                <input type="date" v-model="planForm.start_date" class="w-full bg-gray-50 p-4 rounded-xl font-black outline-none border focus:border-blue-500">
+            </div>
+        </div>
+
+        <div class="flex justify-between items-end mb-4">
+            <h3 class="font-black uppercase tracking-widest text-gray-900">Weekly Architecture</h3>
+            <button @click="addWeek" class="text-xs font-black text-blue-600 bg-blue-50 px-4 py-2 rounded-lg uppercase tracking-widest hover:bg-blue-100">+ Add Week</button>
+        </div>
+
+        <div class="space-y-3 mb-10">
+            <div v-for="(week, index) in planForm.weeks" :key="index" class="flex gap-4 items-center bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                <div class="w-16 text-center font-black text-gray-400 uppercase">W{{index + 1}}</div>
+                <input v-model="week.focus" placeholder="Phase / Focus (e.g. Aerobic Base)" class="flex-1 bg-white p-3 rounded-xl font-bold uppercase text-sm outline-none border focus:border-blue-500">
+                <input v-model="week.targetYards" type="number" placeholder="Target Vol (y)" class="w-32 bg-white p-3 rounded-xl font-bold text-sm outline-none border focus:border-blue-500 text-right">
+                <button @click="planForm.weeks.splice(index, 1)" class="text-red-400 font-black px-2 hover:text-red-600">X</button>
+            </div>
+        </div>
+
+        <button @click="savePlan" :disabled="!planForm.group_name" :class="{'opacity-50 cursor-not-allowed': !planForm.group_name}" class="w-full bg-blue-600 text-white font-black py-6 rounded-2xl shadow-xl shadow-blue-100 uppercase tracking-widest hover:bg-blue-700 transition-all">Save Macrocycle</button>
+    </div>
+
   </div>
 </div>
 
@@ -249,17 +324,19 @@ createApp({
 setup(){
 const user = ref(null);
 const currentView = ref('dashboard');
-const joinCode = ref("");
-const teamPassword = ref(""); 
+const joinCode = ref(""); const teamPassword = ref(""); 
 const currentWorkoutId = ref(null); 
 const fontSize = ref(22); 
 
-const title = ref("");
-const group = ref("");
-const start = ref("17:00");
-const base = ref("1:30");
-const input = ref("");
+// Global State
+const title = ref(""); const group = ref(""); const start = ref("17:00"); const base = ref("1:30"); const input = ref("");
 const cloudWorkouts = ref([]);
+const seasonPlans = ref([]);
+const planForm = ref({ id: null, title: '', group_name: '', start_date: '', weeks: [] });
+
+// NEW: Official Groups State
+const teamGroupsList = ref([]);
+const newGroupName = ref("");
 
 const coachName = computed(() => {
   if(!user.value) return "";
@@ -267,6 +344,28 @@ const coachName = computed(() => {
 });
 
 const myTeam = computed(() => user.value?.user_metadata?.team_id || null);
+
+// The Engine: Calculates the current week and active plan goals dynamically for the Editor
+const activePlanContext = computed(() => {
+    if (!group.value || !seasonPlans.value.length) return null;
+    const plan = seasonPlans.value.find(p => p.group_name.toUpperCase() === group.value.toUpperCase());
+    if (!plan) return null;
+
+    const startDate = new Date(plan.start_date + 'T00:00:00');
+    const today = new Date();
+    const diffTime = today - startDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const currentWeekNum = diffDays < 0 ? 1 : Math.floor(diffDays / 7) + 1;
+    const weekData = plan.weeks.find(w => w.weekNum === currentWeekNum) || null;
+
+    return { planTitle: plan.title, weekNum: currentWeekNum, weekData: weekData };
+});
+
+watch([title, group, start, base, input, fontSize], () => {
+  if (currentView.value === 'setup' || currentView.value === 'editor') {
+    localStorage.setItem('swimsync_draft', JSON.stringify({ id: currentWorkoutId.value, size: fontSize.value, title: title.value, group: group.value, start: start.value, base: base.value, input: input.value }));
+  }
+});
 
 async function login(){ await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin }}); }
 async function logout(){ await client.auth.signOut(); location.reload(); }
@@ -279,11 +378,13 @@ async function joinTeam() {
   location.reload();
 }
 
-function startNewWorkout() { currentWorkoutId.value = null; title.value = ""; group.value = ""; input.value = "Warmup:\n\nMain Set:\n\n"; currentView.value = 'setup'; }
+function startNewWorkout() { 
+    currentWorkoutId.value = null; title.value = ""; group.value = ""; input.value = "Warmup:\n\nMain Set:\n\n"; currentView.value = 'setup'; 
+}
 function discardDraft() { currentWorkoutId.value = null; currentView.value = 'dashboard'; }
 
 async function save(){
-  if(!title.value) return alert("Please set a Title in Setup");
+  if(!title.value || !group.value) return alert("Please fill out Title and Group.");
   const payload = { title: title.value, team_id: myTeam.value, group: group.value, content: input.value, total_yards: totalYards.value, coach_name: coachName.value };
   if(currentWorkoutId.value) await client.from("workouts").update(payload).eq('id', currentWorkoutId.value);
   else await client.from("workouts").insert(payload);
@@ -295,6 +396,7 @@ async function deleteWorkout(id) {
 }
 
 async function loadWorkouts(){
+  if(!myTeam.value) return;
   const { data } = await client.from("workouts").select("*").eq('team_id', myTeam.value).order('created_at', {ascending: false});
   cloudWorkouts.value = data || [];
 }
@@ -303,10 +405,75 @@ function loadWorkout(w){
   currentWorkoutId.value = w.id; title.value = w.title; group.value = w.group; input.value = w.content; currentView.value = 'editor'; 
 }
 
+// GROUPS MANAGEMENT FUNCTIONS
+async function loadGroups() {
+    if(!myTeam.value) return;
+    const { data } = await client.from("team_groups").select("*").eq('team_id', myTeam.value).order('name', {ascending: true});
+    teamGroupsList.value = data || [];
+}
+
+async function addGroup() {
+    if(!newGroupName.value.trim()) return;
+    const nameStr = newGroupName.value.trim().toUpperCase();
+    const { error } = await client.from("team_groups").insert({ team_id: myTeam.value, name: nameStr });
+    if(error) {
+        if(error.code === '23505') alert("This group already exists.");
+        else alert("Error adding group: " + error.message);
+    } else {
+        newGroupName.value = "";
+        loadGroups();
+    }
+}
+
+async function deleteGroup(id) {
+    if(confirm("Delete this group? This won't delete past workouts, but will remove it from menus.")) {
+        await client.from("team_groups").delete().eq('id', id);
+        loadGroups();
+    }
+}
+
+// SEASON PLANNER FUNCTIONS
+async function loadSeasonPlans() {
+    if(!myTeam.value) return;
+    const { data } = await client.from("season_plans").select("*").eq('team_id', myTeam.value).order('start_date', {ascending: false});
+    seasonPlans.value = data || [];
+}
+
+function startNewPlan() {
+    let defaultWeeks = [];
+    for(let i=1; i<=12; i++) defaultWeeks.push({ weekNum: i, focus: '', targetYards: null });
+    planForm.value = { id: null, title: '', group_name: '', start_date: new Date().toISOString().split('T')[0], weeks: defaultWeeks };
+    currentView.value = 'plan-builder';
+}
+
+function editPlan(plan) {
+    planForm.value = JSON.parse(JSON.stringify(plan)); 
+    currentView.value = 'plan-builder';
+}
+
+function addWeek() { planForm.value.weeks.push({ weekNum: planForm.value.weeks.length + 1, focus: '', targetYards: null }); }
+
+async function savePlan() {
+    if(!planForm.value.title || !planForm.value.group_name || !planForm.value.start_date) return alert("Fill out Title, Group, and Start Date.");
+    planForm.value.weeks.forEach((w, index) => w.weekNum = index + 1);
+
+    const payload = { title: planForm.value.title, team_id: myTeam.value, group_name: planForm.value.group_name.toUpperCase(), start_date: planForm.value.start_date, weeks: planForm.value.weeks };
+    if(planForm.value.id) await client.from("season_plans").update(payload).eq('id', planForm.value.id);
+    else await client.from("season_plans").insert(payload);
+    
+    alert("Macrocycle Saved!");
+    loadSeasonPlans();
+    currentView.value = 'season-planning';
+}
+
 onMounted(async ()=>{
   const { data } = await client.auth.getUser();
   user.value = data?.user;
-  if(user.value && myTeam.value) loadWorkouts();
+  if(user.value && myTeam.value) {
+      loadWorkouts();
+      loadSeasonPlans(); 
+      loadGroups(); // Load official groups on startup
+  }
 });
 
 // PARSING LOGIC
@@ -373,6 +540,8 @@ function formatTime(sec){
 return {
   user,login,logout,currentView,joinCode,teamPassword,myTeam,currentWorkoutId,fontSize,
   title,group,start,base,input,parsed,totalYards,duration,cloudWorkouts,coachName,
+  seasonPlans, planForm, activePlanContext, startNewPlan, editPlan, addWeek, savePlan,
+  teamGroupsList, newGroupName, addGroup, deleteGroup, // Exposed Groups Functions
   formatTime,save,loadWorkout,startNewWorkout,discardDraft,deleteWorkout
 };
 }
