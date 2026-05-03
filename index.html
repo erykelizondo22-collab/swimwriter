@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Swim Coach Platform v29</title>
+<title>SwimSync - Coach Access Portal</title>
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -31,9 +31,9 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
 
 <div v-if="!user" class="p-10 max-w-md mx-auto bg-white mt-32 rounded-2xl shadow-2xl text-center border border-gray-100">
   <div class="mb-6">
-    <div class="w-16 h-16 bg-blue-600 text-white rounded-2xl mx-auto flex items-center justify-center text-3xl font-black shadow-lg shadow-blue-200">SE</div>
+    <div class="w-16 h-16 bg-blue-600 text-white rounded-2xl mx-auto flex items-center justify-center text-3xl font-black shadow-lg shadow-blue-200">SS</div>
   </div>
-  <h1 class="text-3xl font-black mb-2 text-gray-900">SOFLO Engine</h1>
+  <h1 class="text-3xl font-black mb-2 text-gray-900">SwimSync</h1>
   <p class="text-sm text-gray-500 mb-8 font-medium">Coach Access Portal</p>
   
   <button @click="login" class="bg-white border-2 border-gray-200 text-gray-700 font-bold p-4 w-full rounded-xl hover:bg-gray-50 hover:border-gray-300 transition flex justify-center items-center gap-3 shadow-sm">
@@ -51,8 +51,8 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
   
   <div class="bg-white border-b px-8 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
     <div class="flex items-center gap-3 cursor-pointer" @click="currentView = 'dashboard'">
-      <div class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center font-black">SE</div>
-      <span class="font-black text-xl tracking-tight">SOFLO Engine</span>
+      <div class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center font-black">SS</div>
+      <span class="font-black text-xl tracking-tight">SwimSync</span>
     </div>
     <div class="flex items-center gap-4">
       <span class="text-sm font-bold text-gray-500 bg-gray-100 px-4 py-2 rounded-full">{{coachName}}</span>
@@ -186,7 +186,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
           <button onclick="window.print()" class="w-full bg-gray-100 text-gray-800 py-4 rounded-xl font-bold hover:bg-gray-200 transition-all uppercase tracking-wide">
             Print Workout
           </button>
-          <button @click="currentView = 'dashboard'" class="w-full text-xs font-bold text-red-400 hover:text-red-600 uppercase tracking-widest mt-2">
+          <button @click="discardDraft" class="w-full text-xs font-bold text-red-400 hover:text-red-600 uppercase tracking-widest mt-2">
             Discard & Exit
           </button>
         </div>
@@ -239,7 +239,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
 </div>
 
 <script>
-const {createApp,ref,computed,onMounted} = Vue;
+const {createApp,ref,computed,onMounted,watch} = Vue;
 
 const client = window.supabase.createClient(
   "https://nzrzcbxxqxwktocrmplg.supabase.co",
@@ -249,9 +249,8 @@ const client = window.supabase.createClient(
 createApp({
 setup(){
 const user = ref(null);
-const currentView = ref('dashboard'); // State manager: 'dashboard', 'setup', 'editor'
+const currentView = ref('dashboard');
 
-// Workout Data
 const title = ref("");
 const team = ref("SOFLO");
 const group = ref("");
@@ -264,6 +263,20 @@ const coachName = computed(() => {
   if(!user.value) return "";
   let name = user.value.user_metadata?.full_name || user.value.email.split('@')[0];
   return name.split(' ')[0]; 
+});
+
+// --- DRAFT MODE: AUTO-SAVE WATCHER ---
+watch([title, group, start, base, input], () => {
+  if (currentView.value === 'setup' || currentView.value === 'editor') {
+    const draft = {
+      title: title.value,
+      group: group.value,
+      start: start.value,
+      base: base.value,
+      input: input.value
+    };
+    localStorage.setItem('soflo_draft', JSON.stringify(draft));
+  }
 });
 
 async function login(){
@@ -280,11 +293,32 @@ async function logout(){
 }
 
 function startNewWorkout() {
-  // Clear the fields for a fresh setup
+  const savedDraft = localStorage.getItem('soflo_draft');
+  if (savedDraft) {
+    if (confirm("You have an unsaved workout draft! Do you want to recover it?")) {
+      const draft = JSON.parse(savedDraft);
+      title.value = draft.title || "";
+      group.value = draft.group || "";
+      start.value = draft.start || "17:00";
+      base.value = draft.base || "1:30";
+      input.value = draft.input || "Warmup:\n\n\nMain Set:\n\n";
+      currentView.value = 'editor';
+      return; 
+    }
+  }
+
+  localStorage.removeItem('soflo_draft');
   title.value = "";
   group.value = "";
   input.value = "Warmup:\n\n\nMain Set:\n\n";
   currentView.value = 'setup';
+}
+
+function discardDraft() {
+  if(confirm("Are you sure you want to delete this workout? This cannot be undone.")) {
+    localStorage.removeItem('soflo_draft');
+    currentView.value = 'dashboard';
+  }
 }
 
 async function save(){
@@ -300,9 +334,10 @@ async function save(){
   if(error) {
     alert("Error saving: " + error.message);
   } else { 
-    alert("Workout Saved!");
+    localStorage.removeItem('soflo_draft');
+    alert("Workout Saved to Cloud!");
     loadWorkouts(); 
-    currentView.value = 'dashboard'; // Return to dashboard automatically
+    currentView.value = 'dashboard'; 
   }
 }
 
@@ -315,7 +350,7 @@ function loadWorkout(w){
   title.value = w.title;
   group.value = w.group;
   input.value = w.content;
-  currentView.value = 'editor'; // Jumps straight to editor if editing an existing workout
+  currentView.value = 'editor'; 
 }
 
 onMounted(async ()=>{
@@ -331,7 +366,6 @@ onMounted(async ()=>{
   });
 });
 
-// PARSING LOGIC
 function timeToSec(t){
   let [m,s]=t.split(":").map(Number);
   return (m*60) + (s || 0);
@@ -424,7 +458,7 @@ return {
   user,login,logout,currentView,
   title,team,group,start,base,input,
   parsed,totalYards,duration,cloudWorkouts,coachName,
-  formatTime,save,loadWorkout,startNewWorkout
+  formatTime,save,loadWorkout,startNewWorkout,discardDraft
 };
 }
 }).mount("#app");
