@@ -50,28 +50,67 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
 <div v-else class="no-print">
   
   <div class="bg-white border-b px-8 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
-    <div class="flex items-center gap-3 cursor-pointer" @click="currentView = 'dashboard'">
+    <div class="flex items-center gap-3 cursor-pointer" @click="currentView = myTeam ? 'dashboard' : 'onboarding'">
       <div class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center font-black">SS</div>
       <span class="font-black text-xl tracking-tight">SwimSync</span>
     </div>
     
-    <div class="flex items-center gap-8">
+    <div class="flex items-center gap-8" v-if="myTeam">
       <nav class="hidden md:flex gap-6">
         <button @click="currentView = 'dashboard'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'dashboard', 'text-gray-500 hover:text-gray-900': currentView !== 'dashboard'}" class="text-sm font-black uppercase tracking-widest pb-1 transition-colors">Vault</button>
         <button @click="currentView = 'season-planning'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'season-planning', 'text-gray-500 hover:text-gray-900': currentView !== 'season-planning'}" class="text-sm font-black uppercase tracking-widest pb-1 transition-colors">Season Planner</button>
       </nav>
 
       <div class="flex items-center gap-4 pl-4 border-l">
+        <span class="text-xs font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-md border border-blue-100 uppercase tracking-widest">{{myTeam}}</span>
         <span class="text-sm font-bold text-gray-500 bg-gray-100 px-4 py-2 rounded-full">{{coachName}}</span>
         <button @click="logout" class="text-xs font-bold text-gray-400 hover:text-red-500 transition">LOGOUT</button>
       </div>
+    </div>
+    <div v-else>
+       <button @click="logout" class="text-xs font-bold text-gray-400 hover:text-red-500 transition">CANCEL</button>
     </div>
   </div>
 
   <div class="max-w-[1200px] mx-auto p-6 mt-4">
     
-    <div v-if="currentView === 'dashboard'" class="space-y-6">
+    <div v-if="currentView === 'onboarding'" class="max-w-4xl mx-auto mt-16 grid grid-cols-1 md:grid-cols-2 gap-8">
       
+      <div class="bg-white p-10 rounded-3xl shadow-xl border border-gray-100 text-center">
+        <div class="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+        </div>
+        <h2 class="text-2xl font-black text-gray-900 mb-2">Join a Team</h2>
+        <p class="text-gray-500 mb-8 text-sm font-medium">Assistant Coaches: Enter the vault code provided by your Head Coach.</p>
+        
+        <input v-model="joinCode" placeholder="Team Code" class="w-full border-2 border-gray-100 p-3 rounded-xl font-black text-gray-800 uppercase text-center text-lg tracking-widest mb-3 focus:border-gray-400 outline-none transition">
+        <input v-model="teamPassword" type="password" @keyup.enter="joinTeam" placeholder="Vault Password" class="w-full border-2 border-gray-100 p-3 rounded-xl font-black text-gray-800 text-center text-lg tracking-widest mb-6 focus:border-gray-400 outline-none transition">
+        
+        <button @click="joinTeam" class="w-full bg-gray-900 text-white font-black py-4 rounded-xl shadow-lg hover:bg-black hover:-translate-y-0.5 transition-all uppercase tracking-wide">
+          Unlock Vault
+        </button>
+      </div>
+
+      <div class="bg-gradient-to-br from-blue-600 to-blue-800 p-10 rounded-3xl shadow-xl text-center text-white relative overflow-hidden flex flex-col justify-between">
+        <div class="absolute top-0 right-0 w-48 h-48 bg-white opacity-10 rounded-full -mr-10 -mt-10"></div>
+        <div class="relative z-10">
+          <div class="w-16 h-16 bg-blue-500 text-white rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-blue-400">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          </div>
+          <h2 class="text-2xl font-black mb-2">Create a Vault</h2>
+          <p class="text-blue-100 mb-8 text-sm font-medium">Head Coaches: Launch your private cloud vault and invite your staff.</p>
+          
+          <input v-model="newTeamId" placeholder="New Team Code (e.g. FAST)" class="w-full bg-white/10 border-2 border-blue-400/50 p-3 rounded-xl font-black text-white placeholder-blue-300 uppercase text-center text-lg tracking-widest mb-3 focus:border-white outline-none transition">
+          <input v-model="newTeamPassword" type="password" @keyup.enter="createTeam" placeholder="Create Master Password" class="w-full bg-white/10 border-2 border-blue-400/50 p-3 rounded-xl font-black text-white placeholder-blue-300 text-center text-lg tracking-widest mb-6 focus:border-white outline-none transition">
+        </div>
+        
+        <button @click="createTeam" class="relative z-10 w-full bg-white text-blue-700 font-black py-4 rounded-xl shadow-lg hover:scale-[1.02] transition-transform uppercase tracking-wide">
+          Launch Cloud Vault
+        </button>
+      </div>
+    </div>
+
+    <div v-if="currentView === 'dashboard'" class="space-y-6">
       <div class="bg-blue-600 rounded-2xl p-8 text-white shadow-lg flex justify-between items-center relative overflow-hidden">
         <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-20 -mt-20"></div>
         <div class="relative z-10">
@@ -86,7 +125,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
       <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
         <div class="flex justify-between items-center mb-6 border-b pb-4">
           <div>
-            <h2 class="text-2xl font-black text-gray-900">Team Vault</h2>
+            <h2 class="text-2xl font-black text-gray-900">{{myTeam}} Vault</h2>
             <p class="text-sm text-gray-500 font-medium">Recent workouts saved by the coaching staff.</p>
           </div>
           <div class="flex items-center gap-2 text-sm font-bold text-green-500 bg-green-50 px-3 py-1 rounded-full border border-green-100">
@@ -131,7 +170,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Team</label>
-            <input v-model="team" placeholder="SOFLO" class="w-full border-2 border-gray-100 p-4 rounded-xl font-bold text-gray-800 focus:border-blue-500 outline-none transition uppercase">
+            <div class="w-full border-2 border-gray-100 p-4 rounded-xl font-black text-gray-400 bg-gray-50 uppercase cursor-not-allowed">{{myTeam}}</div>
           </div>
           <div>
             <label class="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Group</label>
@@ -164,12 +203,11 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
     <div v-if="currentView === 'editor'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       
       <div class="lg:col-span-2 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 space-y-4 flex flex-col h-[75vh]">
-        
         <div class="flex justify-between items-start border-b-2 border-gray-50 pb-4">
           <div>
             <h2 class="text-3xl font-black uppercase text-gray-900 leading-tight">{{title}}</h2>
             <div class="flex gap-3 text-xs font-bold text-gray-400 mt-1 uppercase tracking-widest">
-              <span>{{team}} • {{group}}</span>
+              <span>{{myTeam}} • {{group}}</span>
               <span>Start: {{start}}</span>
               <span>Base: {{base}}</span>
             </div>
@@ -204,9 +242,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
     <div v-if="currentView === 'season-planning'" class="space-y-6">
       <div class="bg-white p-12 rounded-3xl shadow-sm border border-gray-100 text-center mt-10">
         <div class="w-24 h-24 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-sm">
-          <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-          </svg>
+          <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
         </div>
         <h2 class="text-4xl font-black text-gray-900 mb-3 tracking-tight">Season Planner</h2>
         <p class="text-gray-500 text-lg max-w-xl mx-auto mb-10">
@@ -225,7 +261,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
   <div class="flex justify-between border-b-[6px] border-black pb-3 mb-6 mt-4">
     <div>
       <div class="text-4xl font-black uppercase leading-tight">{{title}}</div>
-      <div class="text-sm font-bold tracking-widest">{{team}} — {{group}}</div>
+      <div class="text-sm font-bold tracking-widest">{{myTeam}} — {{group}}</div>
     </div>
     <div class="text-right">
       <div class="text-4xl font-black">{{totalYards}}y</div>
@@ -276,8 +312,14 @@ setup(){
 const user = ref(null);
 const currentView = ref('dashboard');
 
+// Auth/Join State
+const joinCode = ref("");
+const teamPassword = ref(""); 
+const newTeamId = ref("");
+const newTeamPassword = ref("");
+
+// Editor State
 const title = ref("");
-const team = ref("SOFLO");
 const group = ref("");
 const start = ref("17:00");
 const base = ref("1:30");
@@ -290,7 +332,10 @@ const coachName = computed(() => {
   return name.split(' ')[0]; 
 });
 
-// --- DRAFT MODE: AUTO-SAVE WATCHER ---
+const myTeam = computed(() => {
+  return user.value?.user_metadata?.team_id || null;
+});
+
 watch([title, group, start, base, input], () => {
   if (currentView.value === 'setup' || currentView.value === 'editor') {
     const draft = {
@@ -300,7 +345,7 @@ watch([title, group, start, base, input], () => {
       base: base.value,
       input: input.value
     };
-    localStorage.setItem('soflo_draft', JSON.stringify(draft));
+    localStorage.setItem('swimsync_draft', JSON.stringify(draft));
   }
 });
 
@@ -317,8 +362,78 @@ async function logout(){
   location.reload();
 }
 
+// JOIN EXISTING TEAM
+async function joinTeam() {
+  if(!joinCode.value || !teamPassword.value) {
+    alert("Please enter both a Team Code and a Password.");
+    return;
+  }
+  const upperCode = joinCode.value.trim().toUpperCase();
+  
+  const { data: teamData, error: dbError } = await client.from('teams')
+    .select('id')
+    .eq('id', upperCode)
+    .eq('password', teamPassword.value);
+
+  if (dbError || !teamData || teamData.length === 0) {
+    alert("Incorrect Team Code or Password. Please try again.");
+    return;
+  }
+  
+  const { data, error } = await client.auth.updateUser({
+    data: { team_id: upperCode }
+  });
+  
+  if(error) {
+    alert("Error joining team: " + error.message);
+  } else {
+    user.value = data.user;
+    currentView.value = 'dashboard';
+    loadWorkouts();
+  }
+}
+
+// CREATE NEW TEAM
+async function createTeam() {
+  if(!newTeamId.value || !newTeamPassword.value) {
+    alert("Please enter a New Team Code and a Password.");
+    return;
+  }
+  const upperCode = newTeamId.value.trim().toUpperCase();
+
+  // 1. Insert new team into the database
+  const { error: insertError } = await client.from('teams').insert({
+    id: upperCode,
+    password: newTeamPassword.value
+  });
+
+  if (insertError) {
+    // Error code 23505 means the Team ID already exists
+    if (insertError.code === '23505') {
+        alert("That Team Code is already taken! Please choose another.");
+    } else {
+        alert("Error creating team: " + insertError.message);
+    }
+    return;
+  }
+
+  // 2. Attach the coach to their brand new team
+  const { data, error: updateError } = await client.auth.updateUser({
+    data: { team_id: upperCode }
+  });
+
+  if(updateError) {
+    alert("Error linking account: " + updateError.message);
+  } else {
+    alert("Vault created successfully! Welcome to SwimSync.");
+    user.value = data.user;
+    currentView.value = 'dashboard';
+    loadWorkouts(); // Will load an empty vault
+  }
+}
+
 function startNewWorkout() {
-  const savedDraft = localStorage.getItem('soflo_draft');
+  const savedDraft = localStorage.getItem('swimsync_draft');
   if (savedDraft) {
     if (confirm("You have an unsaved workout draft! Do you want to recover it?")) {
       const draft = JSON.parse(savedDraft);
@@ -332,7 +447,7 @@ function startNewWorkout() {
     }
   }
 
-  localStorage.removeItem('soflo_draft');
+  localStorage.removeItem('swimsync_draft');
   title.value = "";
   group.value = "";
   input.value = "Warmup:\n\n\nMain Set:\n\n";
@@ -341,7 +456,7 @@ function startNewWorkout() {
 
 function discardDraft() {
   if(confirm("Are you sure you want to delete this workout? This cannot be undone.")) {
-    localStorage.removeItem('soflo_draft');
+    localStorage.removeItem('swimsync_draft');
     currentView.value = 'dashboard';
   }
 }
@@ -349,7 +464,7 @@ function discardDraft() {
 async function save(){
   const { error } = await client.from("workouts").insert({
     title: title.value,
-    team_id: "SOFLO",
+    team_id: myTeam.value, 
     group: group.value,
     content: input.value,
     total_yards: totalYards.value,
@@ -359,15 +474,20 @@ async function save(){
   if(error) {
     alert("Error saving: " + error.message);
   } else { 
-    localStorage.removeItem('soflo_draft');
-    alert("Workout Saved to Cloud!");
+    localStorage.removeItem('swimsync_draft');
+    alert("Workout Saved to " + myTeam.value + " Vault!");
     loadWorkouts(); 
     currentView.value = 'dashboard'; 
   }
 }
 
 async function loadWorkouts(){
-  const { data } = await client.from("workouts").select("*").eq('team_id', 'SOFLO').order('created_at', {ascending: false}).limit(12);
+  if(!myTeam.value) return;
+  const { data } = await client.from("workouts")
+    .select("*")
+    .eq('team_id', myTeam.value) 
+    .order('created_at', {ascending: false})
+    .limit(12);
   if(data) cloudWorkouts.value = data;
 }
 
@@ -381,12 +501,23 @@ function loadWorkout(w){
 onMounted(async ()=>{
   const { data } = await client.auth.getUser();
   user.value = data?.user;
-  if(user.value) loadWorkouts();
+  
+  if(user.value) {
+    if(!myTeam.value) currentView.value = 'onboarding';
+    else {
+      currentView.value = 'dashboard';
+      loadWorkouts();
+    }
+  }
 
   client.auth.onAuthStateChange((event, session) => {
     if (session) {
       user.value = session.user;
-      loadWorkouts();
+      if(!myTeam.value) currentView.value = 'onboarding';
+      else {
+        currentView.value = 'dashboard';
+        loadWorkouts();
+      }
     }
   });
 });
@@ -481,7 +612,9 @@ function formatTime(sec){
 
 return {
   user,login,logout,currentView,
-  title,team,group,start,base,input,
+  joinCode,teamPassword,newTeamId,newTeamPassword,
+  joinTeam,createTeam,myTeam,
+  title,group,start,base,input,
   parsed,totalYards,duration,cloudWorkouts,coachName,
   formatTime,save,loadWorkout,startNewWorkout,discardDraft
 };
