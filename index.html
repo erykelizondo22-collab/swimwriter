@@ -54,9 +54,17 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
       <div class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center font-black">SS</div>
       <span class="font-black text-xl tracking-tight">SwimSync</span>
     </div>
-    <div class="flex items-center gap-4">
-      <span class="text-sm font-bold text-gray-500 bg-gray-100 px-4 py-2 rounded-full">{{coachName}}</span>
-      <button @click="logout" class="text-xs font-bold text-gray-400 hover:text-red-500 transition">LOGOUT</button>
+    
+    <div class="flex items-center gap-8">
+      <nav class="hidden md:flex gap-6">
+        <button @click="currentView = 'dashboard'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'dashboard', 'text-gray-500 hover:text-gray-900': currentView !== 'dashboard'}" class="text-sm font-black uppercase tracking-widest pb-1 transition-colors">Vault</button>
+        <button @click="currentView = 'season-planning'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'season-planning', 'text-gray-500 hover:text-gray-900': currentView !== 'season-planning'}" class="text-sm font-black uppercase tracking-widest pb-1 transition-colors">Season Planner</button>
+      </nav>
+
+      <div class="flex items-center gap-4 pl-4 border-l">
+        <span class="text-sm font-bold text-gray-500 bg-gray-100 px-4 py-2 rounded-full">{{coachName}}</span>
+        <button @click="logout" class="text-xs font-bold text-gray-400 hover:text-red-500 transition">LOGOUT</button>
+      </div>
     </div>
   </div>
 
@@ -189,6 +197,23 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
           <button @click="discardDraft" class="w-full text-xs font-bold text-red-400 hover:text-red-600 uppercase tracking-widest mt-2">
             Discard & Exit
           </button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="currentView === 'season-planning'" class="space-y-6">
+      <div class="bg-white p-12 rounded-3xl shadow-sm border border-gray-100 text-center mt-10">
+        <div class="w-24 h-24 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-sm">
+          <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+        </div>
+        <h2 class="text-4xl font-black text-gray-900 mb-3 tracking-tight">Season Planner</h2>
+        <p class="text-gray-500 text-lg max-w-xl mx-auto mb-10">
+          The macrocycle engine. Map out yardage progression, taper schedules, and target meets for your groups.
+        </p>
+        <div class="inline-block border-2 border-dashed border-gray-200 rounded-2xl p-8 bg-gray-50">
+          <p class="font-bold text-gray-400 uppercase tracking-widest text-sm">Under Construction</p>
         </div>
       </div>
     </div>
