@@ -136,7 +136,12 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div v-for="w in cloudWorkouts" :key="w.id" @click="loadWorkout(w)" class="p-5 border-2 border-gray-50 rounded-xl hover:border-blue-200 hover:bg-blue-50 hover:-translate-y-1 cursor-pointer transition-all group relative overflow-hidden">
             <div class="absolute top-0 left-0 w-1 h-full bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <div class="flex justify-between font-black text-xs text-blue-600 uppercase mb-2">
+            
+            <button @click.stop="deleteWorkout(w.id)" class="absolute top-4 right-4 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all z-10 bg-white p-1 rounded-md">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
+
+            <div class="flex justify-between font-black text-xs text-blue-600 uppercase mb-2 pr-8">
               <span class="bg-white border px-2 py-0.5 rounded text-[10px]">{{w.group}}</span>
               <span>{{w.total_yards}}y</span>
             </div>
@@ -157,7 +162,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
 
     <div v-if="currentView === 'setup'" class="max-w-xl mx-auto bg-white p-10 rounded-3xl shadow-xl border border-gray-100 mt-10">
       <div class="text-center mb-8">
-        <h2 class="text-3xl font-black text-gray-900">Workout Setup</h2>
+        <h2 class="text-3xl font-black text-gray-900">{{ currentWorkoutId ? 'Edit Setup' : 'Workout Setup' }}</h2>
         <p class="text-gray-500 mt-2">Define the parameters for this session.</p>
       </div>
 
@@ -227,14 +232,20 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
 
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
           <button @click="save" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 transition-all uppercase tracking-wide">
-            Save & Return
+            {{ currentWorkoutId ? 'Update Workout' : 'Save & Return' }}
           </button>
           <button onclick="window.print()" class="w-full bg-gray-100 text-gray-800 py-4 rounded-xl font-bold hover:bg-gray-200 transition-all uppercase tracking-wide">
             Print Workout
           </button>
-          <button @click="discardDraft" class="w-full text-xs font-bold text-red-400 hover:text-red-600 uppercase tracking-widest mt-2">
-            Discard & Exit
-          </button>
+          
+          <div class="border-t border-gray-100 pt-4 mt-2 space-y-2">
+            <button @click="discardDraft" class="w-full text-xs font-bold text-gray-400 hover:text-gray-600 uppercase tracking-widest">
+              Close Editor
+            </button>
+            <button v-if="currentWorkoutId" @click="deleteWorkout(currentWorkoutId)" class="w-full text-xs font-bold text-red-400 hover:text-red-600 uppercase tracking-widest">
+              Delete Forever
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -312,13 +323,13 @@ setup(){
 const user = ref(null);
 const currentView = ref('dashboard');
 
-// Auth/Join State
 const joinCode = ref("");
 const teamPassword = ref(""); 
 const newTeamId = ref("");
 const newTeamPassword = ref("");
 
-// Editor State
+const currentWorkoutId = ref(null); // Tracks if we are editing an existing file
+
 const title = ref("");
 const group = ref("");
 const start = ref("17:00");
@@ -339,6 +350,7 @@ const myTeam = computed(() => {
 watch([title, group, start, base, input], () => {
   if (currentView.value === 'setup' || currentView.value === 'editor') {
     const draft = {
+      id: currentWorkoutId.value,
       title: title.value,
       group: group.value,
       start: start.value,
@@ -362,73 +374,36 @@ async function logout(){
   location.reload();
 }
 
-// JOIN EXISTING TEAM
 async function joinTeam() {
   if(!joinCode.value || !teamPassword.value) {
     alert("Please enter both a Team Code and a Password.");
     return;
   }
   const upperCode = joinCode.value.trim().toUpperCase();
-  
-  const { data: teamData, error: dbError } = await client.from('teams')
-    .select('id')
-    .eq('id', upperCode)
-    .eq('password', teamPassword.value);
-
+  const { data: teamData, error: dbError } = await client.from('teams').select('id').eq('id', upperCode).eq('password', teamPassword.value);
   if (dbError || !teamData || teamData.length === 0) {
     alert("Incorrect Team Code or Password. Please try again.");
     return;
   }
-  
-  const { data, error } = await client.auth.updateUser({
-    data: { team_id: upperCode }
-  });
-  
-  if(error) {
-    alert("Error joining team: " + error.message);
-  } else {
-    user.value = data.user;
-    currentView.value = 'dashboard';
-    loadWorkouts();
-  }
+  const { data, error } = await client.auth.updateUser({ data: { team_id: upperCode } });
+  if(error) alert("Error joining team: " + error.message);
+  else { user.value = data.user; currentView.value = 'dashboard'; loadWorkouts(); }
 }
 
-// CREATE NEW TEAM
 async function createTeam() {
-  if(!newTeamId.value || !newTeamPassword.value) {
-    alert("Please enter a New Team Code and a Password.");
-    return;
-  }
+  if(!newTeamId.value || !newTeamPassword.value) { alert("Please enter a New Team Code and a Password."); return; }
   const upperCode = newTeamId.value.trim().toUpperCase();
-
-  // 1. Insert new team into the database
-  const { error: insertError } = await client.from('teams').insert({
-    id: upperCode,
-    password: newTeamPassword.value
-  });
-
+  const { error: insertError } = await client.from('teams').insert({ id: upperCode, password: newTeamPassword.value });
   if (insertError) {
-    // Error code 23505 means the Team ID already exists
-    if (insertError.code === '23505') {
-        alert("That Team Code is already taken! Please choose another.");
-    } else {
-        alert("Error creating team: " + insertError.message);
-    }
+    if (insertError.code === '23505') alert("That Team Code is already taken! Please choose another.");
+    else alert("Error creating team: " + insertError.message);
     return;
   }
-
-  // 2. Attach the coach to their brand new team
-  const { data, error: updateError } = await client.auth.updateUser({
-    data: { team_id: upperCode }
-  });
-
-  if(updateError) {
-    alert("Error linking account: " + updateError.message);
-  } else {
+  const { data, error: updateError } = await client.auth.updateUser({ data: { team_id: upperCode } });
+  if(updateError) alert("Error linking account: " + updateError.message);
+  else {
     alert("Vault created successfully! Welcome to SwimSync.");
-    user.value = data.user;
-    currentView.value = 'dashboard';
-    loadWorkouts(); // Will load an empty vault
+    user.value = data.user; currentView.value = 'dashboard'; loadWorkouts();
   }
 }
 
@@ -437,6 +412,7 @@ function startNewWorkout() {
   if (savedDraft) {
     if (confirm("You have an unsaved workout draft! Do you want to recover it?")) {
       const draft = JSON.parse(savedDraft);
+      currentWorkoutId.value = draft.id || null;
       title.value = draft.title || "";
       group.value = draft.group || "";
       start.value = draft.start || "17:00";
@@ -446,8 +422,8 @@ function startNewWorkout() {
       return; 
     }
   }
-
   localStorage.removeItem('swimsync_draft');
+  currentWorkoutId.value = null; // Blank slate
   title.value = "";
   group.value = "";
   input.value = "Warmup:\n\n\nMain Set:\n\n";
@@ -455,43 +431,68 @@ function startNewWorkout() {
 }
 
 function discardDraft() {
-  if(confirm("Are you sure you want to delete this workout? This cannot be undone.")) {
-    localStorage.removeItem('swimsync_draft');
-    currentView.value = 'dashboard';
-  }
+  localStorage.removeItem('swimsync_draft');
+  currentWorkoutId.value = null;
+  currentView.value = 'dashboard';
 }
 
 async function save(){
-  const { error } = await client.from("workouts").insert({
+  const payload = {
     title: title.value,
     team_id: myTeam.value, 
     group: group.value,
     content: input.value,
     total_yards: totalYards.value,
     coach_name: coachName.value 
-  });
+  };
+
+  let error;
+  if(currentWorkoutId.value) {
+    // UPDATE existing workout
+    const res = await client.from("workouts").update(payload).eq('id', currentWorkoutId.value);
+    error = res.error;
+  } else {
+    // INSERT new workout
+    const res = await client.from("workouts").insert(payload);
+    error = res.error;
+  }
   
   if(error) {
     alert("Error saving: " + error.message);
   } else { 
     localStorage.removeItem('swimsync_draft');
-    alert("Workout Saved to " + myTeam.value + " Vault!");
+    currentWorkoutId.value = null;
+    alert("Saved to " + myTeam.value + " Vault!");
     loadWorkouts(); 
     currentView.value = 'dashboard'; 
   }
 }
 
+// DELETE WORKOUT LOGIC
+async function deleteWorkout(id) {
+  if(!confirm("Are you sure you want to permanently delete this workout?")) return;
+  
+  const { error } = await client.from("workouts").delete().eq('id', id);
+  
+  if(error) {
+    alert("Error deleting workout: " + error.message);
+  } else {
+    loadWorkouts(); // Refresh the vault list instantly
+    // If they delete the workout while currently inside the editor viewing it:
+    if(currentView.value === 'editor' && currentWorkoutId.value === id) {
+       discardDraft();
+    }
+  }
+}
+
 async function loadWorkouts(){
   if(!myTeam.value) return;
-  const { data } = await client.from("workouts")
-    .select("*")
-    .eq('team_id', myTeam.value) 
-    .order('created_at', {ascending: false})
-    .limit(12);
+  const { data } = await client.from("workouts").select("*").eq('team_id', myTeam.value).order('created_at', {ascending: false}).limit(12);
   if(data) cloudWorkouts.value = data;
 }
 
 function loadWorkout(w){
+  currentWorkoutId.value = w.id; // Lock onto this specific file
   title.value = w.title;
   group.value = w.group;
   input.value = w.content;
@@ -504,42 +505,25 @@ onMounted(async ()=>{
   
   if(user.value) {
     if(!myTeam.value) currentView.value = 'onboarding';
-    else {
-      currentView.value = 'dashboard';
-      loadWorkouts();
-    }
+    else { currentView.value = 'dashboard'; loadWorkouts(); }
   }
 
   client.auth.onAuthStateChange((event, session) => {
     if (session) {
       user.value = session.user;
       if(!myTeam.value) currentView.value = 'onboarding';
-      else {
-        currentView.value = 'dashboard';
-        loadWorkouts();
-      }
+      else { currentView.value = 'dashboard'; loadWorkouts(); }
     }
   });
 });
 
-function timeToSec(t){
-  let [m,s]=t.split(":").map(Number);
-  return (m*60) + (s || 0);
-}
-
-function secToTime(s){
-  let m=Math.floor(s/60);
-  let sec=s%60;
-  return `${m}:${sec.toString().padStart(2,"0")}`;
-}
+function timeToSec(t){ let [m,s]=t.split(":").map(Number); return (m*60) + (s || 0); }
+function secToTime(s){ let m=Math.floor(s/60); let sec=s%60; return `${m}:${sec.toString().padStart(2,"0")}`; }
 
 function parseLine(str, baseSec){
   if(/^\d+:\d+$/.test(str.trim())) return {rest:true,dur:timeToSec(str),label:str,q:1,d:0};
-  let m=str.match(/(\d+)x(\d+)/i);
-  let q=1,d=0;
-  if(m){q=+m[1]; d=+m[2];}
-  else if(/^\d+/.test(str)){d=parseInt(str);}
-  else return null;
+  let m=str.match(/(\d+)x(\d+)/i); let q=1,d=0;
+  if(m){q=+m[1]; d=+m[2];} else if(/^\d+/.test(str)){d=parseInt(str);} else return null;
 
   let paceMatch = str.match(/[@|on]\s*(\d+):(\d+)/);
   let dur = paceMatch ? (parseInt(paceMatch[1])*60 + parseInt(paceMatch[2])) : Math.round((d/100)*baseSec);
@@ -551,23 +535,18 @@ const parsed = computed(()=>{
   if(!start.value || !base.value || !input.value) return [];
   let baseSeconds = timeToSec(base.value);
   let t = (parseInt(start.value.split(":")[0])*3600) + (parseInt(start.value.split(":")[1])*60);
-  let out=[];
-  let secBlock={title:"WARMUP",blocks:[],y:0};
-  let runningYards=0;
+  let out=[]; let secBlock={title:"WARMUP",blocks:[],y:0}; let runningYards=0;
   let lines=input.value.split("\n").map(x=>x.trim()).filter(Boolean);
 
   for(let i=0;i<lines.length;i++){
     let l=lines[i];
     if(l.endsWith(":")){
       if(secBlock.blocks.length) out.push(secBlock);
-      secBlock={title:l.replace(":",""),blocks:[],y:0};
-      continue;
+      secBlock={title:l.replace(":",""),blocks:[],y:0}; continue;
     }
     let roundMatch = l.match(/^(\d+)x$/i);
     if(roundMatch){
-      let rep = parseInt(roundMatch[1]);
-      let block = {rep, sets:[]};
-      i++;
+      let rep = parseInt(roundMatch[1]); let block = {rep, sets:[]}; i++;
       while(i<lines.length && !lines[i].endsWith(":") && !/^(\d+)x$/i.test(lines[i])){
         let s = parseLine(lines[i], baseSeconds);
         if(s){
@@ -576,47 +555,36 @@ const parsed = computed(()=>{
             if(!s.rest){ runningYards += s.q * s.d; secBlock.y += s.q * s.d; t += s.dur * s.q; }
             else { t += s.dur; }
           }
-        }
-        i++;
-      }
-      i--;
-      block.sets.forEach(set => set.run = runningYards);
-      secBlock.blocks.push(block);
-      continue;
+        } i++;
+      } i--; block.sets.forEach(set => set.run = runningYards); secBlock.blocks.push(block); continue;
     }
     let s = parseLine(l, baseSeconds);
     if(s){
       if(!s.rest){ runningYards += s.q * s.d; secBlock.y += s.q * s.d; s.start = t; t += s.dur * s.q; }
       else { s.start = t; t += s.dur; }
-      s.run = runningYards;
-      secBlock.blocks.push({rep:1, sets:[s]});
+      s.run = runningYards; secBlock.blocks.push({rep:1, sets:[s]});
     }
-  }
-  out.push(secBlock);
-  return out;
+  } out.push(secBlock); return out;
 });
 
 const totalYards = computed(()=>parsed.value.reduce((a,s)=>a+s.y,0));
 const duration = computed(()=> {
-  let total = 0;
-  parsed.value.forEach(sec => sec.blocks.forEach(b => b.sets.forEach(s => total += (s.dur * (s.q || 1)))));
+  let total = 0; parsed.value.forEach(sec => sec.blocks.forEach(b => b.sets.forEach(s => total += (s.dur * (s.q || 1)))));
   return Math.round(total/60);
 });
 
 function formatTime(sec){
-  let h=Math.floor(sec/3600)%12||12;
-  let m=Math.floor((sec%3600)/60);
+  let h=Math.floor(sec/3600)%12||12; let m=Math.floor((sec%3600)/60);
   let ap = Math.floor(sec/3600) >= 12 ? 'pm' : 'am';
   return `${h}:${m.toString().padStart(2,"0")}${ap}`;
 }
 
 return {
-  user,login,logout,currentView,
-  joinCode,teamPassword,newTeamId,newTeamPassword,
-  joinTeam,createTeam,myTeam,
+  user,login,logout,currentView,joinCode,teamPassword,newTeamId,newTeamPassword,
+  joinTeam,createTeam,myTeam,currentWorkoutId,
   title,group,start,base,input,
   parsed,totalYards,duration,cloudWorkouts,coachName,
-  formatTime,save,loadWorkout,startNewWorkout,discardDraft
+  formatTime,save,loadWorkout,startNewWorkout,discardDraft,deleteWorkout
 };
 }
 }).mount("#app");
