@@ -2,8 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>SwimSync - Coach Access Portal</title>
+
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="SwimSync" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#2563eb" />
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -11,7 +17,7 @@
 
 <style>
 [v-cloak]{display:none}
-body{margin:0;font-family:system-ui;background:#f8fafc}
+body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-color: transparent;}
 @media print{
   .no-print{display:none!important;}
   body { background: white !important; }
@@ -66,6 +72,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
           </div>
       </div>
       <div v-else class="flex items-center gap-4">
+          <span class="text-sm font-bold text-gray-500 bg-gray-100 px-4 py-2 rounded-full">{{coachName}}</span>
           <button @click="logout" class="text-xs font-bold text-gray-400 hover:text-red-500 transition">LOGOUT</button>
       </div>
     </div>
@@ -270,9 +277,10 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
 
         <div class="bg-white p-6 md:p-8 rounded-3xl md:rounded-[32px] shadow-sm border border-gray-100 space-y-3 md:space-y-4">
           <button @click="save" class="w-full bg-blue-600 text-white font-black py-4 md:py-5 rounded-xl md:rounded-2xl shadow-xl shadow-blue-100 uppercase tracking-widest hover:bg-blue-700 transition-all text-sm md:text-base">Save Workout</button>
-          <button onclick="window.print()" class="w-full bg-black text-white py-4 md:py-5 rounded-xl md:rounded-2xl font-black uppercase tracking-widest hover:bg-gray-800 transition-all text-sm md:text-base hidden sm:block">Print Sheet</button>
           
-          <div class="border-t pt-4 md:pt-6 mt-2 hidden sm:block">
+          <button onclick="window.print()" class="w-full bg-black text-white py-4 md:py-5 rounded-xl md:rounded-2xl font-black uppercase tracking-widest hover:bg-gray-800 transition-all text-sm md:text-base">Print Sheet</button>
+          
+          <div class="border-t pt-4 md:pt-6 mt-2">
             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex justify-between">
                 <span>Font Size</span>
                 <span class="text-blue-600">{{fontSize}}px</span>
