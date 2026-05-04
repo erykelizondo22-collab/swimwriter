@@ -561,7 +561,10 @@ function getWeekDateRange(startDateStr, weekIndex) {
     return `${format(start)} - ${format(end)}`;
 }
 
-async function login(){ await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin }}); }
+async function login(){ 
+    await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href }}); 
+}
+
 async function logout(){ 
     localStorage.removeItem('pending_invite_code');
     localStorage.removeItem('pending_invite_key');
