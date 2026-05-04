@@ -172,6 +172,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
                   </div>
               </div>
           </div>
+
       </div>
     </div>
 
@@ -511,6 +512,7 @@ const staffList = ref([]);
 const newGroupName = ref("");
 const hasPendingInvite = ref(false);
 const isProcessingInvite = ref(false);
+const planForm = ref({ id: null, title: '', group_name: '', start_date: '', weeks: [] });
 
 const myRole = computed(() => user.value?.user_metadata?.team_role || 'coach');
 const coachName = computed(() => {
