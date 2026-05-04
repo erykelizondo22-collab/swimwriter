@@ -101,7 +101,14 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
       <div class="bg-blue-600 rounded-3xl p-6 md:p-10 text-white shadow-xl flex flex-col md:flex-row justify-between items-center relative overflow-hidden gap-6">
         <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-20 -mt-20 pointer-events-none"></div>
         <h2 class="text-2xl md:text-3xl font-black relative z-10 uppercase tracking-tight">The Vault</h2>
-        <button @click="startNewWorkout" class="relative z-10 w-full md:w-auto bg-white text-blue-600 px-8 py-4 rounded-2xl font-black shadow-2xl uppercase transition-all hover:scale-105 tracking-wide">+ Create Workout</button>
+        
+        <div class="relative z-10 flex flex-col sm:flex-row w-full md:w-auto gap-3">
+            <button v-if="hasDraft" @click="resumeDraft" class="w-full sm:w-auto bg-orange-400 text-white px-8 py-4 rounded-2xl font-black shadow-xl uppercase transition-all hover:scale-105 tracking-wide flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Resume Draft
+            </button>
+            <button @click="startNewWorkout" class="w-full sm:w-auto bg-white text-blue-600 px-8 py-4 rounded-2xl font-black shadow-2xl uppercase transition-all hover:scale-105 tracking-wide">+ Create Workout</button>
+        </div>
       </div>
 
       <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-wrap gap-4 items-center">
@@ -122,7 +129,6 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
       <div v-if="!filteredWorkouts.length" class="text-center py-20 text-gray-300 font-black uppercase tracking-widest italic bg-white rounded-3xl border border-gray-100">No workouts found</div>
       
       <div v-else class="space-y-12">
-          
           <div v-if="todaysWorkouts.length">
               <h3 class="text-lg md:text-xl font-black uppercase tracking-tight text-gray-800 mb-4 border-b-[3px] border-blue-500 inline-block pr-6 pb-1">Today's Workouts</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -196,7 +202,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
 
         <div class="bg-white p-4 md:p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col flex-1">
           <div class="mb-4 md:mb-5 flex justify-between items-center border-b pb-4 md:pb-5">
-              <h2 class="text-xl md:text-3xl font-black uppercase tracking-tight text-gray-900 truncate pr-2">{{title}}</h2>
+              <h2 class="text-xl md:text-3xl font-black uppercase tracking-tight text-gray-900 truncate pr-2">{{title || 'Untitled Workout'}}</h2>
               <button @click="currentView = 'setup'" class="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-full hover:bg-gray-100 transition whitespace-nowrap">Edit Setup</button>
           </div>
           <textarea v-model="input" class="w-full flex-1 border-2 border-gray-50 p-4 md:p-6 font-mono rounded-2xl bg-gray-50 outline-none resize-none leading-relaxed transition-all focus:bg-white focus:border-blue-500 min-h-[400px]" placeholder="Type sets..."></textarea>
@@ -222,7 +228,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
             <input type="range" v-model="fontSize" min="6" max="48" step="1" class="font-slider">
           </div>
 
-          <button @click="discardDraft" class="w-full text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest pt-2 md:pt-4 hover:text-gray-600 transition">Close Editor</button>
+          <button @click="discardDraft" class="w-full text-[9px] md:text-[10px] font-black text-red-400 uppercase tracking-widest pt-2 md:pt-4 hover:text-red-600 transition">Close & Discard Draft</button>
         </div>
       </div>
     </div>
@@ -421,7 +427,6 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
 
   </div>
 </div>
-
 <div id="sheet" style="display:none; position: relative; overflow: hidden;" :class="{'no-print': !user}">
   
   <div v-if="teamLogoUrl" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; z-index: 0; opacity: 0.08; pointer-events: none;">
@@ -432,9 +437,9 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
       
       <div class="flex justify-between items-center mb-6">
           <div class="flex items-center gap-3 opacity-40 grayscale">
-              <svg viewBox="0 0 100 100" class="w-8 h-8 text-black" fill="currentColor">
-                  <path d="M75,35 C75,10 25,10 25,35 C25,60 75,60 75,85 C75,110 25,110 25,85" stroke="currentColor" fill="none" stroke-width="14" stroke-linecap="round"/>
-                  <path d="M60,45 C60,25 40,25 40,45 C40,65 60,65 60,85 C60,105 40,105 40,85" stroke="currentColor" fill="none" stroke-width="10" stroke-linecap="round" opacity="0.6"/>
+              <svg viewBox="0 0 100 100" class="w-8 h-8 text-black" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M75,35 C75,10 25,10 25,35 C25,60 75,60 75,85 C75,110 25,110 25,85" stroke="currentColor" stroke-width="14" stroke-linecap="round"/>
+                  <path d="M60,45 C60,25 40,25 40,45 C40,65 60,65 60,85 C60,105 40,105 40,85" stroke="currentColor" stroke-width="10" stroke-linecap="round" opacity="0.6"/>
                   <circle cx="82" cy="50" r="7" fill="currentColor" />
               </svg>
               <span class="font-black text-xl tracking-tighter uppercase text-black">swimsync</span>
@@ -490,6 +495,7 @@ setup(){
 const user = ref(null);
 const currentView = ref('dashboard');
 const practiceDate = ref(new Date().toISOString().split('T')[0]);
+const hasDraft = ref(false);
 
 const getLocalTodayStr = () => {
     const tzoffset = (new Date()).getTimezoneOffset() * 60000; 
@@ -562,6 +568,40 @@ function getWeekDateRange(startDateStr, weekIndex) {
     return `${format(start)} - ${format(end)}`;
 }
 
+// AUTO-SAVE DRAFT ENGINE
+function checkDraft() {
+    const draftStr = localStorage.getItem('swimsync_draft');
+    if (draftStr) {
+        const draft = JSON.parse(draftStr);
+        if (draft.input && draft.input.trim() !== "Warmup:\n\nMain Set:\n\n" && draft.input.length > 20) hasDraft.value = true;
+        else if (draft.title || draft.group) hasDraft.value = true;
+        else hasDraft.value = false;
+    } else { hasDraft.value = false; }
+}
+
+function resumeDraft() {
+    const draftStr = localStorage.getItem('swimsync_draft');
+    if (draftStr) {
+        const draft = JSON.parse(draftStr);
+        currentWorkoutId.value = draft.id || null;
+        title.value = draft.title || "";
+        group.value = draft.group || "";
+        practiceDate.value = draft.date || getLocalTodayStr();
+        start.value = draft.start || "17:00";
+        base.value = draft.base || "1:30";
+        input.value = draft.input || "Warmup:\n\nMain Set:\n\n";
+        currentView.value = 'editor';
+    }
+}
+
+watch([title, group, practiceDate, start, base, input], () => {
+    if (currentView.value === 'setup' || currentView.value === 'editor') {
+        const draft = { id: currentWorkoutId.value, title: title.value, group: group.value, date: practiceDate.value, start: start.value, base: base.value, input: input.value };
+        localStorage.setItem('swimsync_draft', JSON.stringify(draft));
+        checkDraft();
+    }
+}, { deep: true });
+
 async function login(){ 
     await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href }}); 
 }
@@ -631,6 +671,9 @@ async function save(){
   const payload = { title: title.value, team_id: myTeam.value, group: group.value, practice_date: practiceDate.value, content: input.value, total_yards: totalYards.value, coach_name: coachName.value };
   if(currentWorkoutId.value) await client.from("workouts").update(payload).eq('id', currentWorkoutId.value);
   else await client.from("workouts").insert(payload);
+  
+  localStorage.removeItem('swimsync_draft');
+  hasDraft.value = false;
   loadWorkouts(); currentView.value = 'dashboard';
 }
 
@@ -643,7 +686,12 @@ function loadWorkout(w){
   currentWorkoutId.value = w.id; title.value = w.title; group.value = w.group; practiceDate.value = w.practice_date || getLocalTodayStr(); input.value = w.content; currentView.value = 'editor'; 
 }
 
-function discardDraft() { currentWorkoutId.value = null; currentView.value = 'dashboard'; }
+function discardDraft() { 
+    localStorage.removeItem('swimsync_draft');
+    hasDraft.value = false;
+    currentWorkoutId.value = null; 
+    currentView.value = 'dashboard'; 
+}
 
 async function deleteWorkout(id) {
   if(confirm("Permanently delete from Vault?")) { await client.from("workouts").delete().eq('id', id); loadWorkouts(); }
@@ -756,6 +804,8 @@ function checkUrlForInvite() {
 
 onMounted(async ()=>{
   checkUrlForInvite();
+  checkDraft();
+  
   const { data } = await client.auth.getUser();
   user.value = data?.user;
   
@@ -861,7 +911,8 @@ return {
   seasonPlans, activePlanContext, teamGroupsList, staffList, planForm, newGroupName, myRole, myTeam,
   filterGroup, filterDate, filteredWorkouts, todaysWorkouts, upcomingWorkouts, pastWorkouts, getWeekDateRange,
   formatTime, save, loadWorkout, startNewWorkout, formatPracticeDate, startNewPlan, editPlan, addWeek, savePlan, deleteWorkout,
-  addGroup, deleteGroup, removeStaff, changeRole, copyInviteLink, joinTeam, createTeam, updateVaultPassword, discardDraft, loadStaff
+  addGroup, deleteGroup, removeStaff, changeRole, copyInviteLink, joinTeam, createTeam, updateVaultPassword, discardDraft, loadStaff,
+  hasDraft, resumeDraft
 };
 }
 }).mount("#app");
