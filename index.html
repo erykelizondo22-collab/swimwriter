@@ -349,8 +349,8 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
             <h3 class="text-lg font-black text-blue-900 uppercase tracking-tight mb-2">Team Branding</h3>
             <p class="text-blue-700 text-xs font-bold mb-4">Upload your team logo. It will be displayed as a large watermark behind your printed workout sheets.</p>
             <div class="flex items-center gap-4">
-                <div class="w-16 h-16 bg-white rounded-xl border-2 border-blue-200 flex items-center justify-center overflow-hidden shrink-0">
-                    <img v-if="teamLogoUrl" :src="teamLogoUrl" class="w-full h-full object-contain p-1">
+                <div class="w-16 h-16 bg-white rounded-xl border-2 border-blue-200 flex items-center justify-center overflow-hidden shrink-0 z-10 relative bg-white">
+                    <img v-if="teamLogoUrl" :src="teamLogoUrl" class="w-full h-full object-contain p-1 relative z-10 bg-white">
                     <span v-else class="text-blue-300 text-[9px] font-black uppercase text-center leading-tight">No<br>Logo</span>
                 </div>
                 <div class="flex-1">
@@ -547,7 +547,6 @@ const filteredWorkouts = computed(() => {
     });
 });
 
-// BULLETPROOF DATE SORTING: We use || "" so that old workouts missing a date don't crash the localeCompare algorithm.
 const todaysWorkouts = computed(() => filteredWorkouts.value.filter(w => w.practice_date === todayStr.value));
 const upcomingWorkouts = computed(() => filteredWorkouts.value.filter(w => w.practice_date && w.practice_date > todayStr.value).sort((a,b) => (a.practice_date || "").localeCompare(b.practice_date || ""))); 
 const pastWorkouts = computed(() => filteredWorkouts.value.filter(w => !w.practice_date || w.practice_date < todayStr.value).sort((a,b) => (b.practice_date || "").localeCompare(a.practice_date || "")));
