@@ -51,17 +51,24 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
       <div class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center font-black">SS</div>
       <span class="font-black text-xl tracking-tight">SwimSync</span>
     </div>
-    <div class="flex items-center gap-8" v-if="myTeam">
-      <nav class="hidden md:flex gap-6">
-        <button @click="currentView = 'dashboard'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'dashboard', 'text-gray-500 hover:text-gray-900': currentView !== 'dashboard'}" class="text-sm font-black uppercase tracking-widest pb-1 transition-colors">Vault</button>
-        <button @click="currentView = 'season-planning'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'season-planning' || currentView === 'plan-builder', 'text-gray-500 hover:text-gray-900': currentView !== 'season-planning' && currentView !== 'plan-builder'}" class="text-sm font-black uppercase tracking-widest pb-1 transition-colors">Season Planner</button>
-        <button @click="currentView = 'groups'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'groups', 'text-gray-500 hover:text-gray-900': currentView !== 'groups'}" class="text-sm font-black uppercase tracking-widest pb-1 transition-colors">Groups</button>
-        <button @click="currentView = 'staff'; loadStaff();" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'staff', 'text-gray-500 hover:text-gray-900': currentView !== 'staff'}" class="text-sm font-black uppercase tracking-widest pb-1 transition-colors">Staff</button>
-      </nav>
-      <div class="flex items-center gap-4 pl-4 border-l">
-        <span class="text-xs font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-md border border-blue-100 uppercase tracking-widest">{{myTeam}}</span>
-        <span class="text-sm font-bold text-gray-500 bg-gray-100 px-4 py-2 rounded-full">{{coachName}}</span>
-        <button @click="logout" class="text-xs font-bold text-gray-400 hover:text-red-500 transition">LOGOUT</button>
+    
+    <div class="flex items-center gap-8">
+      <div v-if="myTeam" class="flex items-center gap-8">
+          <nav class="hidden md:flex gap-6">
+            <button @click="currentView = 'dashboard'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'dashboard', 'text-gray-500 hover:text-gray-900': currentView !== 'dashboard'}" class="text-sm font-black uppercase tracking-widest pb-1 transition-colors">Vault</button>
+            <button @click="currentView = 'season-planning'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'season-planning' || currentView === 'plan-builder', 'text-gray-500 hover:text-gray-900': currentView !== 'season-planning' && currentView !== 'plan-builder'}" class="text-sm font-black uppercase tracking-widest pb-1 transition-colors">Season Planner</button>
+            <button @click="currentView = 'groups'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'groups', 'text-gray-500 hover:text-gray-900': currentView !== 'groups'}" class="text-sm font-black uppercase tracking-widest pb-1 transition-colors">Groups</button>
+            <button @click="currentView = 'staff'; loadStaff();" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'staff', 'text-gray-500 hover:text-gray-900': currentView !== 'staff'}" class="text-sm font-black uppercase tracking-widest pb-1 transition-colors">Staff</button>
+          </nav>
+          <div class="flex items-center gap-4 pl-4 border-l">
+            <span class="text-xs font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-md border border-blue-100 uppercase tracking-widest">{{myTeam}}</span>
+            <span class="text-sm font-bold text-gray-500 bg-gray-100 px-4 py-2 rounded-full">{{coachName}}</span>
+            <button @click="logout" class="text-xs font-bold text-gray-400 hover:text-red-500 transition">LOGOUT</button>
+          </div>
+      </div>
+      <div v-else class="flex items-center gap-4">
+          <span class="text-sm font-bold text-gray-500 bg-gray-100 px-4 py-2 rounded-full">{{coachName}}</span>
+          <button @click="logout" class="text-xs font-bold text-gray-400 hover:text-red-500 transition">LOGOUT</button>
       </div>
     </div>
   </div>
@@ -480,7 +487,14 @@ function checkUrlForInvite() {
 }
 
 async function login(){ await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin }}); }
-async function logout(){ await client.auth.signOut(); location.reload(); }
+
+// NEW LOGOUT FUNCTION: Shreds the zombie VIP passes
+async function logout(){ 
+  localStorage.removeItem('pending_invite_code');
+  localStorage.removeItem('pending_invite_key');
+  await client.auth.signOut(); 
+  location.reload(); 
+}
 
 async function joinTeam() {
   const code = joinCode.value.trim().toUpperCase();
