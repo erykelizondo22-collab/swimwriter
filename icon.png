@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SwimSync Icon Generator</title>
+</head>
+<body style="background-color: #e2e8f0; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
+
+    <div style="width: 512px; height: 512px; background-color: white; display: flex; justify-content: center; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        
+        <svg viewBox="0 0 100 100" style="width: 75%; height: 75%;" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M75,35 C75,10 25,10 25,35 C25,60 75,60 75,85 C75,110 25,110 25,85" stroke="#0ea5e9" stroke-width="14" stroke-linecap="round"/>
+            <path d="M60,45 C60,25 40,25 40,45 C40,65 60,65 60,85 C60,105 40,105 40,85" stroke="#0284c7" stroke-width="10" stroke-linecap="round" opacity="0.6"/>
+            <circle cx="82" cy="50" r="7" fill="#ef4444" />
+        </svg>
+
+    </div>
+
+</body>
+</html>
