@@ -1,0 +1,17 @@
+{
+  "name": "SwimSync",
+  "short_name": "SwimSync",
+  "description": "Coach Access Portal for SwimSync",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "https://nzrzcbxxqxwktocrmplg.supabase.co/storage/v1/object/public/assets/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
