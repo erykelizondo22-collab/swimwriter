@@ -155,7 +155,8 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
                         <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">{{member.email}}</div>
                     </div>
                     <div class="flex items-center gap-4">
-                        <span class="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded border" 
+                        <span v-if="myRole !== 'owner' || member.id === user.id" 
+                              class="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded border" 
                               :class="{
                                 'bg-purple-100 text-purple-700 border-purple-200': member.role === 'owner',
                                 'bg-blue-100 text-blue-700 border-blue-200': member.role === 'admin',
@@ -164,13 +165,28 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
                               {{member.role}}
                         </span>
 
-                        <div v-if="(myRole === 'owner' || myRole === 'admin') && member.id !== user.id" class="flex gap-2">
+                        <div v-if="(myRole === 'owner' || myRole === 'admin') && member.id !== user.id" class="flex gap-2 items-center">
                             
-                            <button v-if="member.role === 'coach'" @click="changeRole(member.id, member.name, 'admin')" class="text-blue-500 font-black px-4 py-2 hover:bg-blue-50 rounded-lg transition uppercase text-xs tracking-widest">Promote</button>
+                            <select v-if="myRole === 'owner'" 
+                                    @change="changeRole(member.id, member.name || member.email, $event.target.value)" 
+                                    :value="member.role"
+                                    class="bg-white border border-gray-200 text-xs font-black uppercase tracking-widest px-3 py-2 rounded-lg text-gray-700 outline-none focus:border-blue-500 cursor-pointer shadow-sm">
+                                <option value="coach">Coach</option>
+                                <option value="admin">Admin</option>
+                                <option value="owner">Owner</option>
+                            </select>
+
+                            <button v-if="myRole === 'admin' && member.role === 'coach'" 
+                                    @click="changeRole(member.id, member.name || member.email, 'admin')" 
+                                    class="text-blue-500 font-black px-4 py-2 hover:bg-blue-50 rounded-lg transition uppercase text-xs tracking-widest">
+                                Promote to Admin
+                            </button>
                             
-                            <button v-if="myRole === 'owner' && member.role === 'admin'" @click="changeRole(member.id, member.name, 'coach')" class="text-orange-500 font-black px-4 py-2 hover:bg-orange-50 rounded-lg transition uppercase text-xs tracking-widest">Demote</button>
-                            
-                            <button v-if="myRole === 'owner' || (myRole === 'admin' && member.role === 'coach')" @click="removeStaff(member.id, member.name || member.email)" class="text-red-400 font-black px-4 py-2 hover:bg-red-50 hover:text-red-600 rounded-lg transition uppercase text-xs tracking-widest">Remove</button>
+                            <button v-if="myRole === 'owner' || (myRole === 'admin' && member.role === 'coach')" 
+                                    @click="removeStaff(member.id, member.name || member.email)" 
+                                    class="text-red-400 font-black px-4 py-2 hover:bg-red-50 hover:text-red-600 rounded-lg transition uppercase text-xs tracking-widest">
+                                Remove
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -404,7 +420,6 @@ setup(){
 const user = ref(null);
 const currentView = ref('dashboard');
 
-// Auth & Onboarding State
 const joinCode = ref(""); const teamPassword = ref(""); 
 const newTeamId = ref(""); const newTeamPassword = ref("");
 const hasPendingInvite = ref(false);
@@ -421,7 +436,6 @@ const planForm = ref({ id: null, title: '', group_name: '', start_date: '', week
 const teamGroupsList = ref([]);
 const newGroupName = ref("");
 
-// Staff State
 const staffList = ref([]);
 const myRole = computed(() => user.value?.user_metadata?.team_role || 'coach');
 
@@ -453,15 +467,12 @@ watch([title, group, start, base, input, fontSize], () => {
   }
 });
 
-// URL CHECKING FOR MAGIC LINKS
 function checkUrlForInvite() {
     const urlParams = new URLSearchParams(window.location.search);
     if(urlParams.get('invite') && urlParams.get('key')) {
         localStorage.setItem('pending_invite_code', urlParams.get('invite'));
         localStorage.setItem('pending_invite_key', urlParams.get('key'));
         hasPendingInvite.value = true;
-        
-        // Clean URL so it looks pretty
         window.history.replaceState({}, document.title, window.location.pathname);
     } else if (localStorage.getItem('pending_invite_code')) {
         hasPendingInvite.value = true;
@@ -479,11 +490,8 @@ async function joinTeam() {
       return alert("Invalid Team Credentials");
   }
   await client.auth.updateUser({ data: { team_id: code, team_role: 'coach' } });
-  
-  // Clear pending invites on success
   localStorage.removeItem('pending_invite_code');
   localStorage.removeItem('pending_invite_key');
-  
   location.reload();
 }
 
@@ -496,7 +504,6 @@ async function createTeam() {
     else alert("Error creating team: " + insertError.message);
     return;
   }
-  // NEW TEAMS AUTOMATICALLY MAKE THE CREATOR AN "OWNER"
   const { data, error: updateError } = await client.auth.updateUser({ data: { team_id: upperCode, team_role: 'owner' } });
   if(updateError) alert("Error linking account: " + updateError.message);
   else {
@@ -505,7 +512,6 @@ async function createTeam() {
   }
 }
 
-// STAFF FUNCTIONS
 async function loadStaff() {
   if(!myTeam.value) return;
   const { data, error } = await client.rpc('get_team_members', { p_team_id: myTeam.value });
@@ -539,9 +545,7 @@ async function copyInviteLink() {
     }
 }
 
-function startNewWorkout() { 
-    currentWorkoutId.value = null; title.value = ""; group.value = ""; input.value = "Warmup:\n\nMain Set:\n\n"; currentView.value = 'setup'; 
-}
+function startNewWorkout() { currentWorkoutId.value = null; title.value = ""; group.value = ""; input.value = "Warmup:\n\nMain Set:\n\n"; currentView.value = 'setup'; }
 function discardDraft() { currentWorkoutId.value = null; currentView.value = 'dashboard'; }
 
 async function save(){
@@ -625,13 +629,12 @@ onMounted(async ()=>{
   const { data } = await client.auth.getUser();
   user.value = data?.user;
   
-  // MAGIC INVITE AUTOMATION:
   if(user.value && !myTeam.value && localStorage.getItem('pending_invite_code')) {
       isProcessingInvite.value = true;
       currentView.value = 'onboarding';
       joinCode.value = localStorage.getItem('pending_invite_code');
       teamPassword.value = atob(localStorage.getItem('pending_invite_key'));
-      setTimeout(joinTeam, 1000); // 1 sec delay so user sees what is happening
+      setTimeout(joinTeam, 1000); 
   }
   
   if(user.value && myTeam.value) {
