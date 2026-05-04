@@ -30,6 +30,8 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
 .mono { font-family: monospace; font-weight: 700; }
 .font-slider { -webkit-appearance: none; width: 100%; height: 6px; background: #e2e8f0; border-radius: 5px; outline: none; }
 .font-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; background: #2563eb; border-radius: 50%; cursor: pointer; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
 </head>
 
@@ -40,11 +42,6 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
   <div class="mb-6"><div class="w-16 h-16 bg-blue-600 text-white rounded-2xl mx-auto flex items-center justify-center text-3xl font-black shadow-lg shadow-blue-200">SS</div></div>
   <h1 class="text-3xl font-black mb-2 text-gray-900">SwimSync</h1>
   <p class="text-sm text-gray-500 mb-8 font-medium">Coach Access Portal</p>
-  
-  <div v-if="hasPendingInvite" class="mb-6 bg-green-50 text-green-700 p-3 rounded-lg border border-green-200 text-sm font-bold animate-pulse">
-      You have a pending invite! Sign in to join the vault.
-  </div>
-
   <button @click="login" class="bg-white border-2 border-gray-200 text-gray-700 font-bold p-4 w-full rounded-xl hover:bg-gray-50 transition flex justify-center items-center gap-3 shadow-sm">
     <svg class="w-6 h-6" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
     Sign in with Google
@@ -61,7 +58,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
     
     <div class="flex flex-1 md:flex-none items-center justify-end gap-2 md:gap-8 overflow-x-auto no-scrollbar">
       <div v-if="myTeam" class="flex items-center gap-4 md:gap-8 w-full md:w-auto">
-          <nav class="flex gap-4 md:gap-6 overflow-x-auto pb-1 flex-1">
+          <nav class="flex gap-4 md:gap-6 overflow-x-auto pb-1 flex-1 no-scrollbar">
             <button @click="currentView = 'dashboard'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'dashboard', 'text-gray-500 hover:text-gray-900': currentView !== 'dashboard'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-colors">Vault</button>
             <button @click="currentView = 'season-planning'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'season-planning' || currentView === 'plan-builder', 'text-gray-500 hover:text-gray-900': currentView !== 'season-planning' && currentView !== 'plan-builder'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-colors">Season</button>
             <button @click="currentView = 'groups'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'groups', 'text-gray-500 hover:text-gray-900': currentView !== 'groups'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-colors">Groups</button>
@@ -72,190 +69,104 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
             <button @click="logout" class="text-[10px] md:text-xs font-bold text-gray-400 hover:text-red-500 transition">LOGOUT</button>
           </div>
       </div>
-      <div v-else class="flex items-center gap-4">
-          <span class="text-sm font-bold text-gray-500 bg-gray-100 px-4 py-2 rounded-full">{{coachName}}</span>
-          <button @click="logout" class="text-xs font-bold text-gray-400 hover:text-red-500 transition">LOGOUT</button>
-      </div>
     </div>
   </div>
 
   <div class="max-w-[1200px] mx-auto p-4 md:p-6 mt-4">
     
-    <div v-if="currentView === 'dashboard'" class="space-y-6">
+    <div v-if="currentView === 'dashboard'" class="space-y-6 md:space-y-8">
       <div class="bg-blue-600 rounded-3xl p-6 md:p-10 text-white shadow-xl flex flex-col md:flex-row justify-between items-center relative overflow-hidden gap-6">
         <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-20 -mt-20 pointer-events-none"></div>
-        <h2 class="text-2xl md:text-3xl font-black relative z-10 uppercase tracking-tight text-center md:text-left">Welcome, Coach {{coachName}}</h2>
-        <button @click="startNewWorkout" class="relative z-10 w-full md:w-auto bg-white text-blue-600 px-8 py-4 rounded-2xl font-black shadow-2xl uppercase transition-all hover:scale-105 active:scale-95 tracking-wide">+ Create Workout</button>
+        <h2 class="text-2xl md:text-3xl font-black relative z-10 uppercase tracking-tight">The Vault</h2>
+        <button @click="startNewWorkout" class="relative z-10 w-full md:w-auto bg-white text-blue-600 px-8 py-4 rounded-2xl font-black shadow-2xl uppercase transition-all hover:scale-105 tracking-wide">+ Create Workout</button>
       </div>
-      <div class="bg-white p-4 md:p-8 rounded-3xl shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          <div v-for="w in cloudWorkouts" :key="w.id" @click="loadWorkout(w)" class="p-5 md:p-6 border-2 border-gray-50 rounded-2xl hover:border-blue-200 hover:bg-blue-50 cursor-pointer transition-all group relative">
-            <button @click.stop="deleteWorkout(w.id)" class="absolute top-4 right-4 text-gray-300 hover:text-red-500 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all z-10 bg-white p-2 rounded-xl shadow-sm border border-gray-100 md:border-none">
-              <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-            </button>
-            <div class="font-black text-lg md:text-xl truncate uppercase text-gray-800 tracking-tight pr-8">{{w.title}}</div>
-            <div class="text-[10px] md:text-[11px] font-bold text-gray-400 mt-3 border-t pt-3 flex justify-between items-center uppercase tracking-widest">
-                <span>{{w.group}}</span>
-                <span class="text-blue-600 font-black">{{w.total_yards}}y</span>
-            </div>
-          </div>
-          <div v-if="!cloudWorkouts.length" class="col-span-full text-center py-20 text-gray-300 font-black uppercase tracking-widest italic">Vault is empty</div>
-      </div>
-    </div>
 
-    <div v-if="currentView === 'onboarding'" class="max-w-4xl mx-auto mt-8 md:mt-16 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-wrap gap-4 items-center">
+          <div class="flex-1 min-w-[150px]">
+              <label class="text-[8px] font-black text-gray-400 uppercase tracking-widest block mb-1 ml-1">Filter by Group</label>
+              <select v-model="filterGroup" class="w-full bg-gray-50 border border-gray-100 p-2 rounded-xl text-xs font-bold uppercase outline-none">
+                  <option value="">All Groups</option>
+                  <option v-for="g in teamGroupsList" :key="g.id" :value="g.name">{{g.name}}</option>
+              </select>
+          </div>
+          <div class="flex-1 min-w-[150px]">
+            <label class="text-[8px] font-black text-gray-400 uppercase tracking-widest block mb-1 ml-1">Practice Date</label>
+            <input type="date" v-model="filterDate" class="w-full bg-gray-50 border border-gray-100 p-2 rounded-xl text-xs font-bold outline-none">
+          </div>
+          <button @click="filterDate = ''; filterGroup = '';" class="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-4">Clear</button>
+      </div>
+
+      <div v-if="!filteredWorkouts.length" class="text-center py-20 text-gray-300 font-black uppercase tracking-widest italic bg-white rounded-3xl border border-gray-100">No workouts found</div>
       
-      <div class="bg-white p-8 md:p-10 rounded-3xl shadow-xl border border-gray-100 text-center relative overflow-hidden">
-        <div v-if="isProcessingInvite" class="absolute inset-0 bg-white/90 z-10 flex flex-col items-center justify-center">
-            <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
-            <div class="font-black text-gray-900 uppercase tracking-widest text-sm">Unlocking Vault...</div>
-        </div>
-
-        <div class="w-12 h-12 md:w-16 md:h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-        </div>
-        <h2 class="text-xl md:text-2xl font-black text-gray-900 mb-2">Join a Team</h2>
-        <p class="text-gray-500 mb-6 md:mb-8 text-xs md:text-sm font-medium">Assistant Coaches: Enter the vault code provided by your Head Coach.</p>
-        
-        <input v-model="joinCode" placeholder="Team Code" class="w-full border-2 border-gray-100 p-3 md:p-4 rounded-xl font-black text-gray-800 uppercase text-center text-sm md:text-lg tracking-widest mb-3 focus:border-blue-400 outline-none transition">
-        <input v-model="teamPassword" type="password" @keyup.enter="joinTeam" placeholder="Vault Password" class="w-full border-2 border-gray-100 p-3 md:p-4 rounded-xl font-black text-gray-800 text-center text-sm md:text-lg tracking-widest mb-6 focus:border-blue-400 outline-none transition">
-        
-        <button @click="joinTeam" class="w-full bg-gray-900 text-white font-black py-4 rounded-xl shadow-lg hover:bg-black hover:-translate-y-0.5 transition-all uppercase tracking-wide text-sm md:text-base">
-          Open Vault
-        </button>
-      </div>
-
-      <div class="bg-gradient-to-br from-blue-600 to-blue-800 p-8 md:p-10 rounded-3xl shadow-xl text-center text-white relative overflow-hidden flex flex-col justify-between">
-        <div class="absolute top-0 right-0 w-32 h-32 md:w-48 md:h-48 bg-white opacity-10 rounded-full -mr-10 -mt-10 pointer-events-none"></div>
-        <div class="relative z-10">
-          <div class="w-12 h-12 md:w-16 md:h-16 bg-blue-500 text-white rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-blue-400">
-            <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-          </div>
-          <h2 class="text-xl md:text-2xl font-black mb-2">Create a Vault</h2>
-          <p class="text-blue-100 mb-6 md:mb-8 text-xs md:text-sm font-medium">Head Coaches: Launch your private cloud vault and invite your staff.</p>
+      <div v-else class="space-y-12">
           
-          <input v-model="newTeamId" placeholder="New Team Code (e.g. FAST)" class="w-full bg-white/10 border-2 border-blue-400/50 p-3 md:p-4 rounded-xl font-black text-white placeholder-blue-300 uppercase text-center text-sm md:text-lg tracking-widest mb-3 focus:border-white outline-none transition">
-          <input v-model="newTeamPassword" type="password" @keyup.enter="createTeam" placeholder="Create Master Password" class="w-full bg-white/10 border-2 border-blue-400/50 p-3 md:p-4 rounded-xl font-black text-white placeholder-blue-300 text-center text-sm md:text-lg tracking-widest mb-6 focus:border-white outline-none transition">
-        </div>
-        
-        <button @click="createTeam" class="relative z-10 w-full bg-white text-blue-700 font-black py-4 rounded-xl shadow-lg hover:scale-[1.02] transition-transform uppercase tracking-wide text-sm md:text-base">
-          Launch Cloud Vault
-        </button>
+          <div v-if="todaysWorkouts.length">
+              <h3 class="text-lg md:text-xl font-black uppercase tracking-tight text-gray-800 mb-4 border-b-[3px] border-blue-500 inline-block pr-6 pb-1">Today's Workouts</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                  <div v-for="w in todaysWorkouts" :key="w.id" @click="loadWorkout(w)" class="p-5 border-2 border-blue-100 bg-blue-50/30 rounded-2xl hover:border-blue-300 cursor-pointer transition-all group relative">
+                    <button @click.stop="deleteWorkout(w.id)" class="absolute top-4 right-4 text-gray-300 hover:text-red-500 opacity-100 transition-all z-10 bg-white p-2 rounded-xl shadow-sm">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                    <div class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">TODAY • {{formatPracticeDate(w.practice_date)}}</div>
+                    <div class="font-black text-lg truncate uppercase text-gray-900 tracking-tight pr-8">{{w.title}}</div>
+                    <div class="text-[10px] font-bold text-gray-500 mt-3 border-t border-blue-100 pt-3 flex justify-between items-center uppercase tracking-widest">
+                        <span>{{w.group}}</span>
+                        <span class="text-blue-600 font-black">{{w.total_yards}}y</span>
+                    </div>
+                  </div>
+              </div>
+          </div>
+
+          <div v-if="upcomingWorkouts.length">
+              <h3 class="text-lg md:text-xl font-black uppercase tracking-tight text-gray-800 mb-4 border-b-[3px] border-orange-400 inline-block pr-6 pb-1">Upcoming</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                  <div v-for="w in upcomingWorkouts" :key="w.id" @click="loadWorkout(w)" class="p-5 border-2 border-gray-100 bg-white rounded-2xl hover:border-orange-200 hover:bg-orange-50/30 cursor-pointer transition-all group relative">
+                    <button @click.stop="deleteWorkout(w.id)" class="absolute top-4 right-4 text-gray-300 hover:text-red-500 opacity-100 transition-all z-10 bg-white p-2 rounded-xl shadow-sm">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                    <div class="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-1">{{formatPracticeDate(w.practice_date)}}</div>
+                    <div class="font-black text-lg truncate uppercase text-gray-800 tracking-tight pr-8">{{w.title}}</div>
+                    <div class="text-[10px] font-bold text-gray-400 mt-3 border-t pt-3 flex justify-between items-center uppercase tracking-widest">
+                        <span>{{w.group}}</span>
+                        <span class="text-orange-600 font-black">{{w.total_yards}}y</span>
+                    </div>
+                  </div>
+              </div>
+          </div>
+
+          <div v-if="pastWorkouts.length">
+              <h3 class="text-lg md:text-xl font-black uppercase tracking-tight text-gray-400 mb-4 border-b-[3px] border-gray-200 inline-block pr-6 pb-1">Past Archive</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                  <div v-for="w in pastWorkouts" :key="w.id" @click="loadWorkout(w)" class="p-5 border-2 border-gray-50 bg-gray-50/50 rounded-2xl hover:border-gray-200 cursor-pointer transition-all group relative">
+                    <button @click.stop="deleteWorkout(w.id)" class="absolute top-4 right-4 text-gray-300 hover:text-red-500 opacity-100 transition-all z-10 bg-white p-2 rounded-xl shadow-sm">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                    <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{{formatPracticeDate(w.practice_date)}}</div>
+                    <div class="font-black text-lg truncate uppercase text-gray-600 tracking-tight pr-8">{{w.title}}</div>
+                    <div class="text-[10px] font-bold text-gray-400 mt-3 border-t border-gray-100 pt-3 flex justify-between items-center uppercase tracking-widest">
+                        <span>{{w.group}}</span>
+                        <span class="text-gray-500 font-black">{{w.total_yards}}y</span>
+                    </div>
+                  </div>
+              </div>
+          </div>
+
       </div>
-    </div>
-
-    <div v-if="currentView === 'staff'" class="max-w-4xl mx-auto space-y-6 mt-4">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
-            <div>
-               <h2 class="text-2xl md:text-3xl font-black uppercase tracking-tight">Coaching Staff</h2>
-               <p class="text-gray-500 font-medium text-xs md:text-sm">Manage who has access to the {{myTeam}} vault.</p>
-            </div>
-            <div class="flex flex-wrap gap-2 md:gap-4 w-full md:w-auto">
-                <div class="bg-blue-50 text-blue-600 px-4 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] md:text-xs border border-blue-100 flex items-center justify-center flex-1 md:flex-none">
-                    Role: {{myRole}}
-                </div>
-                <button @click="copyInviteLink" class="bg-blue-600 text-white px-4 md:px-6 py-3 rounded-xl font-black shadow-lg uppercase tracking-widest text-[10px] md:text-xs hover:bg-blue-700 transition flex items-center justify-center gap-2 flex-1 md:flex-none">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                    Copy Link
-                </button>
-            </div>
-        </div>
-
-        <div v-if="myRole === 'owner'" class="bg-orange-50 border border-orange-200 p-6 md:p-8 rounded-3xl shadow-sm mb-6">
-            <h3 class="text-lg font-black text-orange-900 uppercase tracking-tight mb-2">Vault Security</h3>
-            <p class="text-orange-700 text-xs font-bold mb-4">Change the master password to instantly lock out anyone using the old credentials.</p>
-            <div class="flex flex-col sm:flex-row gap-3">
-                <input v-model="newVaultPassword" type="password" placeholder="Enter New Master Password" class="flex-1 p-3 rounded-xl border border-orange-300 font-black tracking-widest text-center sm:text-left outline-none focus:border-orange-500">
-                <button @click="updateVaultPassword" class="bg-orange-600 text-white font-black px-6 py-3 rounded-xl uppercase tracking-widest text-xs hover:bg-orange-700 shadow-md">Change Password</button>
-            </div>
-        </div>
-
-        <div class="bg-white p-4 md:p-8 rounded-3xl shadow-sm border border-gray-100">
-            <div class="space-y-3">
-                <div v-for="member in staffList" :key="member.id" class="flex flex-col md:flex-row justify-between items-start md:items-center bg-gray-50 p-4 rounded-2xl border border-gray-100 gap-4">
-                    <div>
-                        <div class="font-black uppercase text-gray-800 tracking-wide md:ml-2 text-sm md:text-base">{{member.name || member.email}}</div>
-                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest md:ml-2 break-all">{{member.email}}</div>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2 md:gap-4 w-full md:w-auto">
-                        <span v-if="myRole !== 'owner' || member.id === user.id" 
-                              class="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 md:py-1 rounded border" 
-                              :class="{
-                                'bg-purple-100 text-purple-700 border-purple-200': member.role === 'owner',
-                                'bg-blue-100 text-blue-700 border-blue-200': member.role === 'admin',
-                                'bg-gray-100 text-gray-600 border-gray-200': member.role === 'coach'
-                              }">
-                              {{member.role}}
-                        </span>
-
-                        <div v-if="(myRole === 'owner' || myRole === 'admin') && member.id !== user.id" class="flex gap-2 items-center w-full md:w-auto justify-end">
-                            <select v-if="myRole === 'owner'" 
-                                    @change="changeRole(member.id, member.name || member.email, $event.target.value)" 
-                                    :value="member.role"
-                                    class="bg-white border border-gray-200 text-[10px] md:text-xs font-black uppercase tracking-widest px-2 md:px-3 py-2 rounded-lg text-gray-700 outline-none focus:border-blue-500 cursor-pointer shadow-sm flex-1 md:flex-none">
-                                <option value="coach">Coach</option>
-                                <option value="admin">Admin</option>
-                                <option value="owner">Owner</option>
-                            </select>
-
-                            <button v-if="myRole === 'admin' && member.role === 'coach'" 
-                                    @click="changeRole(member.id, member.name || member.email, 'admin')" 
-                                    class="text-blue-500 font-black px-3 py-2 hover:bg-blue-50 rounded-lg transition uppercase text-[10px] md:text-xs tracking-widest bg-blue-50 md:bg-transparent">
-                                Promote
-                            </button>
-                            
-                            <button v-if="myRole === 'owner' || (myRole === 'admin' && member.role === 'coach')" 
-                                    @click="removeStaff(member.id, member.name || member.email)" 
-                                    class="text-red-500 font-black px-3 py-2 hover:bg-red-50 hover:text-red-700 rounded-lg transition uppercase text-[10px] md:text-xs tracking-widest bg-red-50 md:bg-transparent">
-                                Remove
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div v-if="!staffList.length" class="text-center py-10 text-gray-400 font-black uppercase tracking-widest italic">
-                    Loading staff...
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div v-if="currentView === 'groups'" class="max-w-3xl mx-auto space-y-6 mt-4">
-        <div class="flex justify-between items-end mb-4 md:mb-6">
-            <div>
-               <h2 class="text-2xl md:text-3xl font-black uppercase tracking-tight">Team Groups</h2>
-               <p class="text-gray-500 font-medium text-xs md:text-sm">Manage the official athlete groups for your vault.</p>
-            </div>
-        </div>
-
-        <div class="bg-white p-4 md:p-8 rounded-3xl shadow-sm border border-gray-100">
-            <div class="flex flex-col sm:flex-row gap-3 mb-8 pb-8 border-b border-gray-100">
-                <input v-model="newGroupName" @keyup.enter="addGroup" placeholder="New Group Name" class="flex-1 bg-gray-50 p-4 rounded-xl font-black uppercase outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200 text-sm md:text-base">
-                <button @click="addGroup" class="bg-blue-600 text-white px-8 py-4 sm:py-0 rounded-xl font-black shadow-lg uppercase tracking-widest hover:bg-blue-700 transition text-sm">Add</button>
-            </div>
-
-            <div class="space-y-3">
-                <div v-for="g in teamGroupsList" :key="g.id" class="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                    <span class="font-black uppercase text-gray-800 tracking-wide md:ml-2 text-sm md:text-base">{{g.name}}</span>
-                    <button @click="deleteGroup(g.id)" class="text-red-400 font-black px-4 py-2 hover:bg-red-50 hover:text-red-600 rounded-lg transition uppercase text-[10px] md:text-xs tracking-widest bg-white md:bg-transparent shadow-sm md:shadow-none border border-red-100 md:border-none">Delete</button>
-                </div>
-                <div v-if="!teamGroupsList.length" class="text-center py-10 text-gray-400 font-black uppercase tracking-widest italic">
-                    No official groups created yet.
-                </div>
-            </div>
-        </div>
     </div>
 
     <div v-if="currentView === 'editor'" class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-      <div class="lg:col-span-2 space-y-4 flex flex-col min-h-[60vh] lg:min-h-0">
+      <div class="lg:col-span-2 space-y-4 flex flex-col">
+        
         <div v-if="activePlanContext" class="bg-blue-50 border-2 border-blue-100 p-3 md:p-4 rounded-2xl flex items-center justify-between">
             <div class="flex items-center gap-2 md:gap-3">
                 <div class="w-8 h-8 md:w-10 md:h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-black text-xs md:text-base">W{{activePlanContext.weekNum}}</div>
                 <div>
-                    <div class="text-[8px] md:text-[10px] font-black text-blue-400 uppercase tracking-widest">{{activePlanContext.planTitle}} Sync</div>
-                    <div class="text-xs md:text-sm font-bold text-blue-900 uppercase leading-tight">{{activePlanContext.weekData?.focus || 'No focus set'}}</div>
+                    <div class="text-[8px] md:text-[10px] font-black text-blue-400 uppercase tracking-widest">{{activePlanContext.planTitle}} Sync ({{formatPracticeDate(practiceDate)}})</div>
+                    <div class="text-xs md:text-sm font-bold text-blue-900 uppercase leading-tight">{{activePlanContext.weekData?.focus || 'No focus set for this week'}}</div>
                 </div>
             </div>
             <div v-if="activePlanContext.weekData?.targetYards" class="text-right hidden sm:block">
-                <div class="text-[10px] font-black text-blue-400 uppercase tracking-widest">Weekly Target</div>
+                <div class="text-[10px] font-black text-blue-400 uppercase tracking-widest">Target Vol</div>
                 <div class="font-black text-blue-900">{{activePlanContext.weekData.targetYards}}y</div>
             </div>
         </div>
@@ -263,9 +174,9 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
         <div class="bg-white p-4 md:p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col flex-1">
           <div class="mb-4 md:mb-5 flex justify-between items-center border-b pb-4 md:pb-5">
               <h2 class="text-xl md:text-3xl font-black uppercase tracking-tight text-gray-900 truncate pr-2">{{title}}</h2>
-              <button @click="currentView = 'setup'" class="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-3 md:px-4 py-2 rounded-full hover:bg-gray-100 transition whitespace-nowrap">Edit Setup</button>
+              <button @click="currentView = 'setup'" class="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-full hover:bg-gray-100 transition whitespace-nowrap">Edit Setup</button>
           </div>
-          <textarea v-model="input" :style="{ fontSize: fontSize + 'px' }" class="w-full flex-1 border-2 border-gray-50 p-4 md:p-6 font-mono rounded-2xl bg-gray-50 outline-none resize-none leading-relaxed transition-all focus:bg-white focus:border-blue-500 min-h-[300px]" placeholder="Type sets..."></textarea>
+          <textarea v-model="input" :style="{ fontSize: fontSize + 'px' }" class="w-full flex-1 border-2 border-gray-50 p-4 md:p-6 font-mono rounded-2xl bg-gray-50 outline-none resize-none leading-relaxed transition-all focus:bg-white focus:border-blue-500 min-h-[400px]" placeholder="Type sets..."></textarea>
         </div>
       </div>
 
@@ -294,8 +205,12 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
     </div>
 
     <div v-if="currentView === 'setup'" class="max-w-xl mx-auto bg-white p-6 md:p-12 rounded-3xl md:rounded-[40px] shadow-2xl border border-gray-100 mt-4 md:mt-10">
-        <h2 class="text-2xl md:text-3xl font-black text-center mb-6 md:mb-8 uppercase tracking-tight">Workout Setup</h2>
+        <h2 class="text-2xl md:text-3xl font-black text-center mb-6 md:mb-8 uppercase tracking-tight">Practice Setup</h2>
         <div class="space-y-4 md:space-y-5">
+            <div class="space-y-1">
+                <label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Practice Date</label>
+                <input type="date" v-model="practiceDate" class="w-full border-2 border-gray-50 bg-gray-50 p-4 md:p-5 rounded-2xl font-black focus:border-blue-500 focus:bg-white transition outline-none text-sm md:text-base">
+            </div>
             <div class="space-y-1">
                 <label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Workout Title</label>
                 <input v-model="title" placeholder="Focus: Aerobic Power" class="w-full border-2 border-gray-50 bg-gray-50 p-4 md:p-5 rounded-2xl font-black uppercase focus:border-blue-500 focus:bg-white transition outline-none text-sm md:text-base">
@@ -309,7 +224,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
             </div>
             <div class="grid grid-cols-2 gap-3 md:gap-4">
                 <div class="space-y-1">
-                    <label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Start</label>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Start Time</label>
                     <input type="time" v-model="start" class="w-full border-2 border-gray-50 bg-gray-50 p-4 md:p-5 rounded-2xl font-black focus:border-blue-500 focus:bg-white transition outline-none text-sm md:text-base">
                 </div>
                 <div class="space-y-1">
@@ -319,19 +234,32 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
                     </select>
                 </div>
             </div>
-            <button @click="currentView = 'editor'" :disabled="!group" :class="{'opacity-50 cursor-not-allowed': !group}" class="w-full bg-blue-600 text-white font-black py-5 md:py-6 rounded-2xl shadow-xl shadow-blue-100 uppercase tracking-widest hover:bg-blue-700 transition-all mt-2 md:mt-4 text-sm md:text-base">Enter Editor</button>
+            <button @click="currentView = 'editor'" :disabled="!group || !practiceDate" :class="{'opacity-50 cursor-not-allowed': !group || !practiceDate}" class="w-full bg-blue-600 text-white font-black py-5 md:py-6 rounded-2xl shadow-xl shadow-blue-100 uppercase tracking-widest hover:bg-blue-700 transition-all mt-2 md:mt-4 text-sm md:text-base">Enter Editor</button>
         </div>
+    </div>
+
+    <div v-if="currentView === 'onboarding'" class="max-w-4xl mx-auto mt-8 md:mt-16 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+      <div class="bg-white p-8 md:p-10 rounded-3xl shadow-xl border border-gray-100 text-center relative overflow-hidden">
+        <h2 class="text-xl md:text-2xl font-black text-gray-900 mb-2">Join a Team</h2>
+        <input v-model="joinCode" placeholder="Team Code" class="w-full border-2 border-gray-100 p-3 md:p-4 rounded-xl font-black text-gray-800 uppercase text-center text-sm md:text-lg tracking-widest mb-3 outline-none">
+        <input v-model="teamPassword" type="password" placeholder="Vault Password" class="w-full border-2 border-gray-100 p-3 md:p-4 rounded-xl font-black text-gray-800 text-center text-sm md:text-lg tracking-widest mb-6 outline-none">
+        <button @click="joinTeam" class="w-full bg-gray-900 text-white font-black py-4 rounded-xl shadow-lg hover:bg-black transition-all uppercase tracking-wide">Open Vault</button>
+      </div>
+      <div class="bg-gradient-to-br from-blue-600 to-blue-800 p-8 md:p-10 rounded-3xl shadow-xl text-center text-white relative overflow-hidden flex flex-col justify-between">
+        <h2 class="text-xl md:text-2xl font-black mb-2">Create a Vault</h2>
+        <input v-model="newTeamId" placeholder="New Team Code" class="w-full bg-white/10 border-2 border-blue-400/50 p-3 md:p-4 rounded-xl font-black text-white placeholder-blue-300 uppercase text-center text-sm md:text-lg tracking-widest mb-3 outline-none">
+        <input v-model="newTeamPassword" type="password" placeholder="Create Password" class="w-full bg-white/10 border-2 border-blue-400/50 p-3 md:p-4 rounded-xl font-black text-white placeholder-blue-300 text-center text-sm md:text-lg tracking-widest mb-6 outline-none">
+        <button @click="createTeam" class="bg-white text-blue-700 font-black py-4 rounded-xl shadow-lg hover:scale-[1.02] transition-transform uppercase tracking-wide">Launch Vault</button>
+      </div>
     </div>
 
     <div v-if="currentView === 'season-planning'" class="space-y-4 md:space-y-6">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-4 md:mb-6 gap-4">
          <div>
             <h2 class="text-2xl md:text-3xl font-black uppercase tracking-tight">Macrocycles</h2>
-            <p class="text-gray-500 font-medium text-xs md:text-sm">Design and track group season plans.</p>
          </div>
-         <button @click="startNewPlan" class="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 md:py-4 rounded-xl font-black shadow-lg uppercase tracking-widest text-xs hover:bg-blue-700 transition">+ Build Plan</button>
+         <button @click="startNewPlan" class="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-xl font-black shadow-lg uppercase tracking-widest text-xs hover:bg-blue-700 transition">+ Build Plan</button>
       </div>
-
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           <div v-for="plan in seasonPlans" :key="plan.id" @click="editPlan(plan)" class="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 hover:border-blue-300 cursor-pointer transition group">
               <div class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 bg-blue-50 inline-block px-2 py-1 rounded">{{plan.group_name}}</div>
@@ -340,9 +268,6 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
                   <span>Start: {{plan.start_date}}</span>
                   <span>{{plan.weeks.length}} Weeks</span>
               </div>
-          </div>
-          <div v-if="!seasonPlans.length" class="col-span-full text-center py-20 border-2 border-dashed rounded-3xl bg-gray-50">
-             <div class="text-gray-400 font-black text-sm md:text-lg uppercase tracking-widest">No Plans Active</div>
           </div>
       </div>
     </div>
@@ -378,7 +303,12 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
 
         <div class="space-y-3 mb-8 md:mb-10">
             <div v-for="(week, index) in planForm.weeks" :key="index" class="flex flex-wrap md:flex-nowrap gap-2 md:gap-4 items-center bg-gray-50 p-3 md:p-4 rounded-2xl border border-gray-100">
-                <div class="w-8 md:w-16 text-center font-black text-gray-400 uppercase text-xs md:text-base">W{{index + 1}}</div>
+                
+                <div class="w-16 md:w-24 text-center font-black text-gray-400 uppercase text-xs md:text-sm flex flex-col justify-center">
+                    <span>W{{index + 1}}</span>
+                    <span class="text-[8px] md:text-[9px] mt-1 whitespace-nowrap">{{getWeekDateRange(planForm.start_date, index)}}</span>
+                </div>
+
                 <input v-model="week.focus" placeholder="Phase / Focus" class="flex-1 w-full min-w-[150px] bg-white p-3 rounded-xl font-bold uppercase text-xs md:text-sm outline-none border focus:border-blue-500">
                 <input v-model="week.targetYards" type="number" placeholder="Vol (y)" class="w-24 md:w-32 bg-white p-3 rounded-xl font-bold text-xs md:text-sm outline-none border focus:border-blue-500 text-right">
                 <button @click="planForm.weeks.splice(index, 1)" class="text-red-400 font-black px-2 hover:text-red-600">X</button>
@@ -388,6 +318,38 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
         <button @click="savePlan" :disabled="!planForm.group_name" :class="{'opacity-50 cursor-not-allowed': !planForm.group_name}" class="w-full bg-blue-600 text-white font-black py-5 md:py-6 rounded-2xl shadow-xl shadow-blue-100 uppercase tracking-widest hover:bg-blue-700 transition-all text-sm md:text-base">Save Macrocycle</button>
     </div>
 
+    <div v-if="currentView === 'staff'" class="max-w-4xl mx-auto space-y-6 mt-4">
+        <div class="flex justify-between items-end mb-6">
+            <h2 class="text-2xl md:text-3xl font-black uppercase tracking-tight">Coaching Staff</h2>
+            <button @click="copyInviteLink" class="bg-blue-600 text-white px-4 md:px-6 py-3 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-widest">Copy Link</button>
+        </div>
+        <div class="bg-white p-4 md:p-8 rounded-3xl shadow-sm border border-gray-100 space-y-3">
+            <div v-for="member in staffList" :key="member.id" class="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                <div>
+                    <div class="font-black uppercase text-gray-800 tracking-wide text-sm">{{member.name || member.email}}</div>
+                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{member.role}}</div>
+                </div>
+                <button v-if="myRole === 'owner' && member.id !== user.id" @click="removeStaff(member.id, member.name)" class="text-red-500 font-black text-[10px] uppercase tracking-widest">Remove</button>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="currentView === 'groups'" class="max-w-3xl mx-auto space-y-6 mt-4">
+        <h2 class="text-2xl md:text-3xl font-black uppercase tracking-tight">Team Groups</h2>
+        <div class="bg-white p-4 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+            <div class="flex gap-3 mb-8">
+                <input v-model="newGroupName" placeholder="New Group Name" class="flex-1 bg-gray-50 p-4 rounded-xl font-black uppercase outline-none border border-gray-200">
+                <button @click="addGroup" class="bg-blue-600 text-white px-8 rounded-xl font-black uppercase tracking-widest">Add</button>
+            </div>
+            <div class="space-y-3">
+                <div v-for="g in teamGroupsList" :key="g.id" class="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <span class="font-black uppercase text-gray-800 text-sm">{{g.name}}</span>
+                    <button @click="deleteGroup(g.id)" class="text-red-400 font-black text-[10px] uppercase tracking-widest">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
   </div>
 </div>
 
@@ -395,7 +357,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
   <div class="flex justify-between border-b-[8px] border-black pb-4 mb-8">
     <div>
       <div class="text-5xl font-black uppercase leading-tight tracking-tighter">{{title}}</div>
-      <div class="text-md font-bold tracking-[0.3em] uppercase mt-1">{{myTeam}} — {{group}}</div>
+      <div class="text-md font-bold tracking-[0.3em] uppercase mt-1">{{myTeam}} — {{group}} ({{formatPracticeDate(practiceDate)}})</div>
     </div>
     <div class="text-right">
       <div class="text-5xl font-black tracking-tighter">{{totalYards}}y</div>
@@ -409,7 +371,6 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
           <span>{{sec.title}}</span>
           <span class="font-normal opacity-50">{{sec.y}}y</span>
         </div>
-
         <div v-for="b in sec.blocks" class="mt-4">
           <div v-if="b.rep > 1" class="font-black uppercase mb-2 text-gray-400" :style="{ fontSize: Math.max(10, fontSize * 0.5) + 'px' }">● {{b.rep}}x (ROUND)</div>
           <div v-for="s in b.sets" class="row items-center border-gray-200" :class="{'border-l-[12px] border-black pl-8 ml-3 py-2': b.rep > 1, 'py-1': b.rep === 1}">
@@ -440,12 +401,22 @@ createApp({
 setup(){
 const user = ref(null);
 const currentView = ref('dashboard');
+const practiceDate = ref(new Date().toISOString().split('T')[0]);
+
+// Dynamic "Today" date in local time for comparison
+const getLocalTodayStr = () => {
+    const tzoffset = (new Date()).getTimezoneOffset() * 60000; 
+    return (new Date(Date.now() - tzoffset)).toISOString().split('T')[0];
+};
+const todayStr = ref(getLocalTodayStr());
+
+// Filtering
+const filterGroup = ref('');
+const filterDate = ref('');
 
 const joinCode = ref(""); const teamPassword = ref(""); 
 const newTeamId = ref(""); const newTeamPassword = ref("");
 const newVaultPassword = ref("");
-const hasPendingInvite = ref(false);
-const isProcessingInvite = ref(false);
 
 const currentWorkoutId = ref(null); 
 const fontSize = ref(22); 
@@ -453,144 +424,90 @@ const fontSize = ref(22);
 const title = ref(""); const group = ref(""); const start = ref("17:00"); const base = ref("1:30"); const input = ref("");
 const cloudWorkouts = ref([]);
 const seasonPlans = ref([]);
-const planForm = ref({ id: null, title: '', group_name: '', start_date: '', weeks: [] });
-
 const teamGroupsList = ref([]);
+const staffList = ref([]);
 const newGroupName = ref("");
 
-const staffList = ref([]);
 const myRole = computed(() => user.value?.user_metadata?.team_role || 'coach');
-
-const coachName = computed(() => {
-  if(!user.value) return "";
-  return user.value.user_metadata?.full_name?.split(' ')[0] || user.value.email.split('@')[0];
-});
-
+const coachName = computed(() => user.value?.user_metadata?.full_name?.split(' ')[0] || user.value?.email.split('@')[0] || "");
 const myTeam = computed(() => user.value?.user_metadata?.team_id || null);
 
+// Correlate Season Plan weeks to the WORKOUT DATE
 const activePlanContext = computed(() => {
-    if (!group.value || !seasonPlans.value.length) return null;
+    if (!group.value || !seasonPlans.value.length || !practiceDate.value) return null;
     const plan = seasonPlans.value.find(p => p.group_name.toUpperCase() === group.value.toUpperCase());
     if (!plan) return null;
 
     const startDate = new Date(plan.start_date + 'T00:00:00');
-    const today = new Date();
-    const diffTime = today - startDate;
+    const workoutDate = new Date(practiceDate.value + 'T00:00:00');
+    
+    const diffTime = workoutDate - startDate;
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
     const currentWeekNum = diffDays < 0 ? 1 : Math.floor(diffDays / 7) + 1;
     const weekData = plan.weeks.find(w => w.weekNum === currentWeekNum) || null;
 
     return { planTitle: plan.title, weekNum: currentWeekNum, weekData: weekData };
 });
 
-watch([title, group, start, base, input, fontSize], () => {
-  if (currentView.value === 'setup' || currentView.value === 'editor') {
-    localStorage.setItem('swimsync_draft', JSON.stringify({ id: currentWorkoutId.value, size: fontSize.value, title: title.value, group: group.value, start: start.value, base: base.value, input: input.value }));
-  }
+const filteredWorkouts = computed(() => {
+    return cloudWorkouts.value.filter(w => {
+        const matchesGroup = filterGroup.value ? w.group === filterGroup.value : true;
+        const matchesDate = filterDate.value ? w.practice_date === filterDate.value : true;
+        return matchesGroup && matchesDate;
+    });
 });
 
-function checkUrlForInvite() {
-    const urlParams = new URLSearchParams(window.location.search);
-    if(urlParams.get('invite') && urlParams.get('key')) {
-        localStorage.setItem('pending_invite_code', urlParams.get('invite'));
-        localStorage.setItem('pending_invite_key', urlParams.get('key'));
-        hasPendingInvite.value = true;
-        window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (localStorage.getItem('pending_invite_code')) {
-        hasPendingInvite.value = true;
-    }
+// Tri-Vault Categorization (After filters are applied)
+const todaysWorkouts = computed(() => filteredWorkouts.value.filter(w => w.practice_date === todayStr.value));
+const upcomingWorkouts = computed(() => filteredWorkouts.value.filter(w => w.practice_date > todayStr.value).sort((a,b) => a.practice_date.localeCompare(b.practice_date))); 
+const pastWorkouts = computed(() => filteredWorkouts.value.filter(w => w.practice_date < todayStr.value).sort((a,b) => b.practice_date.localeCompare(a.practice_date)));
+
+function getWeekDateRange(startDateStr, weekIndex) {
+    if (!startDateStr) return "";
+    const start = new Date(startDateStr + 'T00:00:00');
+    start.setDate(start.getDate() + (weekIndex * 7));
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    
+    const format = (d) => `${d.getMonth()+1}/${d.getDate()}`;
+    return `${format(start)} - ${format(end)}`;
 }
 
 async function login(){ await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin }}); }
-
-async function logout(){ 
-  localStorage.removeItem('pending_invite_code');
-  localStorage.removeItem('pending_invite_key');
-  await client.auth.signOut(); 
-  location.reload(); 
-}
+async function logout(){ await client.auth.signOut(); location.reload(); }
 
 async function joinTeam() {
   const code = joinCode.value.trim().toUpperCase();
   const { data } = await client.from('teams').select('id').eq('id', code).eq('password', teamPassword.value);
-  if (!data?.length) {
-      isProcessingInvite.value = false;
-      return alert("Invalid Team Credentials");
-  }
+  if (!data?.length) return alert("Invalid Team Credentials");
   await client.auth.updateUser({ data: { team_id: code, team_role: 'coach' } });
-  localStorage.removeItem('pending_invite_code');
-  localStorage.removeItem('pending_invite_key');
   location.reload();
 }
 
 async function createTeam() {
-  if(!newTeamId.value || !newTeamPassword.value) { alert("Please enter a New Team Code and a Password."); return; }
   const upperCode = newTeamId.value.trim().toUpperCase();
-  const { error: insertError } = await client.from('teams').insert({ id: upperCode, password: newTeamPassword.value });
-  if (insertError) {
-    if (insertError.code === '23505') alert("That Team Code is already taken! Please choose another.");
-    else alert("Error creating team: " + insertError.message);
-    return;
-  }
-  const { data, error: updateError } = await client.auth.updateUser({ data: { team_id: upperCode, team_role: 'owner' } });
-  if(updateError) alert("Error linking account: " + updateError.message);
-  else {
-    alert("Vault created successfully! Welcome to SwimSync.");
-    user.value = data.user; currentView.value = 'dashboard'; loadWorkouts();
-  }
+  const { error } = await client.from('teams').insert({ id: upperCode, password: newTeamPassword.value });
+  if (error) return alert("Team code taken or error: " + error.message);
+  await client.auth.updateUser({ data: { team_id: upperCode, team_role: 'owner' } });
+  location.reload();
 }
-
-async function updateVaultPassword() {
-  if(!newVaultPassword.value) return alert("Enter a new password");
-  if(confirm("Are you sure? All magic links previously sent will instantly stop working.")) {
-      const { error } = await client.rpc('change_team_password', { p_team_id: myTeam.value, new_password: newVaultPassword.value });
-      if(error) alert("Error: " + error.message);
-      else { alert("Master password updated securely."); newVaultPassword.value = ""; }
-  }
-}
-
-async function loadStaff() {
-  if(!myTeam.value) return;
-  const { data, error } = await client.rpc('get_team_members', { p_team_id: myTeam.value });
-  if(error) alert("Error loading staff: " + error.message);
-  else staffList.value = data || [];
-}
-
-async function removeStaff(id, name) {
-  if(confirm(`Remove ${name} from the team? They will immediately lose access.`)) {
-     const { error } = await client.rpc('remove_team_member', { target_user_id: id, p_team_id: myTeam.value });
-     if(error) alert("Error: " + error.message);
-     else { alert(`${name} removed.`); loadStaff(); }
-  }
-}
-
-async function changeRole(id, name, newRole) {
-  if(confirm(`Update ${name} to ${newRole.toUpperCase()}?`)) {
-     const { error } = await client.rpc('change_team_role', { target_user_id: id, p_team_id: myTeam.value, new_role: newRole });
-     if(error) alert("Error: " + error.message);
-     else loadStaff();
-  }
-}
-
-async function copyInviteLink() {
-    const { data } = await client.from('teams').select('password').eq('id', myTeam.value).single();
-    if(data) {
-        const encodedPwd = btoa(data.password);
-        const link = `${window.location.origin}${window.location.pathname}?invite=${myTeam.value}&key=${encodedPwd}`;
-        navigator.clipboard.writeText(link);
-        alert("Magic Invite Link copied! Text this to your assistant coaches.");
-    }
-}
-
-function startNewWorkout() { currentWorkoutId.value = null; title.value = ""; group.value = ""; input.value = "Warmup:\n\nMain Set:\n\n"; currentView.value = 'setup'; }
-function discardDraft() { currentWorkoutId.value = null; currentView.value = 'dashboard'; }
 
 async function save(){
-  if(!title.value || !group.value) return alert("Please fill out Title and Group.");
-  const payload = { title: title.value, team_id: myTeam.value, group: group.value, content: input.value, total_yards: totalYards.value, coach_name: coachName.value };
+  if(!title.value || !group.value || !practiceDate.value) return alert("Fill out Title, Group, and Date.");
+  const payload = { title: title.value, team_id: myTeam.value, group: group.value, practice_date: practiceDate.value, content: input.value, total_yards: totalYards.value, coach_name: coachName.value };
   if(currentWorkoutId.value) await client.from("workouts").update(payload).eq('id', currentWorkoutId.value);
   else await client.from("workouts").insert(payload);
   loadWorkouts(); currentView.value = 'dashboard';
+}
+
+function startNewWorkout() { 
+    currentWorkoutId.value = null; title.value = ""; group.value = ""; practiceDate.value = getLocalTodayStr();
+    input.value = "Warmup:\n\nMain Set:\n\n"; currentView.value = 'setup'; 
+}
+
+function loadWorkout(w){
+  currentWorkoutId.value = w.id; title.value = w.title; group.value = w.group; practiceDate.value = w.practice_date; input.value = w.content; currentView.value = 'editor'; 
 }
 
 async function deleteWorkout(id) {
@@ -598,47 +515,35 @@ async function deleteWorkout(id) {
 }
 
 async function loadWorkouts(){
-  if(!myTeam.value) return;
-  const { data } = await client.from("workouts").select("*").eq('team_id', myTeam.value).order('created_at', {ascending: false});
+  const { data } = await client.from("workouts").select("*").eq('team_id', myTeam.value).order('practice_date', {ascending: false});
   cloudWorkouts.value = data || [];
 }
 
-function loadWorkout(w){
-  currentWorkoutId.value = w.id; title.value = w.title; group.value = w.group; input.value = w.content; currentView.value = 'editor'; 
-}
-
 async function loadGroups() {
-    if(!myTeam.value) return;
     const { data } = await client.from("team_groups").select("*").eq('team_id', myTeam.value).order('name', {ascending: true});
     teamGroupsList.value = data || [];
 }
 
-async function addGroup() {
-    if(!newGroupName.value.trim()) return;
-    const nameStr = newGroupName.value.trim().toUpperCase();
-    const { error } = await client.from("team_groups").insert({ team_id: myTeam.value, name: nameStr });
-    if(error) {
-        if(error.code === '23505') alert("This group already exists.");
-        else alert("Error adding group: " + error.message);
-    } else { newGroupName.value = ""; loadGroups(); }
-}
-
-async function deleteGroup(id) {
-    if(confirm("Delete this group? Past workouts are safe, but it will vanish from menus.")) {
-        await client.from("team_groups").delete().eq('id', id); loadGroups();
-    }
-}
-
 async function loadSeasonPlans() {
-    if(!myTeam.value) return;
     const { data } = await client.from("season_plans").select("*").eq('team_id', myTeam.value).order('start_date', {ascending: false});
     seasonPlans.value = data || [];
+}
+
+async function loadStaff() {
+  const { data } = await client.rpc('get_team_members', { p_team_id: myTeam.value });
+  staffList.value = data || [];
+}
+
+function formatPracticeDate(d) {
+    if(!d) return "";
+    const options = { weekday: 'short', month: 'short', day: 'numeric' };
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-US', options);
 }
 
 function startNewPlan() {
     let defaultWeeks = [];
     for(let i=1; i<=12; i++) defaultWeeks.push({ weekNum: i, focus: '', targetYards: null });
-    planForm.value = { id: null, title: '', group_name: '', start_date: new Date().toISOString().split('T')[0], weeks: defaultWeeks };
+    planForm.value = { id: null, title: '', group_name: '', start_date: getLocalTodayStr(), weeks: defaultWeeks };
     currentView.value = 'plan-builder';
 }
 
@@ -661,49 +566,19 @@ async function savePlan() {
 }
 
 onMounted(async ()=>{
-  checkUrlForInvite();
-  
   const { data } = await client.auth.getUser();
   user.value = data?.user;
-  
-  if (user.value) {
-      if (!myTeam.value) {
-          if (localStorage.getItem('pending_invite_code')) {
-              isProcessingInvite.value = true;
-              currentView.value = 'onboarding';
-              joinCode.value = localStorage.getItem('pending_invite_code');
-              teamPassword.value = atob(localStorage.getItem('pending_invite_key'));
-              setTimeout(joinTeam, 1000); 
-          } else {
-              currentView.value = 'onboarding';
-          }
-      } else {
-          currentView.value = 'dashboard';
-          loadWorkouts(); loadSeasonPlans(); loadGroups(); 
-      }
+  if(user.value && myTeam.value) {
+      loadWorkouts(); loadSeasonPlans(); loadGroups();
+  } else if (user.value && !myTeam.value) {
+      currentView.value = 'onboarding';
   }
-
-  client.auth.onAuthStateChange((event, session) => {
-    if (session) {
-      user.value = session.user;
-      if(!myTeam.value && currentView.value !== 'onboarding') currentView.value = 'onboarding';
-      else if (myTeam.value && currentView.value === 'onboarding') { currentView.value = 'dashboard'; loadWorkouts(); loadSeasonPlans(); loadGroups(); }
-    }
-  });
-
-  setInterval(async () => {
-      if (user.value && myTeam.value) {
-          const { data: { user: freshUser } } = await client.auth.getUser();
-          if (freshUser && !freshUser.user_metadata?.team_id) {
-              alert("Your access to this vault has been revoked.");
-              logout();
-          }
-      }
-  }, 10000); 
 });
 
+// PARSING LOGIC
 function timeToSec(t){ let [m,s]=t.split(":").map(Number); return (m*60) + (s || 0); }
 function secToTime(s){ let m=Math.floor(s/60); let sec=s%60; return `${m}:${sec.toString().padStart(2,"0")}`; }
+function formatTime(sec){ let h=Math.floor(sec/3600)%12||12; let m=Math.floor((sec%3600)/60); let ap=Math.floor(sec/3600)>=12?'pm':'am'; return `${h}:${m.toString().padStart(2,"0")}${ap}`;}
 
 function parseLine(str, baseSec){
   if(/^\d+:\d+$/.test(str.trim())) return {rest:true,dur:timeToSec(str),label:str,q:1,d:0};
@@ -756,21 +631,12 @@ const duration = computed(()=> {
   return Math.round(total/60);
 });
 
-function formatTime(sec){
-  let h=Math.floor(sec/3600)%12||12; let m=Math.floor((sec%3600)/60);
-  let ap = Math.floor(sec/3600) >= 12 ? 'pm' : 'am';
-  return `${h}:${m.toString().padStart(2,"0")}${ap}`;
-}
-
 return {
   user,login,logout,currentView,joinCode,teamPassword,newTeamId,newTeamPassword,myTeam,currentWorkoutId,fontSize,
-  title,group,start,base,input,parsed,totalYards,duration,cloudWorkouts,coachName,
-  seasonPlans, planForm, activePlanContext, startNewPlan, editPlan, addWeek, savePlan,
-  teamGroupsList, newGroupName, addGroup, deleteGroup,
-  staffList, myRole, loadStaff, removeStaff, changeRole, copyInviteLink, joinTeam, createTeam,
-  newVaultPassword, updateVaultPassword,
-  hasPendingInvite, isProcessingInvite,
-  formatTime,save,loadWorkout,startNewWorkout,discardDraft,deleteWorkout
+  title,group,start,base,input,parsed,totalYards,duration,cloudWorkouts,coachName,practiceDate,
+  seasonPlans, activePlanContext, teamGroupsList, staffList, planForm, newGroupName, newVaultPassword,
+  filterGroup, filterDate, filteredWorkouts, todaysWorkouts, upcomingWorkouts, pastWorkouts, getWeekDateRange,
+  formatTime,save,loadWorkout,startNewWorkout,formatPracticeDate, startNewPlan, editPlan, addWeek, savePlan, deleteWorkout
 };
 }
 }).mount("#app");
