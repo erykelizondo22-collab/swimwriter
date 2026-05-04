@@ -629,17 +629,30 @@ onMounted(async ()=>{
   const { data } = await client.auth.getUser();
   user.value = data?.user;
   
-  if(user.value && !myTeam.value && localStorage.getItem('pending_invite_code')) {
-      isProcessingInvite.value = true;
-      currentView.value = 'onboarding';
-      joinCode.value = localStorage.getItem('pending_invite_code');
-      teamPassword.value = atob(localStorage.getItem('pending_invite_key'));
-      setTimeout(joinTeam, 1000); 
+  if (user.value) {
+      if (!myTeam.value) {
+          if (localStorage.getItem('pending_invite_code')) {
+              isProcessingInvite.value = true;
+              currentView.value = 'onboarding';
+              joinCode.value = localStorage.getItem('pending_invite_code');
+              teamPassword.value = atob(localStorage.getItem('pending_invite_key'));
+              setTimeout(joinTeam, 1000); 
+          } else {
+              currentView.value = 'onboarding';
+          }
+      } else {
+          currentView.value = 'dashboard';
+          loadWorkouts(); loadSeasonPlans(); loadGroups(); 
+      }
   }
-  
-  if(user.value && myTeam.value) {
-      loadWorkouts(); loadSeasonPlans(); loadGroups(); 
-  }
+
+  client.auth.onAuthStateChange((event, session) => {
+    if (session) {
+      user.value = session.user;
+      if(!myTeam.value && currentView.value !== 'onboarding') currentView.value = 'onboarding';
+      else if (myTeam.value && currentView.value === 'onboarding') { currentView.value = 'dashboard'; loadWorkouts(); loadSeasonPlans(); loadGroups(); }
+    }
+  });
 });
 
 function timeToSec(t){ let [m,s]=t.split(":").map(Number); return (m*60) + (s || 0); }
