@@ -323,13 +323,46 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
             <h2 class="text-2xl md:text-3xl font-black uppercase tracking-tight">Coaching Staff</h2>
             <button @click="copyInviteLink" class="bg-blue-600 text-white px-4 md:px-6 py-3 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-widest">Copy Link</button>
         </div>
+
+        <div v-if="myRole === 'owner'" class="bg-orange-50 border border-orange-200 p-6 md:p-8 rounded-3xl shadow-sm mb-6">
+            <h3 class="text-lg font-black text-orange-900 uppercase tracking-tight mb-2">Vault Security</h3>
+            <p class="text-orange-700 text-xs font-bold mb-4">Change the master password to instantly lock out anyone using the old credentials.</p>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input v-model="newVaultPassword" type="password" placeholder="Enter New Master Password" class="flex-1 p-3 rounded-xl border border-orange-300 font-black tracking-widest text-center sm:text-left outline-none focus:border-orange-500">
+                <button @click="updateVaultPassword" class="bg-orange-600 text-white font-black px-6 py-3 rounded-xl uppercase tracking-widest text-xs hover:bg-orange-700 shadow-md">Change Password</button>
+            </div>
+        </div>
+
         <div class="bg-white p-4 md:p-8 rounded-3xl shadow-sm border border-gray-100 space-y-3">
             <div v-for="member in staffList" :key="member.id" class="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border border-gray-100">
                 <div>
                     <div class="font-black uppercase text-gray-800 tracking-wide text-sm">{{member.name || member.email}}</div>
                     <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{member.role}}</div>
                 </div>
-                <button v-if="myRole === 'owner' && member.id !== user.id" @click="removeStaff(member.id, member.name)" class="text-red-500 font-black text-[10px] uppercase tracking-widest">Remove</button>
+                
+                <div v-if="(myRole === 'owner' || myRole === 'admin') && member.id !== user.id" class="flex gap-2 items-center">
+                    <select v-if="myRole === 'owner'" 
+                            @change="changeRole(member.id, member.name || member.email, $event.target.value)" 
+                            :value="member.role"
+                            class="bg-white border border-gray-200 text-[10px] font-black uppercase tracking-widest px-2 py-2 rounded-lg text-gray-700 outline-none focus:border-blue-500 cursor-pointer shadow-sm">
+                        <option value="coach">Coach</option>
+                        <option value="admin">Admin</option>
+                        <option value="owner">Owner</option>
+                    </select>
+
+                    <button v-if="myRole === 'admin' && member.role === 'coach'" 
+                            @click="changeRole(member.id, member.name || member.email, 'admin')" 
+                            class="text-blue-500 font-black px-3 py-2 hover:bg-blue-50 rounded-lg transition uppercase text-[10px] tracking-widest bg-blue-50">
+                        Promote
+                    </button>
+                    
+                    <button v-if="myRole === 'owner' || (myRole === 'admin' && member.role === 'coach')" 
+                            @click="removeStaff(member.id, member.name || member.email)" 
+                            class="text-red-500 font-black px-3 py-2 hover:bg-red-50 rounded-lg transition uppercase text-[10px] tracking-widest bg-red-50">
+                        Remove
+                    </button>
+                </div>
+
             </div>
         </div>
     </div>
@@ -427,6 +460,8 @@ const seasonPlans = ref([]);
 const teamGroupsList = ref([]);
 const staffList = ref([]);
 const newGroupName = ref("");
+const hasPendingInvite = ref(false);
+const isProcessingInvite = ref(false);
 
 const myRole = computed(() => user.value?.user_metadata?.team_role || 'coach');
 const coachName = computed(() => user.value?.user_metadata?.full_name?.split(' ')[0] || user.value?.email.split('@')[0] || "");
@@ -475,13 +510,20 @@ function getWeekDateRange(startDateStr, weekIndex) {
 }
 
 async function login(){ await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin }}); }
-async function logout(){ await client.auth.signOut(); location.reload(); }
+async function logout(){ 
+    localStorage.removeItem('pending_invite_code');
+    localStorage.removeItem('pending_invite_key');
+    await client.auth.signOut(); 
+    location.reload(); 
+}
 
 async function joinTeam() {
   const code = joinCode.value.trim().toUpperCase();
   const { data } = await client.from('teams').select('id').eq('id', code).eq('password', teamPassword.value);
   if (!data?.length) return alert("Invalid Team Credentials");
   await client.auth.updateUser({ data: { team_id: code, team_role: 'coach' } });
+  localStorage.removeItem('pending_invite_code');
+  localStorage.removeItem('pending_invite_key');
   location.reload();
 }
 
@@ -491,6 +533,15 @@ async function createTeam() {
   if (error) return alert("Team code taken or error: " + error.message);
   await client.auth.updateUser({ data: { team_id: upperCode, team_role: 'owner' } });
   location.reload();
+}
+
+async function updateVaultPassword() {
+  if(!newVaultPassword.value) return alert("Enter a new password");
+  if(confirm("Are you sure? All magic links previously sent will instantly stop working.")) {
+      const { error } = await client.rpc('change_team_password', { p_team_id: myTeam.value, new_password: newVaultPassword.value });
+      if(error) alert("Error: " + error.message);
+      else { alert("Master password updated securely."); newVaultPassword.value = ""; }
+  }
 }
 
 async function save(){
@@ -510,6 +561,8 @@ function loadWorkout(w){
   currentWorkoutId.value = w.id; title.value = w.title; group.value = w.group; practiceDate.value = w.practice_date; input.value = w.content; currentView.value = 'editor'; 
 }
 
+function discardDraft() { currentWorkoutId.value = null; currentView.value = 'dashboard'; }
+
 async function deleteWorkout(id) {
   if(confirm("Permanently delete from Vault?")) { await client.from("workouts").delete().eq('id', id); loadWorkouts(); }
 }
@@ -524,20 +577,25 @@ async function loadGroups() {
     teamGroupsList.value = data || [];
 }
 
+async function addGroup() {
+    if(!newGroupName.value.trim()) return;
+    const nameStr = newGroupName.value.trim().toUpperCase();
+    const { error } = await client.from("team_groups").insert({ team_id: myTeam.value, name: nameStr });
+    if(error) {
+        if(error.code === '23505') alert("This group already exists.");
+        else alert("Error adding group: " + error.message);
+    } else { newGroupName.value = ""; loadGroups(); }
+}
+
+async function deleteGroup(id) {
+    if(confirm("Delete this group? Past workouts are safe, but it will vanish from menus.")) {
+        await client.from("team_groups").delete().eq('id', id); loadGroups();
+    }
+}
+
 async function loadSeasonPlans() {
     const { data } = await client.from("season_plans").select("*").eq('team_id', myTeam.value).order('start_date', {ascending: false});
     seasonPlans.value = data || [];
-}
-
-async function loadStaff() {
-  const { data } = await client.rpc('get_team_members', { p_team_id: myTeam.value });
-  staffList.value = data || [];
-}
-
-function formatPracticeDate(d) {
-    if(!d) return "";
-    const options = { weekday: 'short', month: 'short', day: 'numeric' };
-    return new Date(d + 'T00:00:00').toLocaleDateString('en-US', options);
 }
 
 function startNewPlan() {
@@ -565,14 +623,94 @@ async function savePlan() {
     alert("Macrocycle Saved!"); loadSeasonPlans(); currentView.value = 'season-planning';
 }
 
+async function loadStaff() {
+  const { data } = await client.rpc('get_team_members', { p_team_id: myTeam.value });
+  staffList.value = data || [];
+}
+
+async function removeStaff(id, name) {
+  if(confirm(`Remove ${name} from the team? They will immediately lose access.`)) {
+     const { error } = await client.rpc('remove_team_member', { target_user_id: id, p_team_id: myTeam.value });
+     if(error) alert("Error: " + error.message);
+     else { alert(`${name} removed.`); loadStaff(); }
+  }
+}
+
+async function changeRole(id, name, newRole) {
+  if(confirm(`Update ${name} to ${newRole.toUpperCase()}?`)) {
+     const { error } = await client.rpc('change_team_role', { target_user_id: id, p_team_id: myTeam.value, new_role: newRole });
+     if(error) alert("Error: " + error.message);
+     else loadStaff();
+  }
+}
+
+async function copyInviteLink() {
+    const { data } = await client.from('teams').select('password').eq('id', myTeam.value).single();
+    if(data) {
+        const encodedPwd = btoa(data.password);
+        const link = `${window.location.origin}${window.location.pathname}?invite=${myTeam.value}&key=${encodedPwd}`;
+        navigator.clipboard.writeText(link);
+        alert("Magic Invite Link copied! Text this to your assistant coaches.");
+    }
+}
+
+function formatPracticeDate(d) {
+    if(!d) return "";
+    const options = { weekday: 'short', month: 'short', day: 'numeric' };
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-US', options);
+}
+
+function checkUrlForInvite() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.get('invite') && urlParams.get('key')) {
+        localStorage.setItem('pending_invite_code', urlParams.get('invite'));
+        localStorage.setItem('pending_invite_key', urlParams.get('key'));
+        hasPendingInvite.value = true;
+        window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (localStorage.getItem('pending_invite_code')) {
+        hasPendingInvite.value = true;
+    }
+}
+
 onMounted(async ()=>{
+  checkUrlForInvite();
   const { data } = await client.auth.getUser();
   user.value = data?.user;
-  if(user.value && myTeam.value) {
-      loadWorkouts(); loadSeasonPlans(); loadGroups();
-  } else if (user.value && !myTeam.value) {
-      currentView.value = 'onboarding';
+  
+  if (user.value) {
+      if (!myTeam.value) {
+          if (localStorage.getItem('pending_invite_code')) {
+              isProcessingInvite.value = true;
+              currentView.value = 'onboarding';
+              joinCode.value = localStorage.getItem('pending_invite_code');
+              teamPassword.value = atob(localStorage.getItem('pending_invite_key'));
+              setTimeout(joinTeam, 1000); 
+          } else {
+              currentView.value = 'onboarding';
+          }
+      } else {
+          currentView.value = 'dashboard';
+          loadWorkouts(); loadSeasonPlans(); loadGroups(); 
+      }
   }
+
+  client.auth.onAuthStateChange((event, session) => {
+    if (session) {
+      user.value = session.user;
+      if(!myTeam.value && currentView.value !== 'onboarding') currentView.value = 'onboarding';
+      else if (myTeam.value && currentView.value === 'onboarding') { currentView.value = 'dashboard'; loadWorkouts(); loadSeasonPlans(); loadGroups(); }
+    }
+  });
+
+  setInterval(async () => {
+      if (user.value && myTeam.value) {
+          const { data: { user: freshUser } } = await client.auth.getUser();
+          if (freshUser && !freshUser.user_metadata?.team_id) {
+              alert("Your access to this vault has been revoked.");
+              logout();
+          }
+      }
+  }, 10000); 
 });
 
 // PARSING LOGIC
@@ -632,11 +770,13 @@ const duration = computed(()=> {
 });
 
 return {
-  user,login,logout,currentView,joinCode,teamPassword,newTeamId,newTeamPassword,myTeam,currentWorkoutId,fontSize,
-  title,group,start,base,input,parsed,totalYards,duration,cloudWorkouts,coachName,practiceDate,
-  seasonPlans, activePlanContext, teamGroupsList, staffList, planForm, newGroupName, newVaultPassword,
+  user, login, logout, currentView, joinCode, teamPassword, newTeamId, newTeamPassword, newVaultPassword,
+  hasPendingInvite, isProcessingInvite, currentWorkoutId, fontSize,
+  title, group, start, base, input, parsed, totalYards, duration, cloudWorkouts, coachName, practiceDate,
+  seasonPlans, activePlanContext, teamGroupsList, staffList, planForm, newGroupName, myRole, myTeam,
   filterGroup, filterDate, filteredWorkouts, todaysWorkouts, upcomingWorkouts, pastWorkouts, getWeekDateRange,
-  formatTime,save,loadWorkout,startNewWorkout,formatPracticeDate, startNewPlan, editPlan, addWeek, savePlan, deleteWorkout
+  formatTime, save, loadWorkout, startNewWorkout, formatPracticeDate, startNewPlan, editPlan, addWeek, savePlan, deleteWorkout,
+  addGroup, deleteGroup, removeStaff, changeRole, copyInviteLink, joinTeam, createTeam, updateVaultPassword, discardDraft, loadStaff
 };
 }
 }).mount("#app");
