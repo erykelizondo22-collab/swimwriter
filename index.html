@@ -39,9 +39,22 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
 <div id="app" v-cloak>
 
 <div v-if="!user" class="p-6 md:p-10 max-w-md mx-auto bg-white mt-20 md:mt-32 rounded-3xl shadow-2xl text-center border border-gray-100 mx-4 md:mx-auto">
-  <div class="mb-6"><div class="w-16 h-16 bg-blue-600 text-white rounded-2xl mx-auto flex items-center justify-center text-3xl font-black shadow-lg shadow-blue-200">SS</div></div>
+  <div class="mb-6">
+      <div class="w-16 h-16 bg-blue-600 text-white rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-blue-200">
+          <svg viewBox="0 0 100 100" class="w-10 h-10" fill="currentColor">
+              <path d="M0,50 Q25,25 50,50 T100,50 L100,65 Q75,40 50,65 T0,65 Z" />
+              <path d="M0,65 Q25,40 50,65 T100,65 L100,80 Q75,55 50,80 T0,80 Z" opacity="0.6"/>
+              <path d="M0,80 Q25,55 50,80 T100,80 L100,95 Q75,70 50,95 T0,95 Z" opacity="0.3"/>
+          </svg>
+      </div>
+  </div>
   <h1 class="text-3xl font-black mb-2 text-gray-900">SwimSync</h1>
   <p class="text-sm text-gray-500 mb-8 font-medium">Coach Access Portal</p>
+  
+  <div v-if="hasPendingInvite" class="mb-6 bg-green-50 text-green-700 p-3 rounded-lg border border-green-200 text-sm font-bold animate-pulse">
+      You have a pending invite! Sign in to join the vault.
+  </div>
+
   <button @click="login" class="bg-white border-2 border-gray-200 text-gray-700 font-bold p-4 w-full rounded-xl hover:bg-gray-50 transition flex justify-center items-center gap-3 shadow-sm">
     <svg class="w-6 h-6" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
     Sign in with Google
@@ -52,7 +65,13 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
   
   <div class="bg-white border-b px-4 md:px-8 py-4 flex flex-wrap justify-between items-center sticky top-0 z-50 shadow-sm gap-y-4">
     <div class="flex items-center gap-3 cursor-pointer" @click="currentView = myTeam ? 'dashboard' : 'onboarding'">
-      <div class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center font-black">SS</div>
+      <div class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center">
+          <svg viewBox="0 0 100 100" class="w-5 h-5" fill="currentColor">
+              <path d="M0,50 Q25,25 50,50 T100,50 L100,65 Q75,40 50,65 T0,65 Z" />
+              <path d="M0,65 Q25,40 50,65 T100,65 L100,80 Q75,55 50,80 T0,80 Z" opacity="0.6"/>
+              <path d="M0,80 Q25,55 50,80 T100,80 L100,95 Q75,70 50,95 T0,95 Z" opacity="0.3"/>
+          </svg>
+      </div>
       <span class="font-black text-xl tracking-tight hidden sm:inline-block">SwimSync</span>
     </div>
     
@@ -68,6 +87,10 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
             <span class="text-[10px] md:text-xs font-black text-blue-600 bg-blue-50 px-2 md:px-3 py-1 rounded-md border border-blue-100 uppercase tracking-widest">{{myTeam}}</span>
             <button @click="logout" class="text-[10px] md:text-xs font-bold text-gray-400 hover:text-red-500 transition">LOGOUT</button>
           </div>
+      </div>
+      <div v-else class="flex items-center gap-4">
+          <span class="text-sm font-bold text-gray-500 bg-gray-100 px-4 py-2 rounded-full">{{coachName}}</span>
+          <button @click="logout" class="text-xs font-bold text-gray-400 hover:text-red-500 transition">LOGOUT</button>
       </div>
     </div>
   </div>
@@ -303,12 +326,10 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
 
         <div class="space-y-3 mb-8 md:mb-10">
             <div v-for="(week, index) in planForm.weeks" :key="index" class="flex flex-wrap md:flex-nowrap gap-2 md:gap-4 items-center bg-gray-50 p-3 md:p-4 rounded-2xl border border-gray-100">
-                
                 <div class="w-16 md:w-24 text-center font-black text-gray-400 uppercase text-xs md:text-sm flex flex-col justify-center">
                     <span>W{{index + 1}}</span>
                     <span class="text-[8px] md:text-[9px] mt-1 whitespace-nowrap">{{getWeekDateRange(planForm.start_date, index)}}</span>
                 </div>
-
                 <input v-model="week.focus" placeholder="Phase / Focus" class="flex-1 w-full min-w-[150px] bg-white p-3 rounded-xl font-bold uppercase text-xs md:text-sm outline-none border focus:border-blue-500">
                 <input v-model="week.targetYards" type="number" placeholder="Vol (y)" class="w-24 md:w-32 bg-white p-3 rounded-xl font-bold text-xs md:text-sm outline-none border focus:border-blue-500 text-right">
                 <button @click="planForm.weeks.splice(index, 1)" class="text-red-400 font-black px-2 hover:text-red-600">X</button>
@@ -322,6 +343,21 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
         <div class="flex justify-between items-end mb-6">
             <h2 class="text-2xl md:text-3xl font-black uppercase tracking-tight">Coaching Staff</h2>
             <button @click="copyInviteLink" class="bg-blue-600 text-white px-4 md:px-6 py-3 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-widest">Copy Link</button>
+        </div>
+
+        <div v-if="myRole === 'owner'" class="bg-blue-50 border border-blue-200 p-6 md:p-8 rounded-3xl shadow-sm mb-6">
+            <h3 class="text-lg font-black text-blue-900 uppercase tracking-tight mb-2">Team Branding</h3>
+            <p class="text-blue-700 text-xs font-bold mb-4">Upload your team logo. It will be displayed as a large watermark behind your printed workout sheets.</p>
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 bg-white rounded-xl border-2 border-blue-200 flex items-center justify-center overflow-hidden shrink-0">
+                    <img v-if="teamLogoUrl" :src="teamLogoUrl" class="w-full h-full object-contain p-1">
+                    <span v-else class="text-blue-300 text-[9px] font-black uppercase text-center leading-tight">No<br>Logo</span>
+                </div>
+                <div class="flex-1">
+                    <input type="file" @change="uploadLogo" accept="image/*" class="block w-full text-sm text-blue-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer outline-none">
+                    <div v-if="isUploadingLogo" class="text-[10px] font-bold text-blue-500 mt-2 uppercase animate-pulse">Uploading to Database...</div>
+                </div>
+            </div>
         </div>
 
         <div v-if="myRole === 'owner'" class="bg-orange-50 border border-orange-200 p-6 md:p-8 rounded-3xl shadow-sm mb-6">
@@ -386,36 +422,55 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
   </div>
 </div>
 
-<div id="sheet" style="display:none;" :class="{'no-print': !user}">
-  <div class="flex justify-between border-b-[8px] border-black pb-4 mb-8">
-    <div>
-      <div class="text-5xl font-black uppercase leading-tight tracking-tighter">{{title}}</div>
-      <div class="text-md font-bold tracking-[0.3em] uppercase mt-1">{{myTeam}} — {{group}} ({{formatPracticeDate(practiceDate)}})</div>
-    </div>
-    <div class="text-right">
-      <div class="text-5xl font-black tracking-tighter">{{totalYards}}y</div>
-      <div class="text-sm font-bold opacity-60 uppercase tracking-widest">{{duration}} MIN PRACTICE</div>
-    </div>
+<div id="sheet" style="display:none; position: relative; overflow: hidden;" :class="{'no-print': !user}">
+  
+  <div v-if="teamLogoUrl" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; z-index: 0; opacity: 0.08; pointer-events: none;">
+      <img :src="teamLogoUrl" style="width: 70%; max-height: 70%; object-fit: contain; filter: grayscale(100%);">
   </div>
 
-  <div :style="{ fontSize: fontSize + 'px' }">
-      <div v-for="sec in parsed" class="mb-10">
-        <div class="block-title flex justify-between" :style="{ fontSize: Math.max(12, fontSize * 0.7) + 'px' }">
-          <span>{{sec.title}}</span>
-          <span class="font-normal opacity-50">{{sec.y}}y</span>
-        </div>
-        <div v-for="b in sec.blocks" class="mt-4">
-          <div v-if="b.rep > 1" class="font-black uppercase mb-2 text-gray-400" :style="{ fontSize: Math.max(10, fontSize * 0.5) + 'px' }">● {{b.rep}}x (ROUND)</div>
-          <div v-for="s in b.sets" class="row items-center border-gray-200" :class="{'border-l-[12px] border-black pl-8 ml-3 py-2': b.rep > 1, 'py-1': b.rep === 1}">
-            <div class="font-bold flex-1">
-                <span v-if="!s.rest">{{s.q}}x{{s.d}}</span> 
-                <span class="ml-6 text-gray-400" v-if="!s.rest">@ {{s.p}}</span>
-                <span class="font-black text-gray-300 uppercase" v-if="s.rest">REST {{s.label}}</span>
-                <span v-if="s.label && !s.rest" class="ml-6 font-normal opacity-40 italic">— {{s.label}}</span>
-            </div>
-            <div class="mono text-right opacity-30 ml-4" :style="{ fontSize: Math.max(10, fontSize * 0.6) + 'px' }">{{formatTime(s.start)}}</div>
+  <div style="position: relative; z-index: 10;">
+      
+      <div class="flex justify-between items-center mb-6">
+          <div class="flex items-center gap-3 opacity-30 grayscale">
+              <svg viewBox="0 0 100 100" class="w-8 h-8 text-black" fill="currentColor">
+                  <path d="M0,50 Q25,25 50,50 T100,50 L100,65 Q75,40 50,65 T0,65 Z" />
+                  <path d="M0,65 Q25,40 50,65 T100,65 L100,80 Q75,55 50,80 T0,80 Z" opacity="0.6"/>
+                  <path d="M0,80 Q25,55 50,80 T100,80 L100,95 Q75,70 50,95 T0,95 Z" opacity="0.3"/>
+              </svg>
+              <span class="font-black text-xl tracking-tighter uppercase">SwimSync</span>
           </div>
+      </div>
+
+      <div class="flex justify-between border-b-[8px] border-black pb-4 mb-8">
+        <div>
+          <div class="text-5xl font-black uppercase leading-tight tracking-tighter">{{title}}</div>
+          <div class="text-md font-bold tracking-[0.3em] uppercase mt-1">{{myTeam}} — {{group}} ({{formatPracticeDate(practiceDate)}})</div>
         </div>
+        <div class="text-right">
+          <div class="text-5xl font-black tracking-tighter">{{totalYards}}y</div>
+          <div class="text-sm font-bold opacity-60 uppercase tracking-widest">{{duration}} MIN PRACTICE</div>
+        </div>
+      </div>
+
+      <div :style="{ fontSize: fontSize + 'px' }">
+          <div v-for="sec in parsed" class="mb-10">
+            <div class="block-title flex justify-between" :style="{ fontSize: Math.max(12, fontSize * 0.7) + 'px' }">
+              <span>{{sec.title}}</span>
+              <span class="font-normal opacity-50">{{sec.y}}y</span>
+            </div>
+            <div v-for="b in sec.blocks" class="mt-4">
+              <div v-if="b.rep > 1" class="font-black uppercase mb-2 text-gray-400" :style="{ fontSize: Math.max(10, fontSize * 0.5) + 'px' }">● {{b.rep}}x (ROUND)</div>
+              <div v-for="s in b.sets" class="row items-center border-gray-200" :class="{'border-l-[12px] border-black pl-8 ml-3 py-2': b.rep > 1, 'py-1': b.rep === 1}">
+                <div class="font-bold flex-1">
+                    <span v-if="!s.rest">{{s.q}}x{{s.d}}</span> 
+                    <span class="ml-6 text-gray-400" v-if="!s.rest">@ {{s.p}}</span>
+                    <span class="font-black text-gray-300 uppercase" v-if="s.rest">REST {{s.label}}</span>
+                    <span v-if="s.label && !s.rest" class="ml-6 font-normal opacity-40 italic">— {{s.label}}</span>
+                </div>
+                <div class="mono text-right opacity-30 ml-4" :style="{ fontSize: Math.max(10, fontSize * 0.6) + 'px' }">{{formatTime(s.start)}}</div>
+              </div>
+            </div>
+          </div>
       </div>
   </div>
 </div>
@@ -436,20 +491,18 @@ const user = ref(null);
 const currentView = ref('dashboard');
 const practiceDate = ref(new Date().toISOString().split('T')[0]);
 
-// Dynamic "Today" date in local time for comparison
 const getLocalTodayStr = () => {
     const tzoffset = (new Date()).getTimezoneOffset() * 60000; 
     return (new Date(Date.now() - tzoffset)).toISOString().split('T')[0];
 };
 const todayStr = ref(getLocalTodayStr());
 
-// Filtering
-const filterGroup = ref('');
-const filterDate = ref('');
-
+const filterGroup = ref(''); const filterDate = ref('');
 const joinCode = ref(""); const teamPassword = ref(""); 
 const newTeamId = ref(""); const newTeamPassword = ref("");
 const newVaultPassword = ref("");
+const teamLogoUrl = ref("");
+const isUploadingLogo = ref(false);
 
 const currentWorkoutId = ref(null); 
 const fontSize = ref(22); 
@@ -463,11 +516,14 @@ const newGroupName = ref("");
 const hasPendingInvite = ref(false);
 const isProcessingInvite = ref(false);
 
+// BUG FIX: Protect against reading names before login is complete
 const myRole = computed(() => user.value?.user_metadata?.team_role || 'coach');
-const coachName = computed(() => user.value?.user_metadata?.full_name?.split(' ')[0] || user.value?.email.split('@')[0] || "");
+const coachName = computed(() => {
+    if (!user.value) return "";
+    return user.value.user_metadata?.full_name?.split(' ')[0] || user.value.email?.split('@')[0] || "";
+});
 const myTeam = computed(() => user.value?.user_metadata?.team_id || null);
 
-// Correlate Season Plan weeks to the WORKOUT DATE
 const activePlanContext = computed(() => {
     if (!group.value || !seasonPlans.value.length || !practiceDate.value) return null;
     const plan = seasonPlans.value.find(p => p.group_name.toUpperCase() === group.value.toUpperCase());
@@ -475,7 +531,6 @@ const activePlanContext = computed(() => {
 
     const startDate = new Date(plan.start_date + 'T00:00:00');
     const workoutDate = new Date(practiceDate.value + 'T00:00:00');
-    
     const diffTime = workoutDate - startDate;
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     
@@ -493,7 +548,6 @@ const filteredWorkouts = computed(() => {
     });
 });
 
-// Tri-Vault Categorization (After filters are applied)
 const todaysWorkouts = computed(() => filteredWorkouts.value.filter(w => w.practice_date === todayStr.value));
 const upcomingWorkouts = computed(() => filteredWorkouts.value.filter(w => w.practice_date > todayStr.value).sort((a,b) => a.practice_date.localeCompare(b.practice_date))); 
 const pastWorkouts = computed(() => filteredWorkouts.value.filter(w => w.practice_date < todayStr.value).sort((a,b) => b.practice_date.localeCompare(a.practice_date)));
@@ -504,7 +558,6 @@ function getWeekDateRange(startDateStr, weekIndex) {
     start.setDate(start.getDate() + (weekIndex * 7));
     const end = new Date(start);
     end.setDate(end.getDate() + 6);
-    
     const format = (d) => `${d.getMonth()+1}/${d.getDate()}`;
     return `${format(start)} - ${format(end)}`;
 }
@@ -533,6 +586,32 @@ async function createTeam() {
   if (error) return alert("Team code taken or error: " + error.message);
   await client.auth.updateUser({ data: { team_id: upperCode, team_role: 'owner' } });
   location.reload();
+}
+
+async function loadTeamSettings() {
+    if(!myTeam.value) return;
+    const { data } = await client.from('teams').select('logo_url').eq('id', myTeam.value).single();
+    if(data) teamLogoUrl.value = data.logo_url;
+}
+
+async function uploadLogo(event) {
+    const file = event.target.files[0];
+    if(!file) return;
+    isUploadingLogo.value = true;
+    
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${myTeam.value}-logo.${fileExt}`;
+
+    const { error: uploadError } = await client.storage.from('logos').upload(filePath, file, { upsert: true });
+    if(uploadError) { alert("Upload failed: " + uploadError.message); isUploadingLogo.value = false; return; }
+
+    const { data: { publicUrl } } = client.storage.from('logos').getPublicUrl(filePath);
+
+    const { error: dbError } = await client.from('teams').update({ logo_url: publicUrl }).eq('id', myTeam.value);
+    if(dbError) alert("Error saving logo: " + dbError.message);
+    else teamLogoUrl.value = publicUrl;
+
+    isUploadingLogo.value = false;
 }
 
 async function updateVaultPassword() {
@@ -690,7 +769,7 @@ onMounted(async ()=>{
           }
       } else {
           currentView.value = 'dashboard';
-          loadWorkouts(); loadSeasonPlans(); loadGroups(); 
+          loadTeamSettings(); loadWorkouts(); loadSeasonPlans(); loadGroups(); 
       }
   }
 
@@ -698,7 +777,10 @@ onMounted(async ()=>{
     if (session) {
       user.value = session.user;
       if(!myTeam.value && currentView.value !== 'onboarding') currentView.value = 'onboarding';
-      else if (myTeam.value && currentView.value === 'onboarding') { currentView.value = 'dashboard'; loadWorkouts(); loadSeasonPlans(); loadGroups(); }
+      else if (myTeam.value && currentView.value === 'onboarding') { 
+          currentView.value = 'dashboard'; 
+          loadTeamSettings(); loadWorkouts(); loadSeasonPlans(); loadGroups(); 
+      }
     }
   });
 
@@ -713,7 +795,6 @@ onMounted(async ()=>{
   }, 10000); 
 });
 
-// PARSING LOGIC
 function timeToSec(t){ let [m,s]=t.split(":").map(Number); return (m*60) + (s || 0); }
 function secToTime(s){ let m=Math.floor(s/60); let sec=s%60; return `${m}:${sec.toString().padStart(2,"0")}`; }
 function formatTime(sec){ let h=Math.floor(sec/3600)%12||12; let m=Math.floor((sec%3600)/60); let ap=Math.floor(sec/3600)>=12?'pm':'am'; return `${h}:${m.toString().padStart(2,"0")}${ap}`;}
@@ -771,7 +852,7 @@ const duration = computed(()=> {
 
 return {
   user, login, logout, currentView, joinCode, teamPassword, newTeamId, newTeamPassword, newVaultPassword,
-  hasPendingInvite, isProcessingInvite, currentWorkoutId, fontSize,
+  hasPendingInvite, isProcessingInvite, currentWorkoutId, fontSize, teamLogoUrl, isUploadingLogo, uploadLogo,
   title, group, start, base, input, parsed, totalYards, duration, cloudWorkouts, coachName, practiceDate,
   seasonPlans, activePlanContext, teamGroupsList, staffList, planForm, newGroupName, myRole, myTeam,
   filterGroup, filterDate, filteredWorkouts, todaysWorkouts, upcomingWorkouts, pastWorkouts, getWeekDateRange,
