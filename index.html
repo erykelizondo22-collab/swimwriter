@@ -33,6 +33,11 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
   <div class="mb-6"><div class="w-16 h-16 bg-blue-600 text-white rounded-2xl mx-auto flex items-center justify-center text-3xl font-black shadow-lg shadow-blue-200">SS</div></div>
   <h1 class="text-3xl font-black mb-2 text-gray-900">SwimSync</h1>
   <p class="text-sm text-gray-500 mb-8 font-medium">Coach Access Portal</p>
+  
+  <div v-if="hasPendingInvite" class="mb-6 bg-green-50 text-green-700 p-3 rounded-lg border border-green-200 text-sm font-bold animate-pulse">
+      You have a pending invite! Sign in to join the vault.
+  </div>
+
   <button @click="login" class="bg-white border-2 border-gray-200 text-gray-700 font-bold p-4 w-full rounded-xl hover:bg-gray-50 transition flex justify-center items-center gap-3 shadow-sm">
     <svg class="w-6 h-6" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
     Sign in with Google
@@ -86,7 +91,12 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
 
     <div v-if="currentView === 'onboarding'" class="max-w-4xl mx-auto mt-16 grid grid-cols-1 md:grid-cols-2 gap-8">
       
-      <div class="bg-white p-10 rounded-3xl shadow-xl border border-gray-100 text-center">
+      <div class="bg-white p-10 rounded-3xl shadow-xl border border-gray-100 text-center relative overflow-hidden">
+        <div v-if="isProcessingInvite" class="absolute inset-0 bg-white/90 z-10 flex flex-col items-center justify-center">
+            <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+            <div class="font-black text-gray-900 uppercase tracking-widest">Unlocking Vault...</div>
+        </div>
+
         <div class="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
         </div>
@@ -120,14 +130,20 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
       </div>
     </div>
 
-    <div v-if="currentView === 'staff'" class="max-w-3xl mx-auto space-y-6 mt-4">
+    <div v-if="currentView === 'staff'" class="max-w-4xl mx-auto space-y-6 mt-4">
         <div class="flex justify-between items-end mb-6">
             <div>
                <h2 class="text-3xl font-black uppercase tracking-tight">Coaching Staff</h2>
                <p class="text-gray-500 font-medium text-sm">Manage who has access to the {{myTeam}} vault.</p>
             </div>
-            <div class="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-black uppercase tracking-widest text-xs border border-blue-100">
-                Your Role: {{myRole}}
+            <div class="flex gap-4">
+                <div class="bg-blue-50 text-blue-600 px-4 py-3 rounded-xl font-black uppercase tracking-widest text-xs border border-blue-100 flex items-center">
+                    Your Role: {{myRole}}
+                </div>
+                <button @click="copyInviteLink" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-black shadow-lg uppercase tracking-widest text-xs hover:bg-blue-700 transition flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                    Copy Invite Link
+                </button>
             </div>
         </div>
 
@@ -139,8 +155,23 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
                         <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">{{member.email}}</div>
                     </div>
                     <div class="flex items-center gap-4">
-                        <span class="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded" :class="member.role === 'admin' ? 'bg-purple-100 text-purple-600' : 'bg-gray-200 text-gray-600'">{{member.role}}</span>
-                        <button v-if="myRole === 'admin' && member.id !== user.id" @click="kickStaff(member.id, member.name || member.email)" class="text-red-400 font-black px-4 py-2 hover:bg-red-50 hover:text-red-600 rounded-lg transition uppercase text-xs tracking-widest">Kick</button>
+                        <span class="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded border" 
+                              :class="{
+                                'bg-purple-100 text-purple-700 border-purple-200': member.role === 'owner',
+                                'bg-blue-100 text-blue-700 border-blue-200': member.role === 'admin',
+                                'bg-gray-100 text-gray-600 border-gray-200': member.role === 'coach'
+                              }">
+                              {{member.role}}
+                        </span>
+
+                        <div v-if="(myRole === 'owner' || myRole === 'admin') && member.id !== user.id" class="flex gap-2">
+                            
+                            <button v-if="member.role === 'coach'" @click="changeRole(member.id, member.name, 'admin')" class="text-blue-500 font-black px-4 py-2 hover:bg-blue-50 rounded-lg transition uppercase text-xs tracking-widest">Promote</button>
+                            
+                            <button v-if="myRole === 'owner' && member.role === 'admin'" @click="changeRole(member.id, member.name, 'coach')" class="text-orange-500 font-black px-4 py-2 hover:bg-orange-50 rounded-lg transition uppercase text-xs tracking-widest">Demote</button>
+                            
+                            <button v-if="myRole === 'owner' || (myRole === 'admin' && member.role === 'coach')" @click="removeStaff(member.id, member.name || member.email)" class="text-red-400 font-black px-4 py-2 hover:bg-red-50 hover:text-red-600 rounded-lg transition uppercase text-xs tracking-widest">Remove</button>
+                        </div>
                     </div>
                 </div>
                 <div v-if="!staffList.length" class="text-center py-10 text-gray-400 font-black uppercase tracking-widest italic">
@@ -178,7 +209,6 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
 
     <div v-if="currentView === 'editor'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="lg:col-span-2 space-y-4">
-        
         <div v-if="activePlanContext" class="bg-blue-50 border-2 border-blue-100 p-4 rounded-2xl flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-black">W{{activePlanContext.weekNum}}</div>
@@ -219,10 +249,6 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
                 <span class="text-blue-600">{{fontSize}}px</span>
             </label>
             <input type="range" v-model="fontSize" min="6" max="48" step="1" class="font-slider">
-            <div class="flex justify-between text-[10px] font-bold text-gray-300 mt-2 uppercase tracking-tighter">
-                <span>Tiny</span>
-                <span>XL</span>
-            </div>
           </div>
 
           <button @click="discardDraft" class="w-full text-[10px] font-black text-gray-400 uppercase tracking-widest pt-4 hover:text-gray-600 transition">Close Editor</button>
@@ -243,7 +269,6 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
                     <option value="" disabled>Select Group</option>
                     <option v-for="g in teamGroupsList" :key="g.id" :value="g.name">{{g.name}}</option>
                 </select>
-                <p v-if="!teamGroupsList.length" class="text-xs text-red-500 font-bold ml-2 mt-2">No groups exist yet. Please go to the Groups tab to create one.</p>
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div class="space-y-1">
@@ -279,10 +304,8 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
                   <span>{{plan.weeks.length}} Weeks</span>
               </div>
           </div>
-          
           <div v-if="!seasonPlans.length" class="col-span-full text-center py-20 border-2 border-dashed rounded-3xl bg-gray-50">
              <div class="text-gray-400 font-black text-lg uppercase tracking-widest">No Plans Active</div>
-             <p class="text-sm text-gray-400 mt-2">Click Build Plan to start your macrocycle.</p>
           </div>
       </div>
     </div>
@@ -319,7 +342,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc}
         <div class="space-y-3 mb-10">
             <div v-for="(week, index) in planForm.weeks" :key="index" class="flex gap-4 items-center bg-gray-50 p-4 rounded-2xl border border-gray-100">
                 <div class="w-16 text-center font-black text-gray-400 uppercase">W{{index + 1}}</div>
-                <input v-model="week.focus" placeholder="Phase / Focus (e.g. Aerobic Base)" class="flex-1 bg-white p-3 rounded-xl font-bold uppercase text-sm outline-none border focus:border-blue-500">
+                <input v-model="week.focus" placeholder="Phase / Focus" class="flex-1 bg-white p-3 rounded-xl font-bold uppercase text-sm outline-none border focus:border-blue-500">
                 <input v-model="week.targetYards" type="number" placeholder="Target Vol (y)" class="w-32 bg-white p-3 rounded-xl font-bold text-sm outline-none border focus:border-blue-500 text-right">
                 <button @click="planForm.weeks.splice(index, 1)" class="text-red-400 font-black px-2 hover:text-red-600">X</button>
             </div>
@@ -380,8 +403,13 @@ createApp({
 setup(){
 const user = ref(null);
 const currentView = ref('dashboard');
+
+// Auth & Onboarding State
 const joinCode = ref(""); const teamPassword = ref(""); 
 const newTeamId = ref(""); const newTeamPassword = ref("");
+const hasPendingInvite = ref(false);
+const isProcessingInvite = ref(false);
+
 const currentWorkoutId = ref(null); 
 const fontSize = ref(22); 
 
@@ -393,7 +421,7 @@ const planForm = ref({ id: null, title: '', group_name: '', start_date: '', week
 const teamGroupsList = ref([]);
 const newGroupName = ref("");
 
-// NEW: Staff State
+// Staff State
 const staffList = ref([]);
 const myRole = computed(() => user.value?.user_metadata?.team_role || 'coach');
 
@@ -425,14 +453,37 @@ watch([title, group, start, base, input, fontSize], () => {
   }
 });
 
+// URL CHECKING FOR MAGIC LINKS
+function checkUrlForInvite() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.get('invite') && urlParams.get('key')) {
+        localStorage.setItem('pending_invite_code', urlParams.get('invite'));
+        localStorage.setItem('pending_invite_key', urlParams.get('key'));
+        hasPendingInvite.value = true;
+        
+        // Clean URL so it looks pretty
+        window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (localStorage.getItem('pending_invite_code')) {
+        hasPendingInvite.value = true;
+    }
+}
+
 async function login(){ await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin }}); }
 async function logout(){ await client.auth.signOut(); location.reload(); }
 
 async function joinTeam() {
   const code = joinCode.value.trim().toUpperCase();
   const { data } = await client.from('teams').select('id').eq('id', code).eq('password', teamPassword.value);
-  if (!data?.length) return alert("Invalid Team Credentials");
+  if (!data?.length) {
+      isProcessingInvite.value = false;
+      return alert("Invalid Team Credentials");
+  }
   await client.auth.updateUser({ data: { team_id: code, team_role: 'coach' } });
+  
+  // Clear pending invites on success
+  localStorage.removeItem('pending_invite_code');
+  localStorage.removeItem('pending_invite_key');
+  
   location.reload();
 }
 
@@ -445,7 +496,8 @@ async function createTeam() {
     else alert("Error creating team: " + insertError.message);
     return;
   }
-  const { data, error: updateError } = await client.auth.updateUser({ data: { team_id: upperCode, team_role: 'admin' } });
+  // NEW TEAMS AUTOMATICALLY MAKE THE CREATOR AN "OWNER"
+  const { data, error: updateError } = await client.auth.updateUser({ data: { team_id: upperCode, team_role: 'owner' } });
   if(updateError) alert("Error linking account: " + updateError.message);
   else {
     alert("Vault created successfully! Welcome to SwimSync.");
@@ -461,12 +513,30 @@ async function loadStaff() {
   else staffList.value = data || [];
 }
 
-async function kickStaff(id, name) {
+async function removeStaff(id, name) {
   if(confirm(`Remove ${name} from the team? They will immediately lose access.`)) {
-     const { error } = await client.rpc('kick_team_member', { target_user_id: id, p_team_id: myTeam.value });
+     const { error } = await client.rpc('remove_team_member', { target_user_id: id, p_team_id: myTeam.value });
      if(error) alert("Error: " + error.message);
      else { alert(`${name} removed.`); loadStaff(); }
   }
+}
+
+async function changeRole(id, name, newRole) {
+  if(confirm(`Update ${name} to ${newRole.toUpperCase()}?`)) {
+     const { error } = await client.rpc('change_team_role', { target_user_id: id, p_team_id: myTeam.value, new_role: newRole });
+     if(error) alert("Error: " + error.message);
+     else loadStaff();
+  }
+}
+
+async function copyInviteLink() {
+    const { data } = await client.from('teams').select('password').eq('id', myTeam.value).single();
+    if(data) {
+        const encodedPwd = btoa(data.password);
+        const link = `${window.location.origin}${window.location.pathname}?invite=${myTeam.value}&key=${encodedPwd}`;
+        navigator.clipboard.writeText(link);
+        alert("Magic Invite Link copied! Text this to your assistant coaches.");
+    }
 }
 
 function startNewWorkout() { 
@@ -509,16 +579,12 @@ async function addGroup() {
     if(error) {
         if(error.code === '23505') alert("This group already exists.");
         else alert("Error adding group: " + error.message);
-    } else {
-        newGroupName.value = "";
-        loadGroups();
-    }
+    } else { newGroupName.value = ""; loadGroups(); }
 }
 
 async function deleteGroup(id) {
     if(confirm("Delete this group? Past workouts are safe, but it will vanish from menus.")) {
-        await client.from("team_groups").delete().eq('id', id);
-        loadGroups();
+        await client.from("team_groups").delete().eq('id', id); loadGroups();
     }
 }
 
@@ -550,18 +616,26 @@ async function savePlan() {
     if(planForm.value.id) await client.from("season_plans").update(payload).eq('id', planForm.value.id);
     else await client.from("season_plans").insert(payload);
     
-    alert("Macrocycle Saved!");
-    loadSeasonPlans();
-    currentView.value = 'season-planning';
+    alert("Macrocycle Saved!"); loadSeasonPlans(); currentView.value = 'season-planning';
 }
 
 onMounted(async ()=>{
+  checkUrlForInvite();
+  
   const { data } = await client.auth.getUser();
   user.value = data?.user;
+  
+  // MAGIC INVITE AUTOMATION:
+  if(user.value && !myTeam.value && localStorage.getItem('pending_invite_code')) {
+      isProcessingInvite.value = true;
+      currentView.value = 'onboarding';
+      joinCode.value = localStorage.getItem('pending_invite_code');
+      teamPassword.value = atob(localStorage.getItem('pending_invite_key'));
+      setTimeout(joinTeam, 1000); // 1 sec delay so user sees what is happening
+  }
+  
   if(user.value && myTeam.value) {
-      loadWorkouts();
-      loadSeasonPlans(); 
-      loadGroups(); 
+      loadWorkouts(); loadSeasonPlans(); loadGroups(); 
   }
 });
 
@@ -630,7 +704,8 @@ return {
   title,group,start,base,input,parsed,totalYards,duration,cloudWorkouts,coachName,
   seasonPlans, planForm, activePlanContext, startNewPlan, editPlan, addWeek, savePlan,
   teamGroupsList, newGroupName, addGroup, deleteGroup,
-  staffList, myRole, loadStaff, kickStaff, joinTeam, createTeam,
+  staffList, myRole, loadStaff, removeStaff, changeRole, copyInviteLink, joinTeam, createTeam,
+  hasPendingInvite, isProcessingInvite,
   formatTime,save,loadWorkout,startNewWorkout,discardDraft,deleteWorkout
 };
 }
