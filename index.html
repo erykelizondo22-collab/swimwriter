@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-<link rel="manifest" href="/manifest.json" />
+<head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>SwimSync - Coach Access Portal</title>
 
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="default" />
-<meta name="apple-mobile-web-app-title" content="SwimSync" />
+<link rel="manifest" href="manifest.json" />
 <meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="SwimSync" />
 <meta name="theme-color" content="#2563eb" />
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -277,7 +278,6 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
 
         <div class="bg-white p-6 md:p-8 rounded-3xl md:rounded-[32px] shadow-sm border border-gray-100 space-y-3 md:space-y-4">
           <button @click="save" class="w-full bg-blue-600 text-white font-black py-4 md:py-5 rounded-xl md:rounded-2xl shadow-xl shadow-blue-100 uppercase tracking-widest hover:bg-blue-700 transition-all text-sm md:text-base">Save Workout</button>
-          
           <button onclick="window.print()" class="w-full bg-black text-white py-4 md:py-5 rounded-xl md:rounded-2xl font-black uppercase tracking-widest hover:bg-gray-800 transition-all text-sm md:text-base">Print Sheet</button>
           
           <div class="border-t pt-4 md:pt-6 mt-2">
