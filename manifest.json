@@ -1,17 +1,35 @@
 {
   "name": "SwimSync",
   "short_name": "SwimSync",
-  "description": "Coach Access Portal for SwimSync",
-  "start_url": ".",
+  "id": "/swimsync-app-v1",
+  "description": "Professional Coach Access Portal and Workout Vault for SwimSync staff.",
+  "start_url": "/",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
+  "categories": ["education", "sports", "productivity"],
   "icons": [
     {
       "src": "https://nzrzcbxxqxwktocrmplg.supabase.co/storage/v1/object/public/assets/icon.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "https://nzrzcbxxqxwktocrmplg.supabase.co/storage/v1/object/public/assets/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://nzrzcbxxqxwktocrmplg.supabase.co/storage/v1/object/public/assets/screenshot-mobile.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "label": "Coach Dashboard on Mobile",
+      "form_factor": "narrow"
     }
   ]
 }
