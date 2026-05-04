@@ -516,7 +516,6 @@ const newGroupName = ref("");
 const hasPendingInvite = ref(false);
 const isProcessingInvite = ref(false);
 
-// BUG FIX: Protect against reading names before login is complete
 const myRole = computed(() => user.value?.user_metadata?.team_role || 'coach');
 const coachName = computed(() => {
     if (!user.value) return "";
@@ -526,7 +525,7 @@ const myTeam = computed(() => user.value?.user_metadata?.team_id || null);
 
 const activePlanContext = computed(() => {
     if (!group.value || !seasonPlans.value.length || !practiceDate.value) return null;
-    const plan = seasonPlans.value.find(p => p.group_name.toUpperCase() === group.value.toUpperCase());
+    const plan = seasonPlans.value.find(p => (p.group_name || "").toUpperCase() === (group.value || "").toUpperCase());
     if (!plan) return null;
 
     const startDate = new Date(plan.start_date + 'T00:00:00');
@@ -548,9 +547,10 @@ const filteredWorkouts = computed(() => {
     });
 });
 
+// BULLETPROOF DATE SORTING: We use || "" so that old workouts missing a date don't crash the localeCompare algorithm.
 const todaysWorkouts = computed(() => filteredWorkouts.value.filter(w => w.practice_date === todayStr.value));
-const upcomingWorkouts = computed(() => filteredWorkouts.value.filter(w => w.practice_date > todayStr.value).sort((a,b) => a.practice_date.localeCompare(b.practice_date))); 
-const pastWorkouts = computed(() => filteredWorkouts.value.filter(w => w.practice_date < todayStr.value).sort((a,b) => b.practice_date.localeCompare(a.practice_date)));
+const upcomingWorkouts = computed(() => filteredWorkouts.value.filter(w => w.practice_date && w.practice_date > todayStr.value).sort((a,b) => (a.practice_date || "").localeCompare(b.practice_date || ""))); 
+const pastWorkouts = computed(() => filteredWorkouts.value.filter(w => !w.practice_date || w.practice_date < todayStr.value).sort((a,b) => (b.practice_date || "").localeCompare(a.practice_date || "")));
 
 function getWeekDateRange(startDateStr, weekIndex) {
     if (!startDateStr) return "";
@@ -571,7 +571,7 @@ async function logout(){
 }
 
 async function joinTeam() {
-  const code = joinCode.value.trim().toUpperCase();
+  const code = (joinCode.value || "").trim().toUpperCase();
   const { data } = await client.from('teams').select('id').eq('id', code).eq('password', teamPassword.value);
   if (!data?.length) return alert("Invalid Team Credentials");
   await client.auth.updateUser({ data: { team_id: code, team_role: 'coach' } });
@@ -581,7 +581,7 @@ async function joinTeam() {
 }
 
 async function createTeam() {
-  const upperCode = newTeamId.value.trim().toUpperCase();
+  const upperCode = (newTeamId.value || "").trim().toUpperCase();
   const { error } = await client.from('teams').insert({ id: upperCode, password: newTeamPassword.value });
   if (error) return alert("Team code taken or error: " + error.message);
   await client.auth.updateUser({ data: { team_id: upperCode, team_role: 'owner' } });
@@ -637,7 +637,7 @@ function startNewWorkout() {
 }
 
 function loadWorkout(w){
-  currentWorkoutId.value = w.id; title.value = w.title; group.value = w.group; practiceDate.value = w.practice_date; input.value = w.content; currentView.value = 'editor'; 
+  currentWorkoutId.value = w.id; title.value = w.title; group.value = w.group; practiceDate.value = w.practice_date || getLocalTodayStr(); input.value = w.content; currentView.value = 'editor'; 
 }
 
 function discardDraft() { currentWorkoutId.value = null; currentView.value = 'dashboard'; }
@@ -734,7 +734,7 @@ async function copyInviteLink() {
 }
 
 function formatPracticeDate(d) {
-    if(!d) return "";
+    if(!d) return "ARCHIVED";
     const options = { weekday: 'short', month: 'short', day: 'numeric' };
     return new Date(d + 'T00:00:00').toLocaleDateString('en-US', options);
 }
@@ -795,6 +795,7 @@ onMounted(async ()=>{
   }, 10000); 
 });
 
+// PARSING LOGIC
 function timeToSec(t){ let [m,s]=t.split(":").map(Number); return (m*60) + (s || 0); }
 function secToTime(s){ let m=Math.floor(s/60); let sec=s%60; return `${m}:${sec.toString().padStart(2,"0")}`; }
 function formatTime(sec){ let h=Math.floor(sec/3600)%12||12; let m=Math.floor((sec%3600)/60); let ap=Math.floor(sec/3600)>=12?'pm':'am'; return `${h}:${m.toString().padStart(2,"0")}${ap}`;}
