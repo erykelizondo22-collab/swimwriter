@@ -6,7 +6,6 @@
 <title>SwimSync - Coach Access Portal</title>
 
 <link rel="manifest" href="manifest.json" />
-<link rel="apple-touch-icon" href="icon.png" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -21,14 +20,13 @@
 [v-cloak]{display:none}
 body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-color: transparent;}
 @media print{
-  @page { margin: 0.5in; } 
   .no-print{display:none!important;}
   body { background: white !important; }
-  #sheet { box-shadow: none !important; margin: 0 !important; width: 100% !important; padding: 0 !important; display: block !important; }
+  #sheet { box-shadow: none !important; margin: 0 !important; width: 100% !important; display: block !important; }
 }
-#sheet { width: 8.5in; min-height: 11in; margin: 20px auto; background: white; padding: 0.5in; box-shadow: 0 10px 40px rgba(0,0,0,.15); box-sizing: border-box; }
-.row { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; }
-.block-title { font-weight: 800; border-bottom: 2px solid black; text-transform: uppercase; }
+#sheet { width: 8.5in; min-height: 11in; margin: 20px auto; background: white; padding: 0.75in; box-shadow: 0 10px 40px rgba(0,0,0,.15); }
+.row { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 4px 0; }
+.block-title { font-weight: 800; margin-top: 10px; border-bottom: 2px solid black; text-transform: uppercase; }
 .mono { font-family: monospace; font-weight: 700; }
 .font-slider { -webkit-appearance: none; width: 100%; height: 6px; background: #e2e8f0; border-radius: 5px; outline: none; }
 .font-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; background: #2563eb; border-radius: 50%; cursor: pointer; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
@@ -78,28 +76,14 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
     </div>
     
     <div class="flex flex-1 md:flex-none items-center justify-end gap-2 md:gap-8 overflow-x-auto no-scrollbar">
-      
-      <div v-if="currentView === 'client-portal'" class="flex items-center gap-4 md:gap-8 w-full md:w-auto">
-          <div class="flex items-center gap-2 md:gap-4 pl-2 md:pl-4">
-            <span class="text-[10px] md:text-xs font-black text-green-600 bg-green-50 px-2 md:px-3 py-1 rounded-md border border-green-100 uppercase tracking-widest">PARENT PORTAL</span>
-            <button @click="currentView = 'dashboard'" class="text-[10px] md:text-xs font-bold text-gray-400 hover:text-blue-500 transition border-l pl-4">DEV: BACK TO COACH</button>
-          </div>
-      </div>
-
-      <div v-else-if="myTeam" class="flex items-center gap-4 md:gap-8 w-full md:w-auto">
+      <div v-if="myTeam" class="flex items-center gap-4 md:gap-8 w-full md:w-auto">
           <nav class="flex gap-4 md:gap-6 overflow-x-auto pb-1 flex-1 no-scrollbar">
             <button @click="currentView = 'dashboard'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'dashboard', 'text-gray-500 hover:text-gray-900': currentView !== 'dashboard'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-colors">Vault</button>
-            
-            <button v-if="myRole === 'owner'" @click="currentView = 'lessons'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'lessons' || currentView === 'lesson-builder', 'text-gray-500 hover:text-gray-900': currentView !== 'lessons' && currentView !== 'lesson-builder'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-colors">Lessons</button>
-            
             <button @click="currentView = 'season-planning'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'season-planning' || currentView === 'plan-builder', 'text-gray-500 hover:text-gray-900': currentView !== 'season-planning' && currentView !== 'plan-builder'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-colors">Season</button>
             <button @click="currentView = 'groups'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'groups', 'text-gray-500 hover:text-gray-900': currentView !== 'groups'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-colors">Groups</button>
             <button @click="currentView = 'staff'; loadStaff();" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'staff', 'text-gray-500 hover:text-gray-900': currentView !== 'staff'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-colors">Staff</button>
           </nav>
           <div class="flex items-center gap-2 md:gap-4 pl-2 md:pl-4 border-l">
-            
-            <button v-if="myRole === 'owner'" @click="currentView = 'client-portal'" class="text-[10px] md:text-xs font-bold text-gray-400 hover:text-green-500 transition border-r pr-4 hidden sm:block">DEV: TEST CLIENT</button>
-            
             <span class="text-[10px] md:text-xs font-black text-blue-600 bg-blue-50 px-2 md:px-3 py-1 rounded-md border border-blue-100 uppercase tracking-widest">{{myTeam}}</span>
             <button @click="logout" class="text-[10px] md:text-xs font-bold text-gray-400 hover:text-red-500 transition">LOGOUT</button>
           </div>
@@ -145,7 +129,6 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
       <div v-if="!filteredWorkouts.length" class="text-center py-20 text-gray-300 font-black uppercase tracking-widest italic bg-white rounded-3xl border border-gray-100">No workouts found</div>
       
       <div v-else class="space-y-12">
-          
           <div v-if="todaysWorkouts.length">
               <h3 class="text-lg md:text-xl font-black uppercase tracking-tight text-gray-800 mb-4 border-b-[3px] border-blue-500 inline-block pr-6 pb-1">Today's Workouts</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -222,7 +205,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
               <h2 class="text-xl md:text-3xl font-black uppercase tracking-tight text-gray-900 truncate pr-2">{{title || 'Untitled Workout'}}</h2>
               <button @click="currentView = 'setup'" class="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-full hover:bg-gray-100 transition whitespace-nowrap">Edit Setup</button>
           </div>
-          <textarea v-model="input" @keyup="updateCursor" @click="updateCursor" class="w-full flex-1 border-2 border-gray-50 p-4 md:p-6 font-mono rounded-2xl bg-gray-50 outline-none resize-none leading-relaxed transition-all focus:bg-white focus:border-blue-500 min-h-[400px]" placeholder="Type sets..."></textarea>
+          <textarea v-model="input" class="w-full flex-1 border-2 border-gray-50 p-4 md:p-6 font-mono rounded-2xl bg-gray-50 outline-none resize-none leading-relaxed transition-all focus:bg-white focus:border-blue-500 min-h-[400px]" placeholder="Type sets..."></textarea>
         </div>
       </div>
 
@@ -230,8 +213,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
         <div class="bg-gray-900 text-white p-6 md:p-10 rounded-3xl md:rounded-[32px] shadow-2xl text-center relative overflow-hidden">
           <div class="absolute top-0 right-0 w-24 h-24 md:w-32 md:h-32 bg-white opacity-5 rounded-full -mr-10 -mt-10 pointer-events-none"></div>
           <div class="text-5xl md:text-7xl font-black tracking-tighter">{{totalYards}}y</div>
-          
-          <div class="text-[9px] md:text-[10px] font-bold text-blue-400 uppercase mt-2 md:mt-4 tracking-[0.1em] md:tracking-[0.2em]">{{duration}} MIN PRACTICE • LINE PACE: {{currentSetPace}}/100y</div>
+          <div class="text-[9px] md:text-[10px] font-bold text-blue-400 uppercase mt-2 md:mt-4 tracking-[0.1em] md:tracking-[0.2em]">{{duration}} MIN PRACTICE</div>
         </div>
 
         <div class="bg-white p-6 md:p-8 rounded-3xl md:rounded-[32px] shadow-sm border border-gray-100 space-y-3 md:space-y-4">
@@ -322,10 +304,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
     <div v-if="currentView === 'plan-builder'" class="max-w-4xl mx-auto bg-white p-6 md:p-10 rounded-3xl md:rounded-[40px] shadow-xl border border-gray-100 mt-4">
         <div class="flex justify-between items-center mb-6 md:mb-8 border-b pb-4 md:pb-6">
             <h2 class="text-2xl md:text-3xl font-black uppercase tracking-tight">Plan Builder</h2>
-            <div class="flex gap-4">
-                <button v-if="planForm.id" @click="deletePlan(planForm.id)" class="text-[10px] md:text-xs font-bold text-red-400 uppercase tracking-widest hover:text-red-600 transition">Delete</button>
-                <button @click="currentView = 'season-planning'" class="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-gray-600 transition">Cancel</button>
-            </div>
+            <button @click="currentView = 'season-planning'" class="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-gray-600">Cancel</button>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-10">
@@ -446,204 +425,6 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
         </div>
     </div>
 
-    <div v-if="currentView === 'lessons'" class="space-y-6 md:space-y-8">
-        <div class="bg-gradient-to-r from-blue-600 to-cyan-500 rounded-3xl p-6 md:p-10 text-white shadow-xl flex flex-col md:flex-row justify-between items-center relative overflow-hidden gap-6">
-            <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-20 -mt-20 pointer-events-none"></div>
-            <div>
-                <h2 class="text-2xl md:text-3xl font-black relative z-10 uppercase tracking-tight">Florida Swim Lessons</h2>
-                <p class="font-medium text-blue-100 uppercase tracking-widest text-[10px] mt-1">Instructor Dashboard & Routing</p>
-            </div>
-            <button @click="currentView = 'lesson-builder'" class="relative z-10 w-full md:w-auto bg-white text-blue-600 px-8 py-4 rounded-2xl font-black shadow-2xl uppercase transition-all hover:scale-105 tracking-wide">+ Book Lesson</button>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-                <h3 class="text-lg font-black uppercase tracking-tight text-gray-800 mb-6 border-b-[3px] border-blue-500 inline-block pr-6 pb-1">Today's Itinerary</h3>
-                
-                <div class="space-y-0">
-                    <div v-for="(lesson, index) in cloudLessons" :key="lesson.id">
-                        
-                        <div v-if="index > 0" class="flex flex-col items-center justify-center py-2 relative">
-                            <div class="w-0.5 h-6 bg-gray-200 absolute top-0"></div>
-                            <div class="bg-white border border-gray-200 text-gray-500 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest relative z-10 flex items-center gap-1">
-                                🚗 {{lesson.travelTime}} Min Drive
-                            </div>
-                            <div class="w-0.5 h-6 bg-gray-200 absolute bottom-0"></div>
-                        </div>
-                        
-                        <div class="p-4 border-2 border-gray-50 bg-gray-50/50 rounded-2xl flex flex-col sm:flex-row justify-between sm:items-center hover:border-blue-200 transition gap-4">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2">
-                                    <div class="font-black text-gray-900 uppercase text-lg">{{lesson.student}}</div>
-                                    <span v-if="!lesson.paid" class="text-[9px] font-black text-red-500 bg-red-50 px-2 py-0.5 rounded border border-red-100">UNPAID</span>
-                                    <span v-else class="text-[9px] font-black text-green-500 bg-green-50 px-2 py-0.5 rounded border border-green-100">PAID</span>
-                                </div>
-                                <div class="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-1">{{lesson.level}}</div>
-                                <a :href="'https://maps.google.com/?q=' + encodeURIComponent(lesson.address)" target="_blank" class="text-xs font-bold text-gray-500 mt-2 flex items-center gap-1 hover:text-blue-600 transition inline-flex bg-white px-2 py-1 rounded border border-gray-200 shadow-sm">
-                                    📍 {{lesson.address}}
-                                </a>
-                            </div>
-                            <div class="text-left sm:text-right border-t sm:border-t-0 pt-3 sm:pt-0 border-gray-100">
-                                <div class="font-black text-gray-800">{{lesson.time}}</div>
-                                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">{{lesson.duration}} Min • ${{lesson.price}}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-                <h3 class="text-lg font-black uppercase tracking-tight text-gray-800 mb-6 border-b-[3px] border-green-500 inline-block pr-6 pb-1">Active Roster</h3>
-                <div class="space-y-3">
-                    <div v-for="client in clientRoster" :key="client.id" class="flex justify-between items-center p-3 border-b border-gray-100 last:border-0">
-                        <div>
-                            <div class="font-bold text-sm text-gray-900">{{client.parent}}</div>
-                            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{client.swimmer}} ({{client.age}})</div>
-                        </div>
-                        <a :href="'tel:' + client.phone" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded-lg">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div v-if="currentView === 'lesson-builder'" class="max-w-2xl mx-auto bg-white p-6 md:p-10 rounded-3xl md:rounded-[40px] shadow-xl border border-gray-100 mt-4">
-        <div class="flex justify-between items-center mb-6 md:mb-8 border-b pb-4 md:pb-6">
-            <h2 class="text-2xl md:text-3xl font-black uppercase tracking-tight">Book Lesson</h2>
-            <button @click="currentView = 'lessons'" class="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-gray-600 transition">Cancel</button>
-        </div>
-
-        <div class="space-y-4">
-            
-            <div class="space-y-1">
-                <label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Swimmer Name</label>
-                <input placeholder="e.g. Leo" class="w-full bg-gray-50 p-4 rounded-xl font-black uppercase outline-none border focus:border-blue-500">
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-1">
-                    <label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Date</label>
-                    <input type="date" class="w-full bg-gray-50 p-4 rounded-xl font-black outline-none border focus:border-blue-500">
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Time</label>
-                    <input type="time" class="w-full bg-gray-50 p-4 rounded-xl font-black outline-none border focus:border-blue-500">
-                </div>
-            </div>
-            
-            <div class="space-y-1">
-                <label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Client Pool Address</label>
-                <input placeholder="e.g. 123 Palm Ave, Pompano Beach" class="w-full bg-gray-50 p-4 rounded-xl font-black outline-none border focus:border-blue-500">
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-1">
-                    <label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Lesson Price ($)</label>
-                    <input type="number" placeholder="65" class="w-full bg-gray-50 p-4 rounded-xl font-black outline-none border focus:border-blue-500">
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Est. Travel Time From Prev. Lesson (Min)</label>
-                    <input type="number" placeholder="15" class="w-full bg-gray-50 p-4 rounded-xl font-black outline-none border focus:border-blue-500">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-1">
-                    <label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Skill Level</label>
-                    <select class="w-full bg-gray-50 p-4 rounded-xl font-black uppercase outline-none border focus:border-blue-500 appearance-none">
-                        <option>Water Survival</option>
-                        <option>Beginner Stroke</option>
-                        <option>Advanced Stroke</option>
-                        <option>Adult Private</option>
-                    </select>
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Instructor</label>
-                    <select class="w-full bg-gray-50 p-4 rounded-xl font-black uppercase outline-none border focus:border-blue-500 appearance-none">
-                        <option v-for="member in staffList" :key="member.id">{{member.name || member.email}}</option>
-                    </select>
-                </div>
-            </div>
-
-            <button @click="currentView = 'lessons'" class="w-full bg-blue-600 text-white font-black py-5 md:py-6 rounded-2xl shadow-xl shadow-blue-100 uppercase tracking-widest hover:bg-blue-700 transition-all text-sm mt-4">Confirm Booking</button>
-        </div>
-    </div>
-
-    <div v-if="currentView === 'client-portal'" class="max-w-3xl mx-auto space-y-6 md:space-y-8 mt-2">
-        
-        <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl p-6 md:p-10 text-white shadow-xl relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full -mr-20 -mt-20 pointer-events-none"></div>
-            <h2 class="text-2xl md:text-3xl font-black relative z-10 uppercase tracking-tight">Florida Swim Lessons</h2>
-            <p class="font-bold text-green-100 uppercase tracking-widest text-[10px] md:text-xs mt-1">Parent Portal • Logged in as Guest</p>
-        </div>
-
-        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
-            <h3 class="text-lg font-black uppercase tracking-tight text-gray-800 mb-6 border-b-[3px] border-emerald-500 inline-block pr-6 pb-1">Upcoming Lessons</h3>
-            
-            <div class="space-y-4">
-                <div class="p-5 border-2 border-green-50 bg-green-50/30 rounded-2xl flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 hover:border-green-200 transition">
-                    <div class="flex items-center gap-4">
-                        <div class="bg-white p-3 rounded-xl border border-green-100 text-center min-w-[70px]">
-                            <div class="text-[10px] font-black text-green-600 uppercase">May</div>
-                            <div class="text-xl font-black text-gray-800">12</div>
-                        </div>
-                        <div>
-                            <div class="font-black text-gray-900 uppercase text-lg">Leo's Swim Lesson</div>
-                            <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">4:00 PM • 30 Min • Instructor: Coach Eryk</div>
-                        </div>
-                    </div>
-                    <div class="text-[10px] font-black text-emerald-600 bg-white px-4 py-2 rounded-full border border-green-100 text-center">CONFIRMED</div>
-                </div>
-
-                <div class="p-5 border-2 border-gray-50 bg-gray-50/50 rounded-2xl flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 hover:border-gray-200 transition">
-                    <div class="flex items-center gap-4">
-                        <div class="bg-white p-3 rounded-xl border border-gray-100 text-center min-w-[70px]">
-                            <div class="text-[10px] font-black text-gray-400 uppercase">May</div>
-                            <div class="text-xl font-black text-gray-800">14</div>
-                        </div>
-                        <div>
-                            <div class="font-black text-gray-900 uppercase text-lg">Leo's Swim Lesson</div>
-                            <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">4:00 PM • 30 Min • Instructor: Coach Eryk</div>
-                        </div>
-                    </div>
-                    <div class="text-[10px] font-black text-emerald-600 bg-white px-4 py-2 rounded-full border border-green-100 text-center">CONFIRMED</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 mt-6">
-            <div class="flex justify-between items-center mb-6 border-b-[3px] border-purple-500 inline-block pr-6 pb-1">
-                <h3 class="text-lg font-black uppercase tracking-tight text-gray-800">Billing & Payment</h3>
-            </div>
-            
-            <div class="bg-purple-50 border-2 border-purple-100 rounded-2xl p-6 text-center relative overflow-hidden">
-                <div class="absolute top-0 right-0 bg-red-500 text-white text-[9px] font-black px-4 py-1 rounded-bl-xl uppercase tracking-widest">Outstanding: $65.00</div>
-                <div class="font-black text-purple-900 text-xl tracking-tight mb-2 mt-4">Pay securely with Zelle®</div>
-                <p class="text-sm font-medium text-purple-700 mb-6">We currently only accept Zelle for private lesson payments. Please send your balance to the account below and include your swimmer's name in the memo.</p>
-                
-                <div class="bg-white rounded-xl p-5 inline-block mx-auto border border-purple-100 shadow-sm text-left">
-                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Zelle Recipient</div>
-                    <div class="font-black text-gray-900 text-lg uppercase tracking-tight">Eryk Elizondo</div>
-                    <div class="font-bold text-purple-600 mt-1">floridaswimlessons@email.com</div>
-                    <div class="font-bold text-purple-600">951-555-0123</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
-            <h3 class="text-lg font-black uppercase tracking-tight text-gray-800 mb-6 border-b-[3px] border-blue-500 inline-block pr-6 pb-1">Instructor Feedback</h3>
-            
-            <div class="p-5 border-l-4 border-blue-500 bg-blue-50/30 rounded-r-2xl">
-                <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">May 5th Lesson</div>
-                <p class="text-sm font-medium text-gray-700 leading-relaxed">"Leo did fantastic today! We are making huge progress on his water survival roll-overs. Next week we will start focusing a bit more on breath control while his face is submerged."</p>
-                <div class="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-3">— Coach Eryk</div>
-            </div>
-        </div>
-
-    </div>
-
   </div>
 </div>
 <div id="sheet" style="display:none; position: relative; overflow: hidden;" :class="{'no-print': !user}">
@@ -654,49 +435,42 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
 
   <div style="position: relative; z-index: 10;">
       
-      <div class="flex justify-between items-center mb-4">
-          <div class="flex items-center gap-2 opacity-40 grayscale">
-              <svg viewBox="0 0 100 100" class="w-6 h-6 text-black" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <div class="flex justify-between items-center mb-6">
+          <div class="flex items-center gap-3 opacity-40 grayscale">
+              <svg viewBox="0 0 100 100" class="w-8 h-8 text-black" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M75,35 C75,10 25,10 25,35 C25,60 75,60 75,85 C75,110 25,110 25,85" stroke="currentColor" stroke-width="14" stroke-linecap="round"/>
                   <path d="M60,45 C60,25 40,25 40,45 C40,65 60,65 60,85 C60,105 40,105 40,85" stroke="currentColor" stroke-width="10" stroke-linecap="round" opacity="0.6"/>
                   <circle cx="82" cy="50" r="7" fill="currentColor" />
               </svg>
-              <span class="font-black text-lg tracking-tighter uppercase text-black">swimsync</span>
+              <span class="font-black text-xl tracking-tighter uppercase text-black">swimsync</span>
           </div>
       </div>
 
-      <div class="flex justify-between border-b-[4px] border-black pb-2 mb-4 items-end">
+      <div class="flex justify-between border-b-[8px] border-black pb-4 mb-8">
         <div>
-          <div class="text-3xl font-black uppercase leading-tight tracking-tighter">{{title || 'Untitled Workout'}}</div>
-          <div class="text-xs font-bold tracking-[0.2em] uppercase mt-1">{{myTeam}} — {{group}} ({{formatPracticeDate(practiceDate)}})</div>
+          <div class="text-5xl font-black uppercase leading-tight tracking-tighter">{{title}}</div>
+          <div class="text-md font-bold tracking-[0.3em] uppercase mt-1">{{myTeam}} — {{group}} ({{formatPracticeDate(practiceDate)}})</div>
         </div>
         <div class="text-right">
-          <div class="text-3xl font-black tracking-tighter leading-none">{{totalYards}}y</div>
-          <div class="text-[10px] font-bold opacity-60 uppercase tracking-widest mt-1">{{duration}} MIN PRACTICE</div>
+          <div class="text-5xl font-black tracking-tighter">{{totalYards}}y</div>
+          <div class="text-sm font-bold opacity-60 uppercase tracking-widest">{{duration}} MIN PRACTICE</div>
         </div>
       </div>
 
       <div :style="{ fontSize: fontSize + 'px' }">
-          <div v-for="sec in parsed" :style="{ marginBottom: (fontSize * 1.5) + 'px' }">
-            
-            <div class="block-title flex justify-between items-end" :style="{ fontSize: Math.max(12, fontSize * 0.7) + 'px', marginTop: '0', marginBottom: (fontSize * 0.25) + 'px', paddingBottom: '2px', borderBottomWidth: '2px' }">
-              <div>
-                  <span>{{sec.title}}</span>
-                  <span class="font-normal opacity-40 ml-3 tracking-widest text-[0.8em]" v-if="sec.blocks[0] && sec.blocks[0].sets[0]">
-                      STARTS @ {{formatTime(sec.blocks[0].sets[0].start)}}
-                  </span>
-              </div>
+          <div v-for="sec in parsed" class="mb-10">
+            <div class="block-title flex justify-between" :style="{ fontSize: Math.max(12, fontSize * 0.7) + 'px' }">
+              <span>{{sec.title}}</span>
               <span class="font-normal opacity-50">{{sec.y}}y</span>
             </div>
-
-            <div v-for="b in sec.blocks" :style="{ marginTop: (fontSize * 0.4) + 'px' }">
-              <div v-if="b.rep > 1" class="font-black uppercase text-gray-400" :style="{ fontSize: Math.max(10, fontSize * 0.5) + 'px', marginBottom: (fontSize * 0.1) + 'px' }">● {{b.rep}}x (ROUND)</div>
-              <div v-for="s in b.sets" class="row items-center border-gray-200" :style="{ padding: (fontSize * 0.15) + 'px 0' }" :class="{'border-l-4 border-black pl-4 ml-2': b.rep > 1}">
+            <div v-for="b in sec.blocks" class="mt-4">
+              <div v-if="b.rep > 1" class="font-black uppercase mb-2 text-gray-400" :style="{ fontSize: Math.max(10, fontSize * 0.5) + 'px' }">● {{b.rep}}x (ROUND)</div>
+              <div v-for="s in b.sets" class="row items-center border-gray-200" :class="{'border-l-[12px] border-black pl-8 ml-3 py-2': b.rep > 1, 'py-1': b.rep === 1}">
                 <div class="font-bold flex-1">
                     <span v-if="!s.rest">{{s.q}}x{{s.d}}</span> 
-                    <span class="ml-4 text-gray-500" v-if="!s.rest">@ {{s.p}}</span>
-                    <span class="font-black text-gray-400 uppercase" v-if="s.rest">REST {{s.label}}</span>
-                    <span v-if="s.label && !s.rest" class="ml-4 font-normal opacity-40 italic">— {{s.label}}</span>
+                    <span class="ml-6 text-gray-400" v-if="!s.rest">@ {{s.p}}</span>
+                    <span class="font-black text-gray-300 uppercase" v-if="s.rest">REST {{s.label}}</span>
+                    <span v-if="s.label && !s.rest" class="ml-6 font-normal opacity-40 italic">— {{s.label}}</span>
                 </div>
                 <div class="mono text-right opacity-30 ml-4" :style="{ fontSize: Math.max(10, fontSize * 0.6) + 'px' }">{{formatTime(s.start)}}</div>
               </div>
@@ -748,35 +522,6 @@ const newGroupName = ref("");
 const hasPendingInvite = ref(false);
 const isProcessingInvite = ref(false);
 const planForm = ref({ id: null, title: '', group_name: '', start_date: '', weeks: [] });
-
-// SWIM SCHOOL GEO-DATA & ITINERARY
-const cloudLessons = ref([
-    { id: 1, student: 'Leo', level: 'Water Survival', time: '4:00 PM', duration: 30, instructor: 'Coach Eryk', date: todayStr.value, address: 'S Cypress Bend Dr, Pompano Beach, FL', travelTime: 0, price: 65, paid: true },
-    { id: 2, student: 'Sarah', level: 'Beginner Stroke', time: '4:45 PM', duration: 30, instructor: 'Coach Eryk', date: todayStr.value, address: 'Ocean Blvd, Hollywood, FL', travelTime: 25, price: 65, paid: false },
-    { id: 3, student: 'Marcus', level: 'Adult Private', time: '6:00 PM', duration: 45, instructor: 'Coach Eryk', date: todayStr.value, address: '14th St, Pompano Beach, FL', travelTime: 35, price: 90, paid: false }
-]);
-
-const clientRoster = ref([
-    { id: 1, parent: 'Jessica Miller', swimmer: 'Leo', age: 4, phone: '555-0192' },
-    { id: 2, parent: 'David Chen', swimmer: 'Sarah', age: 7, phone: '555-0144' },
-    { id: 3, parent: 'Marcus Johnson', swimmer: 'Self', age: 34, phone: '555-0188' }
-]);
-
-// CURSOR TRACKING
-const cursorPosition = ref(0);
-
-function updateCursor(e) {
-    if(e && e.target) cursorPosition.value = e.target.selectionStart || 0;
-}
-
-const currentLineText = computed(() => {
-    if (!input.value) return "";
-    const sub = input.value.substring(0, cursorPosition.value);
-    const linesBefore = sub.split('\n');
-    const currentLineIndex = linesBefore.length - 1;
-    const allLines = input.value.split('\n');
-    return allLines[currentLineIndex] || "";
-});
 
 const myRole = computed(() => user.value?.user_metadata?.team_role || 'coach');
 const coachName = computed(() => {
@@ -995,15 +740,6 @@ function editPlan(plan) {
     currentView.value = 'plan-builder';
 }
 
-// SEASON PLAN DELETION ENGINE
-async function deletePlan(id) {
-    if(confirm("Are you sure you want to permanently delete this Macrocycle?")) {
-        await client.from("season_plans").delete().eq('id', id);
-        loadSeasonPlans();
-        currentView.value = 'season-planning';
-    }
-}
-
 function addWeek() { planForm.value.weeks.push({ weekNum: planForm.value.weeks.length + 1, focus: '', targetYards: null }); }
 
 async function savePlan() {
@@ -1119,13 +855,11 @@ function formatTime(sec){ let h=Math.floor(sec/3600)%12||12; let m=Math.floor((s
 
 function parseLine(str, baseSec){
   if(/^\d+:\d+$/.test(str.trim())) return {rest:true,dur:timeToSec(str),label:str,q:1,d:0};
-  
-  // UPGRADED REGEX TO HANDLE SPACES (e.g. "10 x 50" or "10 x50")
-  let m=str.match(/(\d+)\s*[xX]\s*(\d+)/i); let q=1,d=0;
+  let m=str.match(/(\d+)x(\d+)/i); let q=1,d=0;
   if(m){q=+m[1]; d=+m[2];} else if(/^\d+/.test(str)){d=parseInt(str);} else return null;
   let paceMatch = str.match(/[@|on]\s*(\d+):(\d+)/);
   let dur = paceMatch ? (parseInt(paceMatch[1])*60 + parseInt(paceMatch[2])) : Math.round((d/100)*baseSec);
-  let label = str.replace(/(\d+\s*[xX]\s*\d+|[@|on]\s*\d+:\d+)/g,"").trim();
+  let label = str.replace(/(\d+x\d+|[@|on]\s*\d+:\d+)/g,"").trim();
   return { rest:false, q, d, dur, label, p:secToTime(dur) };
 }
 
@@ -1170,28 +904,15 @@ const duration = computed(()=> {
   return Math.round(total/60);
 });
 
-// LIVE CURSOR LINE 100 PACE CALCULATOR
-const currentSetPace = computed(() => {
-    let line = currentLineText.value.trim();
-    if (!line) return "0:00";
-    let baseSeconds = timeToSec(base.value || "1:30");
-    let s = parseLine(line, baseSeconds);
-    if (s && !s.rest && s.d > 0 && s.dur > 0) {
-        let paceSecs = Math.round((s.dur / s.d) * 100);
-        return secToTime(paceSecs);
-    }
-    return "0:00";
-});
-
 return {
   user, login, logout, currentView, joinCode, teamPassword, newTeamId, newTeamPassword, newVaultPassword,
   hasPendingInvite, isProcessingInvite, currentWorkoutId, fontSize, teamLogoUrl, isUploadingLogo, uploadLogo,
   title, group, start, base, input, parsed, totalYards, duration, cloudWorkouts, coachName, practiceDate,
   seasonPlans, activePlanContext, teamGroupsList, staffList, planForm, newGroupName, myRole, myTeam,
   filterGroup, filterDate, filteredWorkouts, todaysWorkouts, upcomingWorkouts, pastWorkouts, getWeekDateRange,
-  formatTime, save, loadWorkout, startNewWorkout, formatPracticeDate, startNewPlan, editPlan, addWeek, savePlan, deletePlan, deleteWorkout,
+  formatTime, save, loadWorkout, startNewWorkout, formatPracticeDate, startNewPlan, editPlan, addWeek, savePlan, deleteWorkout,
   addGroup, deleteGroup, removeStaff, changeRole, copyInviteLink, joinTeam, createTeam, updateVaultPassword, discardDraft, loadStaff,
-  hasDraft, resumeDraft, currentSetPace, updateCursor, cloudLessons, clientRoster
+  hasDraft, resumeDraft
 };
 }
 }).mount("#app");
