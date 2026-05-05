@@ -208,7 +208,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
               <h2 class="text-xl md:text-3xl font-black uppercase tracking-tight text-gray-900 truncate pr-2">{{title || 'Untitled Workout'}}</h2>
               <button @click="currentView = 'setup'" class="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-full hover:bg-gray-100 transition whitespace-nowrap">Edit Setup</button>
           </div>
-          <textarea v-model="input" class="w-full flex-1 border-2 border-gray-50 p-4 md:p-6 font-mono rounded-2xl bg-gray-50 outline-none resize-none leading-relaxed transition-all focus:bg-white focus:border-blue-500 min-h-[400px]" placeholder="Type sets..."></textarea>
+          <textarea v-model="input" @keyup="updateCursor" @click="updateCursor" class="w-full flex-1 border-2 border-gray-50 p-4 md:p-6 font-mono rounded-2xl bg-gray-50 outline-none resize-none leading-relaxed transition-all focus:bg-white focus:border-blue-500 min-h-[400px]" placeholder="Type sets..."></textarea>
         </div>
       </div>
 
@@ -216,7 +216,8 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
         <div class="bg-gray-900 text-white p-6 md:p-10 rounded-3xl md:rounded-[32px] shadow-2xl text-center relative overflow-hidden">
           <div class="absolute top-0 right-0 w-24 h-24 md:w-32 md:h-32 bg-white opacity-5 rounded-full -mr-10 -mt-10 pointer-events-none"></div>
           <div class="text-5xl md:text-7xl font-black tracking-tighter">{{totalYards}}y</div>
-          <div class="text-[9px] md:text-[10px] font-bold text-blue-400 uppercase mt-2 md:mt-4 tracking-[0.1em] md:tracking-[0.2em]">{{duration}} MIN PRACTICE • {{avg100Pace}}/100y AVG</div>
+          
+          <div class="text-[9px] md:text-[10px] font-bold text-blue-400 uppercase mt-2 md:mt-4 tracking-[0.1em] md:tracking-[0.2em]">{{duration}} MIN PRACTICE • LINE PACE: {{currentSetPace}}/100y</div>
         </div>
 
         <div class="bg-white p-6 md:p-8 rounded-3xl md:rounded-[32px] shadow-sm border border-gray-100 space-y-3 md:space-y-4">
@@ -535,6 +536,22 @@ const newGroupName = ref("");
 const hasPendingInvite = ref(false);
 const isProcessingInvite = ref(false);
 const planForm = ref({ id: null, title: '', group_name: '', start_date: '', weeks: [] });
+
+// CURSOR TRACKING
+const cursorPosition = ref(0);
+
+function updateCursor(e) {
+    if(e && e.target) cursorPosition.value = e.target.selectionStart || 0;
+}
+
+const currentLineText = computed(() => {
+    if (!input.value) return "";
+    const sub = input.value.substring(0, cursorPosition.value);
+    const linesBefore = sub.split('\n');
+    const currentLineIndex = linesBefore.length - 1;
+    const allLines = input.value.split('\n');
+    return allLines[currentLineIndex] || "";
+});
 
 const myRole = computed(() => user.value?.user_metadata?.team_role || 'coach');
 const coachName = computed(() => {
@@ -877,11 +894,13 @@ function formatTime(sec){ let h=Math.floor(sec/3600)%12||12; let m=Math.floor((s
 
 function parseLine(str, baseSec){
   if(/^\d+:\d+$/.test(str.trim())) return {rest:true,dur:timeToSec(str),label:str,q:1,d:0};
-  let m=str.match(/(\d+)x(\d+)/i); let q=1,d=0;
+  
+  // UPGRADED REGEX TO HANDLE SPACES (e.g. "10 x 50" or "10 x50")
+  let m=str.match(/(\d+)\s*[xX]\s*(\d+)/i); let q=1,d=0;
   if(m){q=+m[1]; d=+m[2];} else if(/^\d+/.test(str)){d=parseInt(str);} else return null;
   let paceMatch = str.match(/[@|on]\s*(\d+):(\d+)/);
   let dur = paceMatch ? (parseInt(paceMatch[1])*60 + parseInt(paceMatch[2])) : Math.round((d/100)*baseSec);
-  let label = str.replace(/(\d+x\d+|[@|on]\s*\d+:\d+)/g,"").trim();
+  let label = str.replace(/(\d+\s*[xX]\s*\d+|[@|on]\s*\d+:\d+)/g,"").trim();
   return { rest:false, q, d, dur, label, p:secToTime(dur) };
 }
 
@@ -926,14 +945,17 @@ const duration = computed(()=> {
   return Math.round(total/60);
 });
 
-// 100 AVERAGE PACE CALCULATOR
-const avg100Pace = computed(() => {
-    if (!totalYards.value || totalYards.value === 0) return "0:00";
-    let totalSecs = 0;
-    parsed.value.forEach(sec => sec.blocks.forEach(b => b.sets.forEach(s => totalSecs += (s.dur * (s.q || 1)))));
-    if (totalSecs === 0) return "0:00";
-    let paceSecs = Math.round(totalSecs / (totalYards.value / 100));
-    return secToTime(paceSecs);
+// LIVE CURSOR LINE 100 PACE CALCULATOR
+const currentSetPace = computed(() => {
+    let line = currentLineText.value.trim();
+    if (!line) return "0:00";
+    let baseSeconds = timeToSec(base.value || "1:30");
+    let s = parseLine(line, baseSeconds);
+    if (s && !s.rest && s.d > 0 && s.dur > 0) {
+        let paceSecs = Math.round((s.dur / s.d) * 100);
+        return secToTime(paceSecs);
+    }
+    return "0:00";
 });
 
 return {
@@ -944,7 +966,7 @@ return {
   filterGroup, filterDate, filteredWorkouts, todaysWorkouts, upcomingWorkouts, pastWorkouts, getWeekDateRange,
   formatTime, save, loadWorkout, startNewWorkout, formatPracticeDate, startNewPlan, editPlan, addWeek, savePlan, deletePlan, deleteWorkout,
   addGroup, deleteGroup, removeStaff, changeRole, copyInviteLink, joinTeam, createTeam, updateVaultPassword, discardDraft, loadStaff,
-  hasDraft, resumeDraft, avg100Pace
+  hasDraft, resumeDraft, currentSetPace, updateCursor
 };
 }
 }).mount("#app");
