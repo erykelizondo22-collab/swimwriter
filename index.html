@@ -131,7 +131,6 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
       <div v-if="!filteredWorkouts.length" class="text-center py-20 text-gray-300 font-black uppercase tracking-widest italic bg-white rounded-3xl border border-gray-100">No workouts found</div>
       
       <div v-else class="space-y-12">
-          
           <div v-if="todaysWorkouts.length">
               <h3 class="text-lg md:text-xl font-black uppercase tracking-tight text-gray-800 mb-4 border-b-[3px] border-blue-500 inline-block pr-6 pb-1">Today's Workouts</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -216,7 +215,8 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
         <div class="bg-gray-900 text-white p-6 md:p-10 rounded-3xl md:rounded-[32px] shadow-2xl text-center relative overflow-hidden">
           <div class="absolute top-0 right-0 w-24 h-24 md:w-32 md:h-32 bg-white opacity-5 rounded-full -mr-10 -mt-10 pointer-events-none"></div>
           <div class="text-5xl md:text-7xl font-black tracking-tighter">{{totalYards}}y</div>
-          <div class="text-[9px] md:text-[10px] font-bold text-blue-400 uppercase mt-2 md:mt-4 tracking-[0.1em] md:tracking-[0.2em]">{{duration}} MIN PRACTICE • {{avg100Pace}}/100y AVG</div>
+          
+          <div class="text-[9px] md:text-[10px] font-bold text-blue-400 uppercase mt-2 md:mt-4 tracking-[0.1em] md:tracking-[0.2em]">{{duration}} MIN PRACTICE • LATEST SET: {{currentSetPace}}/100y</div>
         </div>
 
         <div class="bg-white p-6 md:p-8 rounded-3xl md:rounded-[32px] shadow-sm border border-gray-100 space-y-3 md:space-y-4">
@@ -926,14 +926,26 @@ const duration = computed(()=> {
   return Math.round(total/60);
 });
 
-// 100 AVERAGE PACE CALCULATOR
-const avg100Pace = computed(() => {
-    if (!totalYards.value || totalYards.value === 0) return "0:00";
-    let totalSecs = 0;
-    parsed.value.forEach(sec => sec.blocks.forEach(b => b.sets.forEach(s => totalSecs += (s.dur * (s.q || 1)))));
-    if (totalSecs === 0) return "0:00";
-    let paceSecs = Math.round(totalSecs / (totalYards.value / 100));
-    return secToTime(paceSecs);
+// LIVE SET 100 PACE CALCULATOR
+const currentSetPace = computed(() => {
+    if (!input.value) return "0:00";
+    let lines = input.value.split("\n").map(x => x.trim()).filter(Boolean);
+    if (lines.length === 0) return "0:00";
+    
+    let baseSeconds = timeToSec(base.value || "1:30");
+    
+    // Parse backwards to find the last valid swim set written
+    for (let i = lines.length - 1; i >= 0; i--) {
+        let l = lines[i];
+        if (l.endsWith(":") || /^(\d+)x$/i.test(l)) continue;
+        
+        let s = parseLine(l, baseSeconds);
+        if (s && !s.rest && s.d > 0 && s.dur > 0) {
+            let paceSecs = Math.round((s.dur / s.d) * 100);
+            return secToTime(paceSecs);
+        }
+    }
+    return "0:00";
 });
 
 return {
@@ -944,7 +956,7 @@ return {
   filterGroup, filterDate, filteredWorkouts, todaysWorkouts, upcomingWorkouts, pastWorkouts, getWeekDateRange,
   formatTime, save, loadWorkout, startNewWorkout, formatPracticeDate, startNewPlan, editPlan, addWeek, savePlan, deletePlan, deleteWorkout,
   addGroup, deleteGroup, removeStaff, changeRole, copyInviteLink, joinTeam, createTeam, updateVaultPassword, discardDraft, loadStaff,
-  hasDraft, resumeDraft, avg100Pace
+  hasDraft, resumeDraft, currentSetPace
 };
 }
 }).mount("#app");
