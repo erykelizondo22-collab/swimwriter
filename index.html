@@ -434,6 +434,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
 
   </div>
 </div>
+
 <div id="sheet" style="display:none; position: relative; overflow: hidden;" :class="{'no-print': !user}">
   
   <div v-if="teamLogoUrl" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; z-index: 0; opacity: 0.08; pointer-events: none;">
@@ -940,8 +941,17 @@ const parsed = computed(()=>{
 });
 
 const totalYards = computed(()=>parsed.value.reduce((a,s)=>a+s.y,0));
+
+// MULTIPLYING TIME BY REP DURATION FIX
 const duration = computed(()=> {
-  let total = 0; parsed.value.forEach(sec => sec.blocks.forEach(b => b.sets.forEach(s => total += (s.dur * (s.q || 1)))));
+  let total = 0; 
+  parsed.value.forEach(sec => {
+    sec.blocks.forEach(b => {
+      let blockTime = 0;
+      b.sets.forEach(s => { blockTime += (s.dur * (s.q || 1)); });
+      total += (blockTime * (b.rep || 1));
+    });
+  });
   return Math.round(total/60);
 });
 
