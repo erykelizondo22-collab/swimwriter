@@ -6,6 +6,7 @@
 <title>SwimSync - Coach Access Portal</title>
 
 <link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon.png" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -20,13 +21,14 @@
 [v-cloak]{display:none}
 body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-color: transparent;}
 @media print{
+  @page { margin: 0.5in; } /* SAFER MARGINS TO PREVENT CUTOFF */
   .no-print{display:none!important;}
   body { background: white !important; }
-  #sheet { box-shadow: none !important; margin: 0 !important; width: 100% !important; display: block !important; }
+  #sheet { box-shadow: none !important; margin: 0 !important; width: 100% !important; padding: 0 !important; display: block !important; }
 }
-#sheet { width: 8.5in; min-height: 11in; margin: 20px auto; background: white; padding: 0.75in; box-shadow: 0 10px 40px rgba(0,0,0,.15); }
-.row { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 4px 0; }
-.block-title { font-weight: 800; margin-top: 10px; border-bottom: 2px solid black; text-transform: uppercase; }
+#sheet { width: 8.5in; min-height: 11in; margin: 20px auto; background: white; padding: 0.5in; box-shadow: 0 10px 40px rgba(0,0,0,.15); box-sizing: border-box; }
+.row { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; }
+.block-title { font-weight: 800; border-bottom: 2px solid black; text-transform: uppercase; }
 .mono { font-family: monospace; font-weight: 700; }
 .font-slider { -webkit-appearance: none; width: 100%; height: 6px; background: #e2e8f0; border-radius: 5px; outline: none; }
 .font-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; background: #2563eb; border-radius: 50%; cursor: pointer; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
@@ -129,6 +131,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
       <div v-if="!filteredWorkouts.length" class="text-center py-20 text-gray-300 font-black uppercase tracking-widest italic bg-white rounded-3xl border border-gray-100">No workouts found</div>
       
       <div v-else class="space-y-12">
+          
           <div v-if="todaysWorkouts.length">
               <h3 class="text-lg md:text-xl font-black uppercase tracking-tight text-gray-800 mb-4 border-b-[3px] border-blue-500 inline-block pr-6 pb-1">Today's Workouts</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -213,7 +216,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
         <div class="bg-gray-900 text-white p-6 md:p-10 rounded-3xl md:rounded-[32px] shadow-2xl text-center relative overflow-hidden">
           <div class="absolute top-0 right-0 w-24 h-24 md:w-32 md:h-32 bg-white opacity-5 rounded-full -mr-10 -mt-10 pointer-events-none"></div>
           <div class="text-5xl md:text-7xl font-black tracking-tighter">{{totalYards}}y</div>
-          <div class="text-[9px] md:text-[10px] font-bold text-blue-400 uppercase mt-2 md:mt-4 tracking-[0.1em] md:tracking-[0.2em]">{{duration}} MIN PRACTICE</div>
+          <div class="text-[9px] md:text-[10px] font-bold text-blue-400 uppercase mt-2 md:mt-4 tracking-[0.1em] md:tracking-[0.2em]">{{duration}} MIN PRACTICE • {{avg100Pace}}/100y AVG</div>
         </div>
 
         <div class="bg-white p-6 md:p-8 rounded-3xl md:rounded-[32px] shadow-sm border border-gray-100 space-y-3 md:space-y-4">
@@ -304,7 +307,10 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
     <div v-if="currentView === 'plan-builder'" class="max-w-4xl mx-auto bg-white p-6 md:p-10 rounded-3xl md:rounded-[40px] shadow-xl border border-gray-100 mt-4">
         <div class="flex justify-between items-center mb-6 md:mb-8 border-b pb-4 md:pb-6">
             <h2 class="text-2xl md:text-3xl font-black uppercase tracking-tight">Plan Builder</h2>
-            <button @click="currentView = 'season-planning'" class="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-gray-600">Cancel</button>
+            <div class="flex gap-4">
+                <button v-if="planForm.id" @click="deletePlan(planForm.id)" class="text-[10px] md:text-xs font-bold text-red-400 uppercase tracking-widest hover:text-red-600 transition">Delete</button>
+                <button @click="currentView = 'season-planning'" class="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-gray-600 transition">Cancel</button>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-10">
@@ -435,42 +441,49 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
 
   <div style="position: relative; z-index: 10;">
       
-      <div class="flex justify-between items-center mb-6">
-          <div class="flex items-center gap-3 opacity-40 grayscale">
-              <svg viewBox="0 0 100 100" class="w-8 h-8 text-black" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <div class="flex justify-between items-center mb-4">
+          <div class="flex items-center gap-2 opacity-40 grayscale">
+              <svg viewBox="0 0 100 100" class="w-6 h-6 text-black" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M75,35 C75,10 25,10 25,35 C25,60 75,60 75,85 C75,110 25,110 25,85" stroke="currentColor" stroke-width="14" stroke-linecap="round"/>
                   <path d="M60,45 C60,25 40,25 40,45 C40,65 60,65 60,85 C60,105 40,105 40,85" stroke="currentColor" stroke-width="10" stroke-linecap="round" opacity="0.6"/>
                   <circle cx="82" cy="50" r="7" fill="currentColor" />
               </svg>
-              <span class="font-black text-xl tracking-tighter uppercase text-black">swimsync</span>
+              <span class="font-black text-lg tracking-tighter uppercase text-black">swimsync</span>
           </div>
       </div>
 
-      <div class="flex justify-between border-b-[8px] border-black pb-4 mb-8">
+      <div class="flex justify-between border-b-[4px] border-black pb-2 mb-4 items-end">
         <div>
-          <div class="text-5xl font-black uppercase leading-tight tracking-tighter">{{title}}</div>
-          <div class="text-md font-bold tracking-[0.3em] uppercase mt-1">{{myTeam}} — {{group}} ({{formatPracticeDate(practiceDate)}})</div>
+          <div class="text-3xl font-black uppercase leading-tight tracking-tighter">{{title || 'Untitled Workout'}}</div>
+          <div class="text-xs font-bold tracking-[0.2em] uppercase mt-1">{{myTeam}} — {{group}} ({{formatPracticeDate(practiceDate)}})</div>
         </div>
         <div class="text-right">
-          <div class="text-5xl font-black tracking-tighter">{{totalYards}}y</div>
-          <div class="text-sm font-bold opacity-60 uppercase tracking-widest">{{duration}} MIN PRACTICE</div>
+          <div class="text-3xl font-black tracking-tighter leading-none">{{totalYards}}y</div>
+          <div class="text-[10px] font-bold opacity-60 uppercase tracking-widest mt-1">{{duration}} MIN PRACTICE</div>
         </div>
       </div>
 
       <div :style="{ fontSize: fontSize + 'px' }">
-          <div v-for="sec in parsed" class="mb-10">
-            <div class="block-title flex justify-between" :style="{ fontSize: Math.max(12, fontSize * 0.7) + 'px' }">
-              <span>{{sec.title}}</span>
+          <div v-for="sec in parsed" :style="{ marginBottom: (fontSize * 1.5) + 'px' }">
+            
+            <div class="block-title flex justify-between items-end" :style="{ fontSize: Math.max(12, fontSize * 0.7) + 'px', marginTop: '0', marginBottom: (fontSize * 0.25) + 'px', paddingBottom: '2px', borderBottomWidth: '2px' }">
+              <div>
+                  <span>{{sec.title}}</span>
+                  <span class="font-normal opacity-40 ml-3 tracking-widest text-[0.8em]" v-if="sec.blocks[0] && sec.blocks[0].sets[0]">
+                      STARTS @ {{formatTime(sec.blocks[0].sets[0].start)}}
+                  </span>
+              </div>
               <span class="font-normal opacity-50">{{sec.y}}y</span>
             </div>
-            <div v-for="b in sec.blocks" class="mt-4">
-              <div v-if="b.rep > 1" class="font-black uppercase mb-2 text-gray-400" :style="{ fontSize: Math.max(10, fontSize * 0.5) + 'px' }">● {{b.rep}}x (ROUND)</div>
-              <div v-for="s in b.sets" class="row items-center border-gray-200" :class="{'border-l-[12px] border-black pl-8 ml-3 py-2': b.rep > 1, 'py-1': b.rep === 1}">
+
+            <div v-for="b in sec.blocks" :style="{ marginTop: (fontSize * 0.4) + 'px' }">
+              <div v-if="b.rep > 1" class="font-black uppercase text-gray-400" :style="{ fontSize: Math.max(10, fontSize * 0.5) + 'px', marginBottom: (fontSize * 0.1) + 'px' }">● {{b.rep}}x (ROUND)</div>
+              <div v-for="s in b.sets" class="row items-center border-gray-200" :style="{ padding: (fontSize * 0.15) + 'px 0' }" :class="{'border-l-4 border-black pl-4 ml-2': b.rep > 1}">
                 <div class="font-bold flex-1">
                     <span v-if="!s.rest">{{s.q}}x{{s.d}}</span> 
-                    <span class="ml-6 text-gray-400" v-if="!s.rest">@ {{s.p}}</span>
-                    <span class="font-black text-gray-300 uppercase" v-if="s.rest">REST {{s.label}}</span>
-                    <span v-if="s.label && !s.rest" class="ml-6 font-normal opacity-40 italic">— {{s.label}}</span>
+                    <span class="ml-4 text-gray-500" v-if="!s.rest">@ {{s.p}}</span>
+                    <span class="font-black text-gray-400 uppercase" v-if="s.rest">REST {{s.label}}</span>
+                    <span v-if="s.label && !s.rest" class="ml-4 font-normal opacity-40 italic">— {{s.label}}</span>
                 </div>
                 <div class="mono text-right opacity-30 ml-4" :style="{ fontSize: Math.max(10, fontSize * 0.6) + 'px' }">{{formatTime(s.start)}}</div>
               </div>
@@ -740,6 +753,15 @@ function editPlan(plan) {
     currentView.value = 'plan-builder';
 }
 
+// SEASON PLAN DELETION ENGINE
+async function deletePlan(id) {
+    if(confirm("Are you sure you want to permanently delete this Macrocycle?")) {
+        await client.from("season_plans").delete().eq('id', id);
+        loadSeasonPlans();
+        currentView.value = 'season-planning';
+    }
+}
+
 function addWeek() { planForm.value.weeks.push({ weekNum: planForm.value.weeks.length + 1, focus: '', targetYards: null }); }
 
 async function savePlan() {
@@ -904,15 +926,25 @@ const duration = computed(()=> {
   return Math.round(total/60);
 });
 
+// 100 AVERAGE PACE CALCULATOR
+const avg100Pace = computed(() => {
+    if (!totalYards.value || totalYards.value === 0) return "0:00";
+    let totalSecs = 0;
+    parsed.value.forEach(sec => sec.blocks.forEach(b => b.sets.forEach(s => totalSecs += (s.dur * (s.q || 1)))));
+    if (totalSecs === 0) return "0:00";
+    let paceSecs = Math.round(totalSecs / (totalYards.value / 100));
+    return secToTime(paceSecs);
+});
+
 return {
   user, login, logout, currentView, joinCode, teamPassword, newTeamId, newTeamPassword, newVaultPassword,
   hasPendingInvite, isProcessingInvite, currentWorkoutId, fontSize, teamLogoUrl, isUploadingLogo, uploadLogo,
   title, group, start, base, input, parsed, totalYards, duration, cloudWorkouts, coachName, practiceDate,
   seasonPlans, activePlanContext, teamGroupsList, staffList, planForm, newGroupName, myRole, myTeam,
   filterGroup, filterDate, filteredWorkouts, todaysWorkouts, upcomingWorkouts, pastWorkouts, getWeekDateRange,
-  formatTime, save, loadWorkout, startNewWorkout, formatPracticeDate, startNewPlan, editPlan, addWeek, savePlan, deleteWorkout,
+  formatTime, save, loadWorkout, startNewWorkout, formatPracticeDate, startNewPlan, editPlan, addWeek, savePlan, deletePlan, deleteWorkout,
   addGroup, deleteGroup, removeStaff, changeRole, copyInviteLink, joinTeam, createTeam, updateVaultPassword, discardDraft, loadStaff,
-  hasDraft, resumeDraft
+  hasDraft, resumeDraft, avg100Pace
 };
 }
 }).mount("#app");
