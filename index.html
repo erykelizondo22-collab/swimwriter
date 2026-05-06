@@ -659,10 +659,12 @@ const hasPendingInvite = ref(false);
 const isProcessingInvite = ref(false);
 const planForm = ref({ id: null, title: '', group_name: '', start_date: '', weeks: [] });
 
+// AI STATE
 const showAiModal = ref(false);
 const aiPrompt = ref("");
 const isAiLoading = ref(false);
 
+// ANALYTICS STATE
 const analyticsGroup = ref('');
 const analyticsStartDate = ref('');
 const analyticsEndDate = ref('');
@@ -674,6 +676,7 @@ function resetAnalyticsDates() {
     analyticsEndDate.value = getLocalTodayStr();
 }
 
+// CURSOR TRACKING
 const cursorPosition = ref(0);
 
 function updateCursor(e) {
@@ -736,6 +739,7 @@ function getWeekDateRange(startDateStr, weekIndex) {
     return `${format(start)} - ${format(end)}`;
 }
 
+// AUTO-SAVE DRAFT ENGINE
 function checkDraft() {
     const draftStr = localStorage.getItem('swimsync_draft');
     if (draftStr) {
@@ -1255,13 +1259,25 @@ watch([currentView, analyticsGroup, analyticsStartDate, analyticsEndDate], () =>
     }
 });
 
-// RAW FETCH AI GENERATION
+// RAW FETCH AI GENERATION (Bypasses Supabase Network Blocks)
 async function generateWithAI() {
     if(!aiPrompt.value.trim()) return;
     isAiLoading.value = true;
     
     try {
         const contextStr = `Target Group: ${group.value || 'None'}, Pool Type: ${poolType.value}, Focus: ${activePlanContext.value?.weekData?.focus || 'General Conditioning'}, Default Stroke: ${defaultStroke.value}`;
+        
+        let historyStr = "No previous workouts found.";
+        if (group.value) {
+            const recent = cloudWorkouts.value
+                .filter(w => w.group === group.value)
+                .sort((a,b) => b.practice_date.localeCompare(a.practice_date))
+                .slice(0, 10);
+
+            if (recent.length > 0) {
+                historyStr = recent.map((w, i) => `Workout ${i + 1} (${w.practice_date} - ${w.title}):\n${w.content}`).join("\n\n");
+            }
+        }
         
         const { data: { session } } = await client.auth.getSession();
         
@@ -1275,7 +1291,7 @@ async function generateWithAI() {
             body: JSON.stringify({
                 prompt: aiPrompt.value, 
                 context: contextStr, 
-                groupName: group.value
+                history: historyStr
             })
         });
 
