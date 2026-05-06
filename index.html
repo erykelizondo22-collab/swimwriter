@@ -81,7 +81,6 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
       <div v-if="myTeam" class="flex items-center gap-4 md:gap-8 w-full md:w-auto">
           <nav class="flex gap-4 md:gap-6 overflow-x-auto pb-1 flex-1 no-scrollbar">
             <button @click="currentView = 'dashboard'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'dashboard', 'text-gray-500 hover:text-gray-900': currentView !== 'dashboard'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-colors">Vault</button>
-            <button @click="currentView = 'messages'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'messages', 'text-gray-500 hover:text-gray-900': currentView !== 'messages'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-colors">Messages</button>
             <button @click="currentView = 'season-planning'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'season-planning' || currentView === 'plan-builder', 'text-gray-500 hover:text-gray-900': currentView !== 'season-planning' && currentView !== 'plan-builder'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-colors">Season</button>
             <button @click="currentView = 'groups'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'groups', 'text-gray-500 hover:text-gray-900': currentView !== 'groups'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-colors">Groups</button>
             <button @click="currentView = 'staff'; loadStaff();" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'staff', 'text-gray-500 hover:text-gray-900': currentView !== 'staff'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-colors">Staff</button>
@@ -305,52 +304,6 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
         <input v-model="newTeamPassword" type="password" placeholder="Create Password" class="w-full bg-white/10 border-2 border-blue-400/50 p-3 md:p-4 rounded-xl font-black text-white placeholder-blue-300 text-center text-sm md:text-lg tracking-widest mb-6 outline-none">
         <button @click="createTeam" class="bg-white text-blue-700 font-black py-4 rounded-xl shadow-lg hover:scale-[1.02] transition-transform uppercase tracking-wide">Launch Vault</button>
       </div>
-    </div>
-
-    <div v-if="currentView === 'messages'" class="space-y-6 max-w-4xl mx-auto">
-        <div class="flex justify-between items-end mb-6">
-            <h2 class="text-2xl md:text-3xl font-black uppercase tracking-tight">Announcements</h2>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="space-y-3">
-                <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 mb-2">Select Group</div>
-                <div v-for="g in teamGroupsList" :key="g.id" @click="activeMessageGroup = g.name" 
-                     class="p-4 rounded-2xl font-black uppercase cursor-pointer transition border"
-                     :class="activeMessageGroup === g.name ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-gray-800 border-gray-100 hover:border-blue-300'">
-                    {{g.name}}
-                </div>
-                <div v-if="!teamGroupsList.length" class="text-xs text-gray-400 italic">No groups created yet.</div>
-            </div>
-
-            <div class="md:col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm flex flex-col h-[500px]">
-                <div v-if="!activeMessageGroup" class="flex-1 flex items-center justify-center text-gray-400 font-black uppercase tracking-widest text-xs">
-                    Select a group to broadcast
-                </div>
-                <template v-else>
-                    <div class="bg-blue-50 border-b border-blue-100 p-4 rounded-t-3xl">
-                        <h3 class="font-black text-blue-900 uppercase">Broadcast: {{activeMessageGroup}}</h3>
-                        <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">Parents will receive this via Push Notification</p>
-                    </div>
-                    
-                    <div class="flex-1 p-6 overflow-y-auto space-y-4 bg-gray-50/50">
-                        <div v-if="!localMessages[activeMessageGroup]?.length" class="text-center text-gray-400 text-xs font-bold uppercase mt-10">No recent announcements</div>
-                        
-                        <div v-for="(msg, i) in localMessages[activeMessageGroup]" :key="i" class="flex justify-end">
-                            <div class="max-w-[85%] bg-blue-600 text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm">
-                                <div class="text-[10px] font-black text-blue-200 uppercase tracking-widest mb-1">{{msg.author}} • {{msg.time}}</div>
-                                <div class="text-sm font-medium">{{msg.text}}</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="p-4 bg-white border-t border-gray-100 flex gap-3 rounded-b-3xl">
-                        <input v-model="draftAnnouncement" @keyup.enter="sendAnnouncement" placeholder="Type announcement..." class="flex-1 bg-gray-100 border-2 border-transparent focus:border-blue-200 focus:bg-white transition outline-none rounded-xl px-4 py-3 text-sm font-medium">
-                        <button @click="sendAnnouncement" class="bg-gray-900 text-white font-black px-6 py-3 rounded-xl uppercase tracking-widest text-xs hover:bg-black transition shadow-md">Send</button>
-                    </div>
-                </template>
-            </div>
-        </div>
     </div>
 
     <div v-if="currentView === 'season-planning'" class="space-y-4 md:space-y-6">
@@ -605,27 +558,6 @@ const newGroupName = ref("");
 const hasPendingInvite = ref(false);
 const isProcessingInvite = ref(false);
 const planForm = ref({ id: null, title: '', group_name: '', start_date: '', weeks: [] });
-
-// LOCAL ANNOUNCEMENTS ENGINE (Temporary LocalStorage)
-const activeMessageGroup = ref("");
-const draftAnnouncement = ref("");
-const localMessages = ref(JSON.parse(localStorage.getItem('swimsync_messages')) || {});
-
-function sendAnnouncement() {
-    if(!draftAnnouncement.value.trim() || !activeMessageGroup.value) return;
-    if(!localMessages.value[activeMessageGroup.value]) localMessages.value[activeMessageGroup.value] = [];
-    
-    let timeString = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-    
-    localMessages.value[activeMessageGroup.value].push({
-        text: draftAnnouncement.value,
-        author: coachName.value || 'Coach',
-        time: timeString
-    });
-    
-    localStorage.setItem('swimsync_messages', JSON.stringify(localMessages.value));
-    draftAnnouncement.value = "";
-}
 
 // CURSOR TRACKING
 const cursorPosition = ref(0);
@@ -1108,7 +1040,7 @@ return {
   filterGroup, filterDate, filteredWorkouts, todaysWorkouts, upcomingWorkouts, pastWorkouts, getWeekDateRange,
   formatTime, save, loadWorkout, startNewWorkout, formatPracticeDate, startNewPlan, editPlan, addWeek, savePlan, deletePlan, deleteWorkout,
   addGroup, deleteGroup, removeStaff, changeRole, copyInviteLink, joinTeam, createTeam, updateVaultPassword, discardDraft, loadStaff,
-  hasDraft, resumeDraft, currentSetPace, updateCursor, activeMessageGroup, draftAnnouncement, localMessages, sendAnnouncement, stressScore, stressColor
+  hasDraft, resumeDraft, currentSetPace, updateCursor, stressScore, stressColor
 };
 }
 }).mount("#app");
