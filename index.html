@@ -216,9 +216,17 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
       <div class="space-y-4 md:space-y-6">
         <div class="bg-gray-900 text-white p-6 md:p-10 rounded-3xl md:rounded-[32px] shadow-2xl text-center relative overflow-hidden">
           <div class="absolute top-0 right-0 w-24 h-24 md:w-32 md:h-32 bg-white opacity-5 rounded-full -mr-10 -mt-10 pointer-events-none"></div>
-          <div class="text-5xl md:text-7xl font-black tracking-tighter">{{totalYards}}{{unit}}</div>
           
-          <div class="text-[9px] md:text-[10px] font-bold text-blue-400 uppercase mt-2 md:mt-4 tracking-[0.1em] md:tracking-[0.2em]">{{duration}} MIN PRACTICE • LINE PACE: {{currentSetPace}}/100{{unit}}</div>
+          <div class="flex justify-center items-end gap-6 mb-2 relative z-10">
+              <div class="text-5xl md:text-7xl font-black tracking-tighter">{{totalYards}}{{unit}}</div>
+              
+              <div class="flex flex-col items-center pb-2">
+                  <div class="text-3xl md:text-4xl font-black tracking-tighter" :class="stressColor">{{stressScore}}</div>
+                  <div class="text-[8px] font-black uppercase tracking-widest text-gray-500">STRESS</div>
+              </div>
+          </div>
+          
+          <div class="text-[9px] md:text-[10px] font-bold text-blue-400 uppercase tracking-[0.1em] md:tracking-[0.2em] mt-4 relative z-10">{{duration}} MIN PRACTICE • LINE PACE: {{currentSetPace}}/100{{unit}}</div>
         </div>
 
         <div class="bg-white p-6 md:p-8 rounded-3xl md:rounded-[32px] shadow-sm border border-gray-100 space-y-3 md:space-y-4">
@@ -1057,6 +1065,41 @@ const currentSetPace = computed(() => {
     return "0:00";
 });
 
+// STRESS SCORE ENGINE
+const stressScore = computed(() => {
+    let total = 0;
+    let baseSecs = timeToSec(base.value || "1:30");
+
+    parsed.value.forEach(sec => {
+        sec.blocks.forEach(b => {
+            b.sets.forEach(s => {
+                if (!s.rest && s.d > 0 && s.dur > 0) {
+                    let paceSecs = (s.dur / s.d) * 100;
+                    let intensity = baseSecs / paceSecs;
+                    
+                    // Cap bounds to prevent insane algorithmic spikes from typos
+                    intensity = Math.min(Math.max(intensity, 0.5), 1.6);
+                    
+                    // Stress Factor: (Distance in hundreds) * (Intensity^2.8)
+                    let distanceMultiplier = (s.q * s.d * (b.rep || 1)) / 100;
+                    let setStress = distanceMultiplier * Math.pow(intensity, 2.8);
+                    
+                    total += setStress;
+                }
+            });
+        });
+    });
+    
+    return Math.min(100, Math.round(total));
+});
+
+const stressColor = computed(() => {
+    let s = stressScore.value;
+    if(s < 40) return 'text-green-400';
+    if(s < 75) return 'text-yellow-400';
+    return 'text-red-500';
+});
+
 return {
   user, login, logout, currentView, joinCode, teamPassword, newTeamId, newTeamPassword, newVaultPassword,
   hasPendingInvite, isProcessingInvite, currentWorkoutId, fontSize, teamLogoUrl, isUploadingLogo, uploadLogo,
@@ -1065,7 +1108,7 @@ return {
   filterGroup, filterDate, filteredWorkouts, todaysWorkouts, upcomingWorkouts, pastWorkouts, getWeekDateRange,
   formatTime, save, loadWorkout, startNewWorkout, formatPracticeDate, startNewPlan, editPlan, addWeek, savePlan, deletePlan, deleteWorkout,
   addGroup, deleteGroup, removeStaff, changeRole, copyInviteLink, joinTeam, createTeam, updateVaultPassword, discardDraft, loadStaff,
-  hasDraft, resumeDraft, currentSetPace, updateCursor, activeMessageGroup, draftAnnouncement, localMessages, sendAnnouncement
+  hasDraft, resumeDraft, currentSetPace, updateCursor, activeMessageGroup, draftAnnouncement, localMessages, sendAnnouncement, stressScore, stressColor
 };
 }
 }).mount("#app");
