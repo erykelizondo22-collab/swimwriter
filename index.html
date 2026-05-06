@@ -576,7 +576,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
       <div class="flex justify-between border-b-[4px] border-black pb-2 mb-4 items-end">
         <div>
           <div class="text-3xl font-black uppercase leading-tight tracking-tighter">{{title || 'Untitled Workout'}}</div>
-          <div class="text-xs font-bold tracking-[0.2em] uppercase mt-1">{{myTeam}} — {{group}} — {{poolType}} ({{formatPracticeDate(practiceDate)}})</div>
+          <div class="text-xs font-bold tracking-[0.2em] uppercase mt-1">{{myTeam}} — {{group}} — {{poolType}} ({{formatPracticeDate(practiceDate)}} @ {{formattedStartTime}})</div>
         </div>
         <div class="text-right">
           <div class="text-3xl font-black tracking-tighter leading-none">{{totalYards}}{{unit}}</div>
@@ -1039,9 +1039,30 @@ onMounted(async ()=>{
   }, 10000); 
 });
 
+// TIME FORMATTING ENGINE FIXES
 function timeToSec(t){ let [m,s]=t.split(":").map(Number); return (m*60) + (s || 0); }
 function secToTime(s){ let m=Math.floor(s/60); let sec=s%60; return `${m}:${sec.toString().padStart(2,"0")}`; }
-function formatTime(sec){ let h=Math.floor(sec/3600)%12||12; let m=Math.floor((sec%3600)/60); let ap=Math.floor(sec/3600)>=12?'pm':'am'; return `${h}:${m.toString().padStart(2,"0")}${ap}`;}
+
+// New function to convert "05:45" strictly into seconds-from-midnight
+function timeOfDayToSec(t) { 
+    if(!t) return 0; 
+    let [h,m]=t.split(":").map(Number); 
+    return (h * 3600) + ((m || 0) * 60); 
+}
+
+// Fixed formatTime to correctly handle 24hr wrap-around for AM/PM calculation
+function formatTime(sec){ 
+    let totalHours = Math.floor(sec/3600);
+    let h = totalHours % 12 || 12; 
+    let m = Math.floor((sec%3600)/60); 
+    let ap = (totalHours % 24) >= 12 ? 'pm' : 'am'; 
+    return `${h}:${m.toString().padStart(2,"0")}${ap}`;
+}
+
+const formattedStartTime = computed(() => {
+    if (!start.value) return "";
+    return formatTime(timeOfDayToSec(start.value));
+});
 
 function parseLine(str, baseSec){
   if(/^\d+:\d+$/.test(str.trim())) return {rest:true,dur:timeToSec(str),label:str,q:1,d:0};
@@ -1074,10 +1095,13 @@ function getCategories(txt) {
     return { type, stroke };
 }
 
-function parseContentBlock(text, baseStr) {
+function parseContentBlock(text, baseStr, startTimeStr) {
   if(!text) return [];
   let baseSeconds = timeToSec(baseStr || "1:30");
-  let t = 0; 
+  
+  // FIXED: Start the parser's internal clock at the actual start time selected
+  let t = timeOfDayToSec(startTimeStr || "00:00"); 
+  
   let out=[]; let secBlock={title:"WARMUP",blocks:[],y:0};
   let lines=text.split("\n").map(x=>x.trim()).filter(Boolean);
   
@@ -1110,7 +1134,8 @@ function parseContentBlock(text, baseStr) {
   } out.push(secBlock); return out;
 }
 
-const parsed = computed(() => parseContentBlock(input.value, base.value));
+// PASS THE START TIME INTO THE PARSER
+const parsed = computed(() => parseContentBlock(input.value, base.value, start.value));
 
 const totalYards = computed(()=>parsed.value.reduce((a,s)=>a+s.y,0));
 
@@ -1183,7 +1208,7 @@ const analyticsStats = computed(() => {
         
         if (pass) {
             stats.workouts++;
-            let p = parseContentBlock(w.content, "1:30");
+            let p = parseContentBlock(w.content, "1:30", "00:00");
             let wDefaultStroke = (w.default_stroke || 'free').toLowerCase();
             
             p.forEach(sec => {
@@ -1322,7 +1347,7 @@ return {
   title, group, poolType, defaultStroke, unit, start, base, input, parsed, totalYards, duration, cloudWorkouts, coachName, practiceDate,
   seasonPlans, activePlanContext, teamGroupsList, staffList, planForm, newGroupName, myRole, myTeam,
   filterGroup, filterDate, filteredWorkouts, todaysWorkouts, upcomingWorkouts, pastWorkouts, getWeekDateRange,
-  formatTime, save, loadWorkout, startNewWorkout, formatPracticeDate, startNewPlan, editPlan, addWeek, savePlan, deletePlan, deleteWorkout,
+  formatTime, formattedStartTime, save, loadWorkout, startNewWorkout, formatPracticeDate, startNewPlan, editPlan, addWeek, savePlan, deletePlan, deleteWorkout,
   addGroup, deleteGroup, removeStaff, changeRole, copyInviteLink, joinTeam, createTeam, updateVaultPassword, discardDraft, loadStaff,
   hasDraft, resumeDraft, currentSetPace, updateCursor, stressScore, stressColor,
   analyticsGroup, analyticsStartDate, analyticsEndDate, analyticsStats, resetAnalyticsDates,
