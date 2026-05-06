@@ -119,7 +119,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
                 <textarea v-model="aiPrompt" rows="4" placeholder="e.g., Give me a 1200y threshold set using 100s and 200s..." class="w-full bg-gray-50 border border-gray-200 p-4 rounded-2xl outline-none focus:border-purple-400 focus:bg-white transition text-sm font-medium resize-none"></textarea>
                 
                 <button @click="generateWithAI" :disabled="isAiLoading || !aiPrompt.trim()" :class="{'opacity-50 cursor-not-allowed': isAiLoading || !aiPrompt.trim()}" class="w-full bg-gray-900 text-white font-black py-4 rounded-xl hover:bg-black transition flex items-center justify-center gap-2 uppercase tracking-widest text-xs">
-                    <span v-if="isAiLoading" class="animate-pulse">Analyzing Last 10 Workouts & Generating...</span>
+                    <span v-if="isAiLoading" class="animate-pulse">Analyzing History & Generating...</span>
                     <span v-else>Generate Set</span>
                 </button>
             </div>
@@ -364,7 +364,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3 md:gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
                 <div class="space-y-1">
                     <label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Start Time</label>
                     <input type="time" v-model="start" class="w-full border-2 border-gray-50 bg-gray-50 p-4 md:p-5 rounded-2xl font-black focus:border-blue-500 focus:bg-white transition outline-none text-sm md:text-base">
@@ -373,6 +373,16 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
                     <label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Base Interval</label>
                     <select v-model="base" class="w-full border-2 border-gray-50 bg-gray-50 p-4 md:p-5 rounded-2xl font-black focus:border-blue-500 focus:bg-white transition outline-none text-sm md:text-base">
                         <option v-for="b in ['1:15','1:20','1:30','1:40','1:45','2:00']" :key="b">{{b}}</option>
+                    </select>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-2 tracking-widest">Default Stroke</label>
+                    <select v-model="defaultStroke" class="w-full border-2 border-gray-50 bg-gray-50 p-4 md:p-5 rounded-2xl font-black focus:border-blue-500 focus:bg-white transition outline-none text-sm md:text-base uppercase">
+                        <option value="free">Freestyle</option>
+                        <option value="back">Backstroke</option>
+                        <option value="breast">Breaststroke</option>
+                        <option value="fly">Butterfly</option>
+                        <option value="im">IM</option>
                     </select>
                 </div>
             </div>
@@ -639,6 +649,7 @@ const fontSize = ref(22);
 
 const title = ref(""); const group = ref(""); const start = ref("17:00"); const base = ref("1:30"); const input = ref("");
 const poolType = ref("SCY");
+const defaultStroke = ref("free");
 const cloudWorkouts = ref([]);
 const seasonPlans = ref([]);
 const teamGroupsList = ref([]);
@@ -750,14 +761,15 @@ function resumeDraft() {
         start.value = draft.start || "17:00";
         base.value = draft.base || "1:30";
         poolType.value = draft.poolType || "SCY";
+        defaultStroke.value = draft.defaultStroke || "free";
         input.value = draft.input || "Warmup:\n\nMain Set:\n\n";
         currentView.value = 'editor';
     }
 }
 
-watch([title, group, practiceDate, start, base, poolType, input], () => {
+watch([title, group, practiceDate, start, base, poolType, defaultStroke, input], () => {
     if (currentView.value === 'setup' || currentView.value === 'editor') {
-        const draft = { id: currentWorkoutId.value, title: title.value, group: group.value, date: practiceDate.value, start: start.value, base: base.value, poolType: poolType.value, input: input.value };
+        const draft = { id: currentWorkoutId.value, title: title.value, group: group.value, date: practiceDate.value, start: start.value, base: base.value, poolType: poolType.value, defaultStroke: defaultStroke.value, input: input.value };
         localStorage.setItem('swimsync_draft', JSON.stringify(draft));
         checkDraft();
     }
@@ -829,7 +841,7 @@ async function updateVaultPassword() {
 
 async function save(){
   if(!title.value || !group.value || !practiceDate.value) return alert("Fill out Title, Group, and Date.");
-  const payload = { title: title.value, team_id: myTeam.value, group: group.value, practice_date: practiceDate.value, content: input.value, total_yards: totalYards.value, coach_name: coachName.value, pool_type: poolType.value };
+  const payload = { title: title.value, team_id: myTeam.value, group: group.value, practice_date: practiceDate.value, content: input.value, total_yards: totalYards.value, coach_name: coachName.value, pool_type: poolType.value, default_stroke: defaultStroke.value };
   
   if(currentWorkoutId.value) {
       const { error } = await client.from("workouts").update(payload).eq('id', currentWorkoutId.value);
@@ -846,13 +858,13 @@ async function save(){
 
 function startNewWorkout() { 
     currentWorkoutId.value = null; title.value = ""; group.value = ""; practiceDate.value = getLocalTodayStr();
-    poolType.value = "SCY";
+    poolType.value = "SCY"; defaultStroke.value = "free";
     input.value = "Warmup:\n\nMain Set:\n\n"; currentView.value = 'setup'; 
 }
 
 function loadWorkout(w){
   currentWorkoutId.value = w.id; title.value = w.title; group.value = w.group; practiceDate.value = w.practice_date || getLocalTodayStr(); 
-  poolType.value = w.pool_type || "SCY";
+  poolType.value = w.pool_type || "SCY"; defaultStroke.value = w.default_stroke || "free";
   input.value = w.content; currentView.value = 'editor'; 
 }
 
@@ -1174,6 +1186,7 @@ const analyticsStats = computed(() => {
         if (pass) {
             stats.workouts++;
             let p = parseContentBlock(w.content, "1:30");
+            let wDefaultStroke = (w.default_stroke || 'free').toLowerCase();
             
             p.forEach(sec => {
                 let blockCats = getCategories(sec.title);
@@ -1186,7 +1199,9 @@ const analyticsStats = computed(() => {
 
                             let setCats = getCategories(s.label);
                             let finalType = setCats.type || blockCats.type || 'swim';
-                            let finalStroke = setCats.stroke || blockCats.stroke || 'free';
+                            
+                            // DEFAULT STROKE INJECTION IS HERE
+                            let finalStroke = setCats.stroke || blockCats.stroke || wDefaultStroke;
 
                             if(stats.type[finalType] !== undefined) stats.type[finalType] += y;
                             if(stats.stroke[finalStroke] !== undefined) stats.stroke[finalStroke] += y;
@@ -1254,7 +1269,7 @@ async function generateWithAI() {
     isAiLoading.value = true;
     
     try {
-        const contextStr = `Target Group: ${group.value || 'None'}, Pool Type: ${poolType.value}, Focus: ${activePlanContext.value?.weekData?.focus || 'General Conditioning'}`;
+        const contextStr = `Target Group: ${group.value || 'None'}, Pool Type: ${poolType.value}, Focus: ${activePlanContext.value?.weekData?.focus || 'General Conditioning'}, Default Stroke: ${defaultStroke.value}`;
         
         // Pass groupName to backend so it can pull the last 10 workouts
         const { data, error } = await client.functions.invoke('generate-workout', {
@@ -1280,7 +1295,7 @@ async function generateWithAI() {
 return {
   user, login, logout, currentView, joinCode, teamPassword, newTeamId, newTeamPassword, newVaultPassword,
   hasPendingInvite, isProcessingInvite, currentWorkoutId, fontSize, teamLogoUrl, isUploadingLogo, uploadLogo,
-  title, group, poolType, unit, start, base, input, parsed, totalYards, duration, cloudWorkouts, coachName, practiceDate,
+  title, group, poolType, defaultStroke, unit, start, base, input, parsed, totalYards, duration, cloudWorkouts, coachName, practiceDate,
   seasonPlans, activePlanContext, teamGroupsList, staffList, planForm, newGroupName, myRole, myTeam,
   filterGroup, filterDate, filteredWorkouts, todaysWorkouts, upcomingWorkouts, pastWorkouts, getWeekDateRange,
   formatTime, save, loadWorkout, startNewWorkout, formatPracticeDate, startNewPlan, editPlan, addWeek, savePlan, deletePlan, deleteWorkout,
@@ -1293,4 +1308,4 @@ return {
 }).mount("#app");
 </script>
 </body>
-</html>
+  </html>
