@@ -99,8 +99,33 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
     </div>
   </div>
 
-  <div class="max-w-[1200px] mx-auto p-4 md:p-6 mt-4">
-    
+  <div class="max-w-[1200px] mx-auto p-4 md:p-6 mt-4 relative">
+      
+    <div v-if="showAiModal" class="fixed inset-0 bg-black/40 z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col">
+            <div class="bg-gradient-to-r from-indigo-500 to-purple-600 p-5 flex justify-between items-center text-white">
+                <div>
+                    <h3 class="font-black text-lg leading-tight flex items-center gap-2">✨ SwimSync AI Co-Pilot</h3>
+                    <p class="text-[10px] text-purple-100 uppercase tracking-widest mt-1">
+                        Context: {{group || 'No Group'}} • {{poolType}} • 
+                        {{activePlanContext ? activePlanContext.weekData?.focus : 'No Plan Focus'}}
+                    </p>
+                </div>
+                <button @click="showAiModal = false" class="font-black hover:text-gray-200 bg-black/20 w-8 h-8 rounded-full flex items-center justify-center transition">X</button>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-gray-600 font-medium">Describe the set you want to generate. The AI will automatically pull the last 10 workouts for <strong>{{group || 'this group'}}</strong> and structure a new set that fits your current season plan and pool type.</p>
+                <textarea v-model="aiPrompt" rows="4" placeholder="e.g., Give me a 1200y threshold set using 100s and 200s..." class="w-full bg-gray-50 border border-gray-200 p-4 rounded-2xl outline-none focus:border-purple-400 focus:bg-white transition text-sm font-medium resize-none"></textarea>
+                
+                <button @click="generateWithAI" :disabled="isAiLoading || !aiPrompt.trim()" :class="{'opacity-50 cursor-not-allowed': isAiLoading || !aiPrompt.trim()}" class="w-full bg-gray-900 text-white font-black py-4 rounded-xl hover:bg-black transition flex items-center justify-center gap-2 uppercase tracking-widest text-xs">
+                    <span v-if="isAiLoading" class="animate-pulse">Analyzing Last 10 Workouts & Generating...</span>
+                    <span v-else>Generate Set</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div v-if="currentView === 'dashboard'" class="space-y-6 md:space-y-8">
       <div class="bg-blue-600 rounded-3xl p-6 md:p-10 text-white shadow-xl flex flex-col md:flex-row justify-between items-center relative overflow-hidden gap-6">
         <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-20 -mt-20 pointer-events-none"></div>
@@ -263,10 +288,14 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
             </div>
         </div>
 
-        <div class="bg-white p-4 md:p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col flex-1">
+        <div class="bg-white p-4 md:p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col flex-1 relative">
           <div class="mb-4 md:mb-5 flex justify-between items-center border-b pb-4 md:pb-5">
               <h2 class="text-xl md:text-3xl font-black uppercase tracking-tight text-gray-900 truncate pr-2">{{title || 'Untitled Workout'}}</h2>
-              <button @click="currentView = 'setup'" class="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-full hover:bg-gray-100 transition whitespace-nowrap">Edit Setup</button>
+              
+              <div class="flex gap-2">
+                  <button @click="showAiModal = true" class="text-[10px] font-black text-purple-600 uppercase tracking-widest bg-purple-50 px-4 py-2 rounded-full hover:bg-purple-100 transition whitespace-nowrap flex items-center gap-1 shadow-sm border border-purple-100">✨ AI Co-Pilot</button>
+                  <button @click="currentView = 'setup'" class="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-full hover:bg-gray-100 transition whitespace-nowrap border border-gray-100">Edit Setup</button>
+              </div>
           </div>
           <textarea v-model="input" @keyup="updateCursor" @click="updateCursor" class="w-full flex-1 border-2 border-gray-50 p-4 md:p-6 font-mono rounded-2xl bg-gray-50 outline-none resize-none leading-relaxed transition-all focus:bg-white focus:border-blue-500 min-h-[400px]" placeholder="Type sets..."></textarea>
         </div>
@@ -618,6 +647,11 @@ const newGroupName = ref("");
 const hasPendingInvite = ref(false);
 const isProcessingInvite = ref(false);
 const planForm = ref({ id: null, title: '', group_name: '', start_date: '', weeks: [] });
+
+// AI STATE
+const showAiModal = ref(false);
+const aiPrompt = ref("");
+const isAiLoading = ref(false);
 
 // ANALYTICS STATE
 const analyticsGroup = ref('');
@@ -1009,7 +1043,27 @@ function parseLine(str, baseSec){
   return { rest:false, q, d, dur, label, p:secToTime(dur) };
 }
 
-// GENERIC CONTENT PARSER
+// HIERARCHICAL CATEGORY DETECTOR
+function getCategories(txt) {
+    if(!txt) return { type: null, stroke: null };
+    let t = txt.toLowerCase();
+    
+    let type = null;
+    if(t.includes('kick')) type = 'kick';
+    else if(t.includes('pull')) type = 'pull';
+    else if(t.includes('drill')) type = 'drill';
+    else if(t.includes('swim')) type = 'swim';
+
+    let stroke = null;
+    if(t.includes('fly') || t.includes('butterfly')) stroke = 'fly';
+    else if(t.includes('back')) stroke = 'back';
+    else if(t.includes('breast')) stroke = 'breast';
+    else if(t.match(/\bim\b/) || t.includes('medley') || t.includes('i.m.')) stroke = 'im';
+    else if(t.includes('free')) stroke = 'free';
+
+    return { type, stroke };
+}
+
 function parseContentBlock(text, baseStr) {
   if(!text) return [];
   let baseSeconds = timeToSec(baseStr || "1:30");
@@ -1074,7 +1128,6 @@ const currentSetPace = computed(() => {
     return "0:00";
 });
 
-// STRESS SCORE ENGINE
 const stressScore = computed(() => {
     let total = 0;
     let baseSecs = timeToSec(base.value || "1:30");
@@ -1104,7 +1157,6 @@ const stressColor = computed(() => {
     return 'text-red-500';
 });
 
-// ANALYTICS ENGINE
 const analyticsStats = computed(() => {
     let stats = {
         workouts: 0,
@@ -1122,25 +1174,22 @@ const analyticsStats = computed(() => {
         if (pass) {
             stats.workouts++;
             let p = parseContentBlock(w.content, "1:30");
+            
             p.forEach(sec => {
+                let blockCats = getCategories(sec.title);
+                
                 sec.blocks.forEach(b => {
                     b.sets.forEach(s => {
                         if (!s.rest && s.d > 0) {
                             let y = s.q * s.d * (b.rep || 1);
                             stats.totalYards += y;
 
-                            let txt = (s.label || "").toLowerCase();
-                            
-                            if (txt.includes('kick')) stats.type.kick += y;
-                            else if (txt.includes('pull')) stats.type.pull += y;
-                            else if (txt.includes('drill')) stats.type.drill += y;
-                            else stats.type.swim += y;
+                            let setCats = getCategories(s.label);
+                            let finalType = setCats.type || blockCats.type || 'swim';
+                            let finalStroke = setCats.stroke || blockCats.stroke || 'free';
 
-                            if (txt.includes('fly') || txt.includes('butterfly')) stats.stroke.fly += y;
-                            else if (txt.includes('back')) stats.stroke.back += y;
-                            else if (txt.includes('breast')) stats.stroke.breast += y;
-                            else if (txt.includes('im')) stats.stroke.im += y;
-                            else stats.stroke.free += y;
+                            if(stats.type[finalType] !== undefined) stats.type[finalType] += y;
+                            if(stats.stroke[finalStroke] !== undefined) stats.stroke[finalStroke] += y;
                         }
                     });
                 });
@@ -1150,7 +1199,6 @@ const analyticsStats = computed(() => {
     return stats;
 });
 
-// CHART RENDERING
 let typeChartInst = null;
 let strokeChartInst = null;
 
@@ -1200,6 +1248,35 @@ watch([currentView, analyticsGroup, analyticsStartDate, analyticsEndDate], () =>
     }
 });
 
+// REAL SUPABASE AI GENERATION WITH HISTORY RETRIEVAL
+async function generateWithAI() {
+    if(!aiPrompt.value.trim()) return;
+    isAiLoading.value = true;
+    
+    try {
+        const contextStr = `Target Group: ${group.value || 'None'}, Pool Type: ${poolType.value}, Focus: ${activePlanContext.value?.weekData?.focus || 'General Conditioning'}`;
+        
+        // Pass groupName to backend so it can pull the last 10 workouts
+        const { data, error } = await client.functions.invoke('generate-workout', {
+            body: { prompt: aiPrompt.value, context: contextStr, groupName: group.value }
+        });
+
+        if(error) throw error;
+        
+        if(input.value && !input.value.endsWith('\n\n')) {
+            input.value += '\n\n';
+        }
+        input.value += "=== AI GENERATED PROGRESSION ===\n" + data.result;
+
+    } catch(err) {
+        alert("AI Generation Error: " + err.message);
+    }
+    
+    isAiLoading.value = false;
+    showAiModal.value = false;
+    aiPrompt.value = "";
+}
+
 return {
   user, login, logout, currentView, joinCode, teamPassword, newTeamId, newTeamPassword, newVaultPassword,
   hasPendingInvite, isProcessingInvite, currentWorkoutId, fontSize, teamLogoUrl, isUploadingLogo, uploadLogo,
@@ -1209,7 +1286,8 @@ return {
   formatTime, save, loadWorkout, startNewWorkout, formatPracticeDate, startNewPlan, editPlan, addWeek, savePlan, deletePlan, deleteWorkout,
   addGroup, deleteGroup, removeStaff, changeRole, copyInviteLink, joinTeam, createTeam, updateVaultPassword, discardDraft, loadStaff,
   hasDraft, resumeDraft, currentSetPace, updateCursor, stressScore, stressColor,
-  analyticsGroup, analyticsStartDate, analyticsEndDate, analyticsStats, resetAnalyticsDates
+  analyticsGroup, analyticsStartDate, analyticsEndDate, analyticsStats, resetAnalyticsDates,
+  showAiModal, aiPrompt, isAiLoading, generateWithAI
 };
 }
 }).mount("#app");
