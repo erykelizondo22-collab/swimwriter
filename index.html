@@ -659,12 +659,10 @@ const hasPendingInvite = ref(false);
 const isProcessingInvite = ref(false);
 const planForm = ref({ id: null, title: '', group_name: '', start_date: '', weeks: [] });
 
-// AI STATE
 const showAiModal = ref(false);
 const aiPrompt = ref("");
 const isAiLoading = ref(false);
 
-// ANALYTICS STATE
 const analyticsGroup = ref('');
 const analyticsStartDate = ref('');
 const analyticsEndDate = ref('');
@@ -676,7 +674,6 @@ function resetAnalyticsDates() {
     analyticsEndDate.value = getLocalTodayStr();
 }
 
-// CURSOR TRACKING
 const cursorPosition = ref(0);
 
 function updateCursor(e) {
@@ -739,7 +736,6 @@ function getWeekDateRange(startDateStr, weekIndex) {
     return `${format(start)} - ${format(end)}`;
 }
 
-// AUTO-SAVE DRAFT ENGINE
 function checkDraft() {
     const draftStr = localStorage.getItem('swimsync_draft');
     if (draftStr) {
@@ -1039,7 +1035,6 @@ onMounted(async ()=>{
   }, 10000); 
 });
 
-// PARSING LOGIC
 function timeToSec(t){ let [m,s]=t.split(":").map(Number); return (m*60) + (s || 0); }
 function secToTime(s){ let m=Math.floor(s/60); let sec=s%60; return `${m}:${sec.toString().padStart(2,"0")}`; }
 function formatTime(sec){ let h=Math.floor(sec/3600)%12||12; let m=Math.floor((sec%3600)/60); let ap=Math.floor(sec/3600)>=12?'pm':'am'; return `${h}:${m.toString().padStart(2,"0")}${ap}`;}
@@ -1055,7 +1050,6 @@ function parseLine(str, baseSec){
   return { rest:false, q, d, dur, label, p:secToTime(dur) };
 }
 
-// HIERARCHICAL CATEGORY DETECTOR
 function getCategories(txt) {
     if(!txt) return { type: null, stroke: null };
     let t = txt.toLowerCase();
@@ -1199,8 +1193,6 @@ const analyticsStats = computed(() => {
 
                             let setCats = getCategories(s.label);
                             let finalType = setCats.type || blockCats.type || 'swim';
-                            
-                            // DEFAULT STROKE INJECTION IS HERE
                             let finalStroke = setCats.stroke || blockCats.stroke || wDefaultStroke;
 
                             if(stats.type[finalType] !== undefined) stats.type[finalType] += y;
@@ -1263,7 +1255,7 @@ watch([currentView, analyticsGroup, analyticsStartDate, analyticsEndDate], () =>
     }
 });
 
-// REAL SUPABASE AI GENERATION WITH HISTORY RETRIEVAL
+// RAW FETCH AI GENERATION
 async function generateWithAI() {
     if(!aiPrompt.value.trim()) return;
     isAiLoading.value = true;
@@ -1271,12 +1263,28 @@ async function generateWithAI() {
     try {
         const contextStr = `Target Group: ${group.value || 'None'}, Pool Type: ${poolType.value}, Focus: ${activePlanContext.value?.weekData?.focus || 'General Conditioning'}, Default Stroke: ${defaultStroke.value}`;
         
-        // Pass groupName to backend so it can pull the last 10 workouts
-        const { data, error } = await client.functions.invoke('generate-workout', {
-            body: { prompt: aiPrompt.value, context: contextStr, groupName: group.value }
+        const { data: { session } } = await client.auth.getSession();
+        
+        const response = await fetch("https://nzrzcbxxqxwktocrmplg.supabase.co/functions/v1/generate-workout", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${session?.access_token || ''}`,
+                "apikey": "sb_publishable_IENWSv_n2kZ1yR2-VmV8ew_pljwvLdt"
+            },
+            body: JSON.stringify({
+                prompt: aiPrompt.value, 
+                context: contextStr, 
+                groupName: group.value
+            })
         });
 
-        if(error) throw error;
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Server Error ${response.status}: ${errText}`);
+        }
+
+        const data = await response.json();
         
         if(input.value && !input.value.endsWith('\n\n')) {
             input.value += '\n\n';
@@ -1308,4 +1316,4 @@ return {
 }).mount("#app");
 </script>
 </body>
-  </html>
+</html>
