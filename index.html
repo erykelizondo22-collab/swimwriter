@@ -16,6 +16,7 @@
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 [v-cloak]{display:none}
@@ -81,6 +82,7 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
       <div v-if="myTeam" class="flex items-center gap-4 md:gap-8 w-full md:w-auto">
           <nav class="flex gap-4 md:gap-6 overflow-x-auto pb-1 flex-1 no-scrollbar">
             <button @click="currentView = 'dashboard'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'dashboard', 'text-gray-500 hover:text-gray-900': currentView !== 'dashboard'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-colors">Vault</button>
+            <button @click="currentView = 'analytics'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'analytics', 'text-gray-500 hover:text-gray-900': currentView !== 'analytics'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-colors">Analytics</button>
             <button @click="currentView = 'season-planning'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'season-planning' || currentView === 'plan-builder', 'text-gray-500 hover:text-gray-900': currentView !== 'season-planning' && currentView !== 'plan-builder'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-colors">Season</button>
             <button @click="currentView = 'groups'" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'groups', 'text-gray-500 hover:text-gray-900': currentView !== 'groups'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-colors">Groups</button>
             <button @click="currentView = 'staff'; loadStaff();" :class="{'text-blue-600 border-b-2 border-blue-600': currentView === 'staff', 'text-gray-500 hover:text-gray-900': currentView !== 'staff'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-colors">Staff</button>
@@ -184,6 +186,64 @@ body{margin:0;font-family:system-ui;background:#f8fafc; -webkit-tap-highlight-co
           </div>
 
       </div>
+    </div>
+
+    <div v-if="currentView === 'analytics'" class="space-y-6 md:space-y-8">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-2 gap-4">
+            <div>
+                <h2 class="text-2xl md:text-3xl font-black uppercase tracking-tight">Analytics Engine</h2>
+                <p class="text-gray-500 text-xs font-bold uppercase tracking-widest mt-1">Practice Data Insights</p>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-wrap gap-4 items-end">
+            <div class="flex-1 min-w-[150px]">
+                <label class="text-[8px] font-black text-gray-400 uppercase tracking-widest block mb-1 ml-1">Target Group</label>
+                <select v-model="analyticsGroup" class="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl text-xs font-bold uppercase outline-none">
+                    <option value="">All Groups</option>
+                    <option v-for="g in teamGroupsList" :key="g.id" :value="g.name">{{g.name}}</option>
+                </select>
+            </div>
+            <div class="flex-1 min-w-[140px]">
+                <label class="text-[8px] font-black text-gray-400 uppercase tracking-widest block mb-1 ml-1">Start Date</label>
+                <input type="date" v-model="analyticsStartDate" class="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl text-xs font-bold outline-none">
+            </div>
+            <div class="flex-1 min-w-[140px]">
+                <label class="text-[8px] font-black text-gray-400 uppercase tracking-widest block mb-1 ml-1">End Date</label>
+                <input type="date" v-model="analyticsEndDate" class="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl text-xs font-bold outline-none">
+            </div>
+            <button @click="analyticsGroup = ''; resetAnalyticsDates();" class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-3 px-2">Reset</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-gray-900 text-white p-6 rounded-3xl shadow-xl flex flex-col justify-center items-center text-center">
+                <div class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Total Volume</div>
+                <div class="text-4xl md:text-5xl font-black tracking-tighter">{{analyticsStats.totalYards.toLocaleString()}}</div>
+            </div>
+            <div class="bg-blue-600 text-white p-6 rounded-3xl shadow-xl flex flex-col justify-center items-center text-center">
+                <div class="text-[10px] font-black text-blue-200 uppercase tracking-widest mb-1">Workouts Logged</div>
+                <div class="text-4xl md:text-5xl font-black tracking-tighter">{{analyticsStats.workouts}}</div>
+            </div>
+            <div class="bg-orange-500 text-white p-6 rounded-3xl shadow-xl flex flex-col justify-center items-center text-center">
+                <div class="text-[10px] font-black text-orange-200 uppercase tracking-widest mb-1">Avg Volume / Practice</div>
+                <div class="text-4xl md:text-5xl font-black tracking-tighter">{{analyticsStats.workouts ? Math.round(analyticsStats.totalYards / analyticsStats.workouts).toLocaleString() : 0}}</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 h-[350px] flex flex-col">
+                <h3 class="text-sm font-black text-gray-800 uppercase tracking-widest border-b pb-3 mb-4">Training Focus (Type)</h3>
+                <div class="flex-1 relative w-full h-full">
+                    <canvas id="typeChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 h-[350px] flex flex-col">
+                <h3 class="text-sm font-black text-gray-800 uppercase tracking-widest border-b pb-3 mb-4">Stroke Distribution</h3>
+                <div class="flex-1 relative w-full h-full">
+                    <canvas id="strokeChart"></canvas>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div v-if="currentView === 'editor'" class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
@@ -559,6 +619,18 @@ const hasPendingInvite = ref(false);
 const isProcessingInvite = ref(false);
 const planForm = ref({ id: null, title: '', group_name: '', start_date: '', weeks: [] });
 
+// ANALYTICS STATE
+const analyticsGroup = ref('');
+const analyticsStartDate = ref('');
+const analyticsEndDate = ref('');
+
+function resetAnalyticsDates() {
+    let d = new Date();
+    d.setDate(d.getDate() - 30);
+    analyticsStartDate.value = d.toISOString().split('T')[0];
+    analyticsEndDate.value = getLocalTodayStr();
+}
+
 // CURSOR TRACKING
 const cursorPosition = ref(0);
 
@@ -877,6 +949,7 @@ function checkUrlForInvite() {
 onMounted(async ()=>{
   checkUrlForInvite();
   checkDraft();
+  resetAnalyticsDates();
   
   const { data } = await client.auth.getUser();
   user.value = data?.user;
@@ -936,12 +1009,14 @@ function parseLine(str, baseSec){
   return { rest:false, q, d, dur, label, p:secToTime(dur) };
 }
 
-const parsed = computed(()=>{
-  if(!start.value || !base.value || !input.value) return [];
-  let baseSeconds = timeToSec(base.value);
-  let t = (parseInt(start.value.split(":")[0])*3600) + (parseInt(start.value.split(":")[1])*60);
-  let out=[]; let secBlock={title:"WARMUP",blocks:[],y:0}; let runningYards=0;
-  let lines=input.value.split("\n").map(x=>x.trim()).filter(Boolean);
+// GENERIC CONTENT PARSER
+function parseContentBlock(text, baseStr) {
+  if(!text) return [];
+  let baseSeconds = timeToSec(baseStr || "1:30");
+  let t = 0; 
+  let out=[]; let secBlock={title:"WARMUP",blocks:[],y:0};
+  let lines=text.split("\n").map(x=>x.trim()).filter(Boolean);
+  
   for(let i=0;i<lines.length;i++){
     let l=lines[i];
     if(l.endsWith(":")){
@@ -956,7 +1031,7 @@ const parsed = computed(()=>{
         if(s){
           for(let r=0; r<rep; r++){
             if(r===0) block.sets.push({...s, start: t});
-            if(!s.rest){ runningYards += s.q * s.d; secBlock.y += s.q * s.d; t += s.dur * s.q; }
+            if(!s.rest){ secBlock.y += s.q * s.d; t += s.dur * s.q; }
             else { t += s.dur; }
           }
         } i++;
@@ -964,12 +1039,14 @@ const parsed = computed(()=>{
     }
     let s = parseLine(l, baseSeconds);
     if(s){
-      if(!s.rest){ runningYards += s.q * s.d; secBlock.y += s.q * s.d; s.start = t; t += s.dur * s.q; }
+      if(!s.rest){ secBlock.y += s.q * s.d; s.start = t; t += s.dur * s.q; }
       else { s.start = t; t += s.dur; }
       secBlock.blocks.push({rep:1, sets:[s]});
     }
   } out.push(secBlock); return out;
-});
+}
+
+const parsed = computed(() => parseContentBlock(input.value, base.value));
 
 const totalYards = computed(()=>parsed.value.reduce((a,s)=>a+s.y,0));
 
@@ -1009,19 +1086,14 @@ const stressScore = computed(() => {
                     let paceSecs = (s.dur / s.d) * 100;
                     let intensity = baseSecs / paceSecs;
                     
-                    // Cap bounds to prevent insane algorithmic spikes from typos
                     intensity = Math.min(Math.max(intensity, 0.5), 1.6);
-                    
-                    // Stress Factor: (Distance in hundreds) * (Intensity^2.8)
                     let distanceMultiplier = (s.q * s.d * (b.rep || 1)) / 100;
                     let setStress = distanceMultiplier * Math.pow(intensity, 2.8);
-                    
                     total += setStress;
                 }
             });
         });
     });
-    
     return Math.min(100, Math.round(total));
 });
 
@@ -1032,6 +1104,102 @@ const stressColor = computed(() => {
     return 'text-red-500';
 });
 
+// ANALYTICS ENGINE
+const analyticsStats = computed(() => {
+    let stats = {
+        workouts: 0,
+        totalYards: 0,
+        type: { swim: 0, pull: 0, kick: 0, drill: 0 },
+        stroke: { free: 0, back: 0, breast: 0, fly: 0, im: 0 }
+    };
+
+    cloudWorkouts.value.forEach(w => {
+        let pass = true;
+        if (analyticsGroup.value && w.group !== analyticsGroup.value) pass = false;
+        if (analyticsStartDate.value && w.practice_date < analyticsStartDate.value) pass = false;
+        if (analyticsEndDate.value && w.practice_date > analyticsEndDate.value) pass = false;
+        
+        if (pass) {
+            stats.workouts++;
+            let p = parseContentBlock(w.content, "1:30");
+            p.forEach(sec => {
+                sec.blocks.forEach(b => {
+                    b.sets.forEach(s => {
+                        if (!s.rest && s.d > 0) {
+                            let y = s.q * s.d * (b.rep || 1);
+                            stats.totalYards += y;
+
+                            let txt = (s.label || "").toLowerCase();
+                            
+                            if (txt.includes('kick')) stats.type.kick += y;
+                            else if (txt.includes('pull')) stats.type.pull += y;
+                            else if (txt.includes('drill')) stats.type.drill += y;
+                            else stats.type.swim += y;
+
+                            if (txt.includes('fly') || txt.includes('butterfly')) stats.stroke.fly += y;
+                            else if (txt.includes('back')) stats.stroke.back += y;
+                            else if (txt.includes('breast')) stats.stroke.breast += y;
+                            else if (txt.includes('im')) stats.stroke.im += y;
+                            else stats.stroke.free += y;
+                        }
+                    });
+                });
+            });
+        }
+    });
+    return stats;
+});
+
+// CHART RENDERING
+let typeChartInst = null;
+let strokeChartInst = null;
+
+function renderCharts() {
+    const tCtx = document.getElementById('typeChart');
+    const sCtx = document.getElementById('strokeChart');
+    if(!tCtx || !sCtx || typeof Chart === 'undefined') return;
+
+    if(typeChartInst) typeChartInst.destroy();
+    if(strokeChartInst) strokeChartInst.destroy();
+
+    const data = analyticsStats.value;
+
+    Chart.defaults.font.family = 'system-ui';
+    Chart.defaults.font.weight = 'bold';
+
+    typeChartInst = new Chart(tCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Swim', 'Pull', 'Kick', 'Drill'],
+            datasets: [{
+                data: [data.type.swim, data.type.pull, data.type.kick, data.type.drill],
+                backgroundColor: ['#3b82f6', '#8b5cf6', '#0ea5e9', '#06b6d4'],
+                borderWidth: 0
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+    });
+
+    strokeChartInst = new Chart(sCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Free', 'Back', 'Breast', 'Fly', 'IM'],
+            datasets: [{
+                data: [data.stroke.free, data.stroke.back, data.stroke.breast, data.stroke.fly, data.stroke.im],
+                backgroundColor: ['#94a3b8', '#f59e0b', '#ec4899', '#ef4444', '#10b981'],
+                borderWidth: 0
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+    });
+}
+
+watch([currentView, analyticsGroup, analyticsStartDate, analyticsEndDate], () => {
+    if (currentView.value === 'analytics') {
+        Vue.nextTick(() => { renderCharts(); });
+    }
+});
+
 return {
   user, login, logout, currentView, joinCode, teamPassword, newTeamId, newTeamPassword, newVaultPassword,
   hasPendingInvite, isProcessingInvite, currentWorkoutId, fontSize, teamLogoUrl, isUploadingLogo, uploadLogo,
@@ -1040,7 +1208,8 @@ return {
   filterGroup, filterDate, filteredWorkouts, todaysWorkouts, upcomingWorkouts, pastWorkouts, getWeekDateRange,
   formatTime, save, loadWorkout, startNewWorkout, formatPracticeDate, startNewPlan, editPlan, addWeek, savePlan, deletePlan, deleteWorkout,
   addGroup, deleteGroup, removeStaff, changeRole, copyInviteLink, joinTeam, createTeam, updateVaultPassword, discardDraft, loadStaff,
-  hasDraft, resumeDraft, currentSetPace, updateCursor, stressScore, stressColor
+  hasDraft, resumeDraft, currentSetPace, updateCursor, stressScore, stressColor,
+  analyticsGroup, analyticsStartDate, analyticsEndDate, analyticsStats, resetAnalyticsDates
 };
 }
 }).mount("#app");
