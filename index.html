@@ -54,7 +54,7 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
               </svg>
           </div>
       </div>
-      <h1 class="text-4xl font-black mb-2 text-slate-900 tracking-tight">swimops</h1>
+      <h1 class="text-4xl font-black mb-2 text-slate-900 tracking-tight">SwimOps</h1>
       <p class="text-sm text-slate-500 mb-10 font-bold uppercase tracking-widest">Coach Access Portal</p>
       
       <div v-if="hasPendingInvite" class="mb-8 bg-emerald-50 text-emerald-700 p-4 rounded-2xl border border-emerald-200 text-sm font-bold animate-pulse shadow-sm">
@@ -79,7 +79,7 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
               <circle cx="82" cy="50" r="7" fill="#ef4444" />
             </svg>
         </div>
-        <span class="font-black text-2xl tracking-tight hidden sm:inline-block text-slate-900 group-hover:opacity-80 transition-opacity">swimops</span>
+        <span class="font-black text-2xl tracking-tight hidden sm:inline-block text-slate-900 group-hover:opacity-80 transition-opacity">SwimOps</span>
       </div>
       
       <div class="flex flex-1 md:flex-none items-center justify-end gap-2 md:gap-8 overflow-x-auto no-scrollbar">
@@ -366,7 +366,7 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
                   </div>
               </div>
               <div class="pt-4">
-                  <button @click="currentView = 'editor'" :disabled="!group || !practiceDate" :class="{'opacity-50 cursor-not-allowed': !group || !practiceDate, 'hover:scale-[1.02] hover:shadow-xl': group && practiceDate}" class="w-full text-white font-black py-6 rounded-2xl shadow-lg uppercase tracking-widest transition-all duration-300 text-sm" :style="{ background: 'linear-gradient(to right, ' + teamColors.primary + ', ' + teamColors.secondary + ')' }">Enter Editor</button>
+                  <button @click="currentView = 'editor'" :disabled="!group || !practiceDate" :class="{'opacity-50 cursor-not-allowed': !group || !practiceDate, 'hover:scale-[1.02] hover:shadow-xl shadow-blue-500/30': group && practiceDate}" class="w-full text-white font-black py-6 rounded-2xl shadow-lg uppercase tracking-widest transition-all duration-300 text-sm" :style="{ background: 'linear-gradient(to right, ' + teamColors.primary + ', ' + teamColors.secondary + ')' }">Enter Editor</button>
               </div>
           </div>
       </div>
@@ -554,9 +554,14 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
                   </div>
                   <div class="flex-1 w-full">
                       <input type="file" @change="uploadLogo" accept="image/*" class="block w-full text-sm text-slate-800 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-white file:border file:border-slate-200 file:text-slate-700 hover:file:bg-slate-50 file:transition-colors file:cursor-pointer cursor-pointer outline-none file:shadow-sm file:uppercase file:tracking-widest">
-                      <div v-if="isUploadingLogo" class="text-[10px] font-black text-blue-600 mt-3 uppercase tracking-widest animate-pulse flex items-center gap-2">
-                          <svg class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                          Encrypting & Uploading...
+                      
+                      <div class="flex items-center gap-4 mt-3">
+                          <button v-if="teamLogoUrl" @click="deleteLogo" class="text-[10px] font-black text-red-500 bg-red-50 border border-red-100 hover:bg-red-100 px-3 py-1.5 rounded-lg uppercase tracking-widest transition-colors">Delete Logo</button>
+                          
+                          <div v-if="isUploadingLogo" class="text-[10px] font-black text-blue-600 mt-3 uppercase tracking-widest animate-pulse flex items-center gap-2">
+                              <svg class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                              Encrypting & Uploading...
+                          </div>
                       </div>
                   </div>
               </div>
@@ -642,7 +647,7 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
                     <path d="M60,45 C60,25 40,25 40,45 C40,65 60,65 60,85 C60,105 40,105 40,85" stroke="currentColor" stroke-width="10" stroke-linecap="round" opacity="0.6"/>
                     <circle cx="82" cy="50" r="7" fill="currentColor" />
                 </svg>
-                <span class="font-black text-lg tracking-tighter uppercase text-black">swimops</span>
+                <span class="font-black text-lg tracking-tighter uppercase text-black">SwimOps</span>
             </div>
         </div>
 
@@ -914,27 +919,48 @@ async function saveColors() {
     if(error) alert("Error saving colors: " + error.message);
 }
 
+// BULLETPROOF LOGO UPLOAD
 async function uploadLogo(event) {
     const file = event.target.files[0];
     if(!file) return;
     isUploadingLogo.value = true;
     
     const fileExt = file.name.split('.').pop();
-    const filePath = `${myTeam.value}-logo.${fileExt}`;
+    
+    // FORCE UNIQUE FILENAME TO AVOID BROWSER CACHING AND OVERWRITE BLOCKS
+    const timestamp = new Date().getTime();
+    const filePath = `${myTeam.value}-logo-${timestamp}.${fileExt}`;
 
-    const { error: uploadError } = await client.storage.from('logos').upload(filePath, file, { upsert: true });
-    if(uploadError) { alert("Upload failed: " + uploadError.message); isUploadingLogo.value = false; return; }
+    const { error: uploadError } = await client.storage.from('logos').upload(filePath, file, { upsert: false });
+    if(uploadError) { 
+        alert("Upload failed: " + uploadError.message + " (Check if your bucket is named 'logos')"); 
+        isUploadingLogo.value = false; 
+        return; 
+    }
 
     const { error: dbError } = await client.from('teams').update({ logo_url: filePath }).eq('id', myTeam.value);
     
     if(dbError) {
-        alert("Error saving logo: " + dbError.message);
+        alert("Error saving logo to database: " + dbError.message);
     } else {
         const { data: signedData } = await client.storage.from('logos').createSignedUrl(filePath, 86400);
         if (signedData) teamLogoUrl.value = signedData.signedUrl;
     }
 
     isUploadingLogo.value = false;
+}
+
+// NEW FUNCTION: DELETE LOGO
+async function deleteLogo() {
+    if(!confirm("Are you sure you want to remove the team logo?")) return;
+    
+    const { data } = await client.from('teams').select('logo_url').eq('id', myTeam.value).single();
+    if(data && data.logo_url) {
+        await client.storage.from('logos').remove([data.logo_url]);
+    }
+    
+    await client.from('teams').update({ logo_url: null }).eq('id', myTeam.value);
+    teamLogoUrl.value = "";
 }
 
 async function updateVaultPassword() {
@@ -1465,7 +1491,7 @@ async function generateWithAI() {
 
 return {
   user, login, logout, currentView, joinCode, teamPassword, newTeamId, newTeamPassword, newVaultPassword,
-  hasPendingInvite, isProcessingInvite, currentWorkoutId, fontSize, teamLogoUrl, isUploadingLogo, uploadLogo,
+  hasPendingInvite, isProcessingInvite, currentWorkoutId, fontSize, teamLogoUrl, isUploadingLogo, uploadLogo, deleteLogo,
   teamColors, saveColors,
   title, group, poolType, defaultStroke, unit, start, base, input, parsed, totalYards, duration, cloudWorkouts, coachName, practiceDate,
   seasonPlans, activePlanContext, teamGroupsList, staffList, planForm, newGroupName, myRole, myTeam,
