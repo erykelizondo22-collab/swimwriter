@@ -72,14 +72,14 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
     
     <div class="glass-nav border-b border-slate-200/60 px-4 md:px-8 py-4 flex flex-wrap justify-between items-center sticky top-0 z-50 shadow-sm gap-y-4 transition-all">
       <div class="flex items-center gap-3 cursor-pointer group" @click="currentView = myTeam ? 'dashboard' : 'onboarding'">
-        <div class="w-10 h-10 flex items-center justify-center bg-blue-50 rounded-xl group-hover:scale-105 transition-transform duration-300">
+        <div class="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-xl group-hover:scale-105 transition-transform duration-300" :style="{ backgroundColor: teamColors.primary + '20' }">
             <svg viewBox="0 0 100 100" class="w-full h-full p-1" fill="none">
-              <path d="M75,35 C75,10 25,10 25,35 C25,60 75,60 75,85 C75,110 25,110 25,85" stroke="#0ea5e9" stroke-width="14" stroke-linecap="round"/>
-              <path d="M60,45 C60,25 40,25 40,45 C40,65 60,65 60,85 C60,105 40,105 40,85" stroke="#0284c7" stroke-width="10" stroke-linecap="round"/>
+              <path d="M75,35 C75,10 25,10 25,35 C25,60 75,60 75,85 C75,110 25,110 25,85" :stroke="teamColors.primary" stroke-width="14" stroke-linecap="round"/>
+              <path d="M60,45 C60,25 40,25 40,45 C40,65 60,65 60,85 C60,105 40,105 40,85" :stroke="teamColors.secondary" stroke-width="10" stroke-linecap="round"/>
               <circle cx="82" cy="50" r="7" fill="#ef4444" />
             </svg>
         </div>
-        <span class="font-black text-2xl tracking-tight hidden sm:inline-block text-slate-900 group-hover:text-blue-600 transition-colors">swimsync</span>
+        <span class="font-black text-2xl tracking-tight hidden sm:inline-block text-slate-900 group-hover:opacity-80 transition-opacity">swimsync</span>
       </div>
       
       <div class="flex flex-1 md:flex-none items-center justify-end gap-2 md:gap-8 overflow-x-auto no-scrollbar">
@@ -92,7 +92,7 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
               <button @click="currentView = 'staff'; loadStaff();" :class="{'bg-slate-900 text-white shadow-md': currentView === 'staff', 'text-slate-500 hover:bg-slate-100 hover:text-slate-900': currentView !== 'staff'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-all duration-300 px-4 py-2 rounded-full">Staff</button>
             </nav>
             <div class="flex items-center gap-3 pl-3 md:pl-6 border-l border-slate-200">
-              <span class="text-[10px] md:text-xs font-black text-blue-700 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-lg uppercase tracking-widest shadow-sm">{{myTeam}}</span>
+              <span class="text-[10px] md:text-xs font-black bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg uppercase tracking-widest shadow-sm" :style="{ color: teamColors.primary }">{{myTeam}}</span>
               <button @click="logout" class="text-[10px] md:text-xs font-bold text-slate-400 hover:text-red-500 transition-colors bg-slate-50 hover:bg-red-50 px-3 py-1.5 rounded-lg">LOGOUT</button>
             </div>
         </div>
@@ -107,10 +107,10 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
         
       <div v-if="showAiModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 transition-opacity">
           <div class="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col scale-100 transition-transform">
-              <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 flex justify-between items-center text-white">
+              <div class="p-6 flex justify-between items-center text-white" :style="{ background: 'linear-gradient(to right, ' + teamColors.primary + ', ' + teamColors.secondary + ')' }">
                   <div>
                       <h3 class="font-black text-xl leading-tight flex items-center gap-2">✨ SwimSync AI Co-Pilot</h3>
-                      <p class="text-[10px] text-blue-100 uppercase tracking-widest mt-1 opacity-90">
+                      <p class="text-[10px] text-white/80 uppercase tracking-widest mt-1 opacity-90">
                           Context: {{group || 'No Group'}} • {{poolType}} • 
                           {{activePlanContext ? activePlanContext.weekData?.focus : 'No Plan Focus'}}
                       </p>
@@ -120,7 +120,7 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
               
               <div class="p-6 space-y-4 bg-slate-50/50">
                   <p class="text-sm text-slate-600 font-medium">Describe the set you want to generate. The AI will automatically pull the last 10 workouts for <strong>{{group || 'this group'}}</strong> and structure a new set that fits your current season plan.</p>
-                  <textarea v-model="aiPrompt" rows="4" placeholder="e.g., Give me a 1200y threshold set using 100s and 200s..." class="w-full bg-white border border-slate-200 p-4 rounded-2xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-sm font-medium resize-none shadow-sm"></textarea>
+                  <textarea v-model="aiPrompt" rows="4" placeholder="e.g., Give me a 1200y threshold set using 100s and 200s..." class="w-full bg-white border border-slate-200 p-4 rounded-2xl outline-none focus:ring-4 transition-all text-sm font-medium resize-none shadow-sm" :style="{ outlineColor: teamColors.primary }"></textarea>
                   
                   <button @click="generateWithAI" :disabled="isAiLoading || !aiPrompt.trim()" :class="{'opacity-50 cursor-not-allowed': isAiLoading || !aiPrompt.trim()}" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl hover:bg-black hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 uppercase tracking-widest text-xs">
                       <span v-if="isAiLoading" class="flex items-center gap-2">
@@ -149,13 +149,13 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
       </div>
 
       <div v-if="currentView === 'dashboard'" class="space-y-8 md:space-y-10">
-        <div class="bg-gradient-to-br from-blue-600 to-cyan-500 rounded-[2.5rem] p-8 md:p-12 text-white shadow-2xl shadow-blue-900/20 flex flex-col md:flex-row justify-between items-center relative overflow-hidden gap-8">
+        <div class="rounded-[2.5rem] p-8 md:p-12 text-white shadow-xl shadow-slate-900/20 flex flex-col md:flex-row justify-between items-center relative overflow-hidden gap-8" :style="{ background: 'linear-gradient(to bottom right, ' + teamColors.primary + ', ' + teamColors.secondary + ')' }">
           <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-          <div class="absolute bottom-0 left-0 w-40 h-40 bg-blue-900 opacity-20 rounded-full blur-2xl -ml-10 -mb-10 pointer-events-none"></div>
+          <div class="absolute bottom-0 left-0 w-40 h-40 bg-black opacity-20 rounded-full blur-2xl -ml-10 -mb-10 pointer-events-none"></div>
           
           <div class="relative z-10 text-center md:text-left">
               <h2 class="text-3xl md:text-4xl font-black uppercase tracking-tight mb-2">The Vault</h2>
-              <p class="text-blue-100 font-medium text-sm md:text-base uppercase tracking-widest opacity-90">Your master workout repository</p>
+              <p class="text-white/80 font-medium text-sm md:text-base uppercase tracking-widest opacity-90">Your master workout repository</p>
           </div>
           
           <div class="relative z-10 flex flex-col sm:flex-row w-full md:w-auto gap-4">
@@ -163,7 +163,7 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                   Resume Draft
               </button>
-              <button @click="startNewWorkout" class="w-full sm:w-auto bg-white text-blue-600 px-8 py-4 rounded-2xl font-black shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 uppercase tracking-widest text-xs flex items-center justify-center gap-2">
+              <button @click="startNewWorkout" class="w-full sm:w-auto bg-white px-8 py-4 rounded-2xl font-black shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 uppercase tracking-widest text-xs flex items-center justify-center gap-2" :style="{ color: teamColors.primary }">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                   Create Workout
               </button>
@@ -173,16 +173,16 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
         <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200/60 flex flex-wrap gap-5 items-center">
             <div class="flex-1 min-w-[150px]">
                 <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-2">Filter by Group</label>
-                <select v-model="filterGroup" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer">
+                <select v-model="filterGroup" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-xs font-bold uppercase outline-none transition-all cursor-pointer">
                     <option value="">All Groups</option>
                     <option v-for="g in teamGroupsList" :key="g.id" :value="g.name">{{g.name}}</option>
                 </select>
             </div>
             <div class="flex-1 min-w-[150px]">
               <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-2">Practice Date</label>
-              <input type="date" v-model="filterDate" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer">
+              <input type="date" v-model="filterDate" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-xs font-bold outline-none transition-all cursor-pointer">
             </div>
-            <button @click="filterDate = ''; filterGroup = '';" class="text-[10px] font-black text-slate-400 hover:text-blue-600 uppercase tracking-widest mt-4 px-2 transition-colors">Clear Filter</button>
+            <button @click="filterDate = ''; filterGroup = '';" class="text-[10px] font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest mt-4 px-2 transition-colors">Clear Filter</button>
         </div>
 
         <div v-if="!filteredWorkouts.length" class="text-center py-32 text-slate-400 font-black uppercase tracking-widest border-2 border-dashed border-slate-200 rounded-[2.5rem]">
@@ -194,18 +194,18 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
             <div v-if="todaysWorkouts.length">
                 <div class="flex items-center gap-4 mb-6">
                     <h3 class="text-xl md:text-2xl font-black uppercase tracking-tight text-slate-900">Today's Workouts</h3>
-                    <div class="h-1 flex-1 bg-gradient-to-r from-blue-500 to-transparent rounded-full opacity-20"></div>
+                    <div class="h-1 flex-1 rounded-full opacity-20" :style="{ background: 'linear-gradient(to right, ' + teamColors.primary + ', transparent)' }"></div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-                    <div v-for="w in todaysWorkouts" :key="w.id" @click="loadWorkout(w)" class="p-6 bg-white border border-slate-200 rounded-[2rem] hover:border-blue-400 hover:shadow-xl hover:shadow-blue-900/5 hover:-translate-y-1 cursor-pointer transition-all duration-300 group relative flex flex-col">
+                    <div v-for="w in todaysWorkouts" :key="w.id" @click="loadWorkout(w)" class="p-6 bg-white border border-slate-200 rounded-[2rem] hover:shadow-xl hover:-translate-y-1 cursor-pointer transition-all duration-300 group relative flex flex-col" :style="{ '--tw-border-opacity': '1' }" onmouseover="this.style.borderColor=__vue_app__.config.globalProperties.teamColors.primary" onmouseout="this.style.borderColor='#e2e8f0'">
                       <button @click.stop="deleteWorkout(w.id)" class="absolute top-5 right-5 text-slate-300 hover:text-red-500 hover:bg-red-50 z-10 bg-slate-50 p-2.5 rounded-xl transition-all duration-200 opacity-0 group-hover:opacity-100">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                       </button>
-                      <div class="text-[10px] font-black text-blue-600 bg-blue-50 self-start px-3 py-1 rounded-md uppercase tracking-widest mb-4 border border-blue-100">TODAY • {{formatPracticeDate(w.practice_date)}}</div>
+                      <div class="text-[10px] font-black self-start px-3 py-1 rounded-md uppercase tracking-widest mb-4 border" :style="{ color: teamColors.primary, backgroundColor: teamColors.primary + '10', borderColor: teamColors.primary + '30' }">TODAY • {{formatPracticeDate(w.practice_date)}}</div>
                       <div class="font-black text-xl leading-tight uppercase text-slate-900 tracking-tight pr-8 mb-6 flex-1">{{w.title}}</div>
                       <div class="text-[11px] font-bold text-slate-500 mt-auto border-t border-slate-100 pt-4 flex justify-between items-center uppercase tracking-widest">
                           <span class="bg-slate-100 px-2 py-1 rounded-md text-slate-600">{{w.group}}</span>
-                          <span class="text-blue-600 font-black text-sm bg-blue-50 px-2 py-1 rounded-md">{{w.total_yards}}{{w.pool_type === 'SCM' || w.pool_type === 'LCM' ? 'm' : 'y'}}</span>
+                          <span class="font-black text-sm px-2 py-1 rounded-md" :style="{ color: teamColors.primary, backgroundColor: teamColors.primary + '10' }">{{w.total_yards}}{{w.pool_type === 'SCM' || w.pool_type === 'LCM' ? 'm' : 'y'}}</span>
                       </div>
                     </div>
                 </div>
@@ -258,37 +258,37 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-slate-200 pb-6">
               <div>
                   <h2 class="text-3xl md:text-4xl font-black uppercase tracking-tight text-slate-900">Analytics Engine</h2>
-                  <p class="text-blue-600 text-sm font-bold uppercase tracking-widest mt-1">Practice Data Insights</p>
+                  <p class="text-sm font-bold uppercase tracking-widest mt-1" :style="{ color: teamColors.primary }">Practice Data Insights</p>
               </div>
           </div>
 
           <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-200 flex flex-wrap gap-5 items-end">
               <div class="flex-1 min-w-[150px]">
                   <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-2">Target Group</label>
-                  <select v-model="analyticsGroup" class="w-full bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-sm font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer">
+                  <select v-model="analyticsGroup" class="w-full bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-sm font-bold uppercase outline-none transition-all cursor-pointer">
                       <option value="">All Groups</option>
                       <option v-for="g in teamGroupsList" :key="g.id" :value="g.name">{{g.name}}</option>
                   </select>
               </div>
               <div class="flex-1 min-w-[140px]">
                   <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-2">Start Date</label>
-                  <input type="date" v-model="analyticsStartDate" class="w-full bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer">
+                  <input type="date" v-model="analyticsStartDate" class="w-full bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-sm font-bold outline-none transition-all cursor-pointer">
               </div>
               <div class="flex-1 min-w-[140px]">
                   <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-2">End Date</label>
-                  <input type="date" v-model="analyticsEndDate" class="w-full bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer">
+                  <input type="date" v-model="analyticsEndDate" class="w-full bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-sm font-bold outline-none transition-all cursor-pointer">
               </div>
-              <button @click="analyticsGroup = ''; resetAnalyticsDates();" class="text-[10px] font-black text-slate-400 hover:text-blue-600 uppercase tracking-widest mb-4 px-3 transition-colors">Reset</button>
+              <button @click="analyticsGroup = ''; resetAnalyticsDates();" class="text-[10px] font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest mb-4 px-3 transition-colors">Reset</button>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div class="bg-slate-900 text-white p-8 rounded-[2rem] shadow-xl flex flex-col justify-center items-center text-center relative overflow-hidden hover:-translate-y-1 transition-transform duration-300">
-                  <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500 opacity-20 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
-                  <div class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2 relative z-10">Total Volume</div>
+                  <div class="absolute top-0 right-0 w-32 h-32 opacity-20 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none" :style="{ backgroundColor: teamColors.primary }"></div>
+                  <div class="text-[10px] font-black uppercase tracking-widest mb-2 relative z-10" :style="{ color: teamColors.primary }">Total Volume</div>
                   <div class="text-5xl md:text-6xl font-black tracking-tighter relative z-10">{{analyticsStats.totalYards.toLocaleString()}}</div>
               </div>
-              <div class="bg-gradient-to-br from-blue-600 to-cyan-500 text-white p-8 rounded-[2rem] shadow-xl shadow-blue-900/20 flex flex-col justify-center items-center text-center hover:-translate-y-1 transition-transform duration-300">
-                  <div class="text-[10px] font-black text-blue-100 uppercase tracking-widest mb-2">Workouts Logged</div>
+              <div class="text-white p-8 rounded-[2rem] shadow-xl shadow-slate-900/10 flex flex-col justify-center items-center text-center hover:-translate-y-1 transition-transform duration-300" :style="{ background: 'linear-gradient(to bottom right, ' + teamColors.primary + ', ' + teamColors.secondary + ')' }">
+                  <div class="text-[10px] font-black text-white/80 uppercase tracking-widest mb-2">Workouts Logged</div>
                   <div class="text-5xl md:text-6xl font-black tracking-tighter">{{analyticsStats.workouts}}</div>
               </div>
               <div class="bg-amber-500 text-white p-8 rounded-[2rem] shadow-xl shadow-amber-900/20 flex flex-col justify-center items-center text-center hover:-translate-y-1 transition-transform duration-300">
@@ -313,29 +313,29 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
           </div>
       </div>
 
-      <div v-if="currentView === 'setup'" class="max-w-2xl mx-auto bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl shadow-blue-900/5 border border-slate-100 mt-8">
+      <div v-if="currentView === 'setup'" class="max-w-2xl mx-auto bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl shadow-slate-900/5 border border-slate-100 mt-8">
           <h2 class="text-3xl font-black text-center mb-10 uppercase tracking-tight text-slate-900">Practice Setup</h2>
           <div class="space-y-6">
               <div class="space-y-1.5">
                   <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Practice Date</label>
-                  <input type="date" v-model="practiceDate" class="w-full bg-slate-50 border border-slate-200 p-5 rounded-2xl font-black text-slate-800 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-base cursor-pointer">
+                  <input type="date" v-model="practiceDate" class="w-full bg-slate-50 border border-slate-200 p-5 rounded-2xl font-black text-slate-800 transition-all outline-none text-base cursor-pointer">
               </div>
               <div class="space-y-1.5">
                   <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Workout Title</label>
-                  <input v-model="title" placeholder="e.g. Focus: Aerobic Power" class="w-full bg-slate-50 border border-slate-200 p-5 rounded-2xl font-black text-slate-800 uppercase focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-base">
+                  <input v-model="title" placeholder="e.g. Focus: Aerobic Power" class="w-full bg-slate-50 border border-slate-200 p-5 rounded-2xl font-black text-slate-800 uppercase transition-all outline-none text-base">
               </div>
               
               <div class="grid grid-cols-2 gap-4">
                   <div class="space-y-1.5">
                       <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Athlete Group</label>
-                      <select v-model="group" class="w-full bg-slate-50 border border-slate-200 p-5 rounded-2xl font-black text-slate-800 uppercase focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none appearance-none text-base cursor-pointer">
+                      <select v-model="group" class="w-full bg-slate-50 border border-slate-200 p-5 rounded-2xl font-black text-slate-800 uppercase transition-all outline-none appearance-none text-base cursor-pointer">
                           <option value="" disabled>Select Group</option>
                           <option v-for="g in teamGroupsList" :key="g.id" :value="g.name">{{g.name}}</option>
                       </select>
                   </div>
                   <div class="space-y-1.5">
                       <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Pool Type</label>
-                      <select v-model="poolType" class="w-full bg-slate-50 border border-slate-200 p-5 rounded-2xl font-black text-slate-800 uppercase focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none appearance-none text-base cursor-pointer">
+                      <select v-model="poolType" class="w-full bg-slate-50 border border-slate-200 p-5 rounded-2xl font-black text-slate-800 uppercase transition-all outline-none appearance-none text-base cursor-pointer">
                           <option value="SCY">SCY (Yards)</option>
                           <option value="SCM">SCM (Meters)</option>
                           <option value="LCM">LCM (Long Course)</option>
@@ -346,17 +346,17 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div class="space-y-1.5">
                       <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Start Time</label>
-                      <input type="time" v-model="start" class="w-full bg-slate-50 border border-slate-200 p-5 rounded-2xl font-black text-slate-800 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-base cursor-pointer">
+                      <input type="time" v-model="start" class="w-full bg-slate-50 border border-slate-200 p-5 rounded-2xl font-black text-slate-800 transition-all outline-none text-base cursor-pointer">
                   </div>
                   <div class="space-y-1.5">
                       <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Base Interval</label>
-                      <select v-model="base" class="w-full bg-slate-50 border border-slate-200 p-5 rounded-2xl font-black text-slate-800 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none appearance-none text-base cursor-pointer">
+                      <select v-model="base" class="w-full bg-slate-50 border border-slate-200 p-5 rounded-2xl font-black text-slate-800 transition-all outline-none appearance-none text-base cursor-pointer">
                           <option v-for="b in ['1:15','1:20','1:30','1:40','1:45','2:00']" :key="b">{{b}}</option>
                       </select>
                   </div>
                   <div class="space-y-1.5">
                       <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Default Stroke</label>
-                      <select v-model="defaultStroke" class="w-full bg-slate-50 border border-slate-200 p-5 rounded-2xl font-black text-slate-800 uppercase focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none appearance-none text-base cursor-pointer">
+                      <select v-model="defaultStroke" class="w-full bg-slate-50 border border-slate-200 p-5 rounded-2xl font-black text-slate-800 uppercase transition-all outline-none appearance-none text-base cursor-pointer">
                           <option value="free">Freestyle</option>
                           <option value="back">Backstroke</option>
                           <option value="breast">Breaststroke</option>
@@ -366,7 +366,7 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
                   </div>
               </div>
               <div class="pt-4">
-                  <button @click="currentView = 'editor'" :disabled="!group || !practiceDate" :class="{'opacity-50 cursor-not-allowed': !group || !practiceDate, 'hover:scale-[1.02] hover:shadow-xl shadow-blue-500/30': group && practiceDate}" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-black py-6 rounded-2xl shadow-lg uppercase tracking-widest transition-all duration-300 text-sm">Enter Editor</button>
+                  <button @click="currentView = 'editor'" :disabled="!group || !practiceDate" :class="{'opacity-50 cursor-not-allowed': !group || !practiceDate, 'hover:scale-[1.02] hover:shadow-xl': group && practiceDate}" class="w-full text-white font-black py-6 rounded-2xl shadow-lg uppercase tracking-widest transition-all duration-300 text-sm" :style="{ background: 'linear-gradient(to right, ' + teamColors.primary + ', ' + teamColors.secondary + ')' }">Enter Editor</button>
               </div>
           </div>
       </div>
@@ -374,12 +374,12 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
       <div v-if="currentView === 'editor'" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div class="lg:col-span-8 space-y-6 flex flex-col">
           
-          <div v-if="activePlanContext" class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 p-5 rounded-3xl flex items-center justify-between shadow-sm">
+          <div v-if="activePlanContext" class="border p-5 rounded-3xl flex items-center justify-between shadow-sm" :style="{ backgroundColor: teamColors.primary + '05', borderColor: teamColors.primary + '30' }">
               <div class="flex items-center gap-4">
-                  <div class="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center font-black text-lg shadow-inner">W{{activePlanContext.weekNum}}</div>
+                  <div class="w-12 h-12 text-white rounded-2xl flex items-center justify-center font-black text-lg shadow-inner" :style="{ backgroundColor: teamColors.primary }">W{{activePlanContext.weekNum}}</div>
                   <div>
-                      <div class="text-[9px] font-black text-blue-500 uppercase tracking-widest mb-0.5">{{activePlanContext.planTitle}} Sync ({{formatPracticeDate(practiceDate)}})</div>
-                      <div class="text-sm font-bold text-blue-900 uppercase leading-tight flex items-center flex-wrap gap-2">
+                      <div class="text-[9px] font-black uppercase tracking-widest mb-0.5" :style="{ color: teamColors.primary }">{{activePlanContext.planTitle}} Sync ({{formatPracticeDate(practiceDate)}})</div>
+                      <div class="text-sm font-bold text-slate-900 uppercase leading-tight flex items-center flex-wrap gap-2">
                           {{activePlanContext.weekData?.focus || 'No focus set for this week'}}
                           <span v-if="activePlanContext.weekData?.meet" class="bg-amber-100 border border-amber-200 text-amber-700 px-2.5 py-1 rounded-md text-[10px] tracking-widest shadow-sm">
                               🏆 {{activePlanContext.weekData.meet}}
@@ -387,9 +387,9 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
                       </div>
                   </div>
               </div>
-              <div v-if="activePlanContext.weekData?.targetYards" class="text-right hidden sm:block bg-white px-4 py-2 rounded-xl border border-blue-100">
-                  <div class="text-[9px] font-black text-blue-400 uppercase tracking-widest">Target Vol</div>
-                  <div class="font-black text-blue-900">{{activePlanContext.weekData.targetYards}}{{unit}}</div>
+              <div v-if="activePlanContext.weekData?.targetYards" class="text-right hidden sm:block bg-white px-4 py-2 rounded-xl border border-slate-100">
+                  <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Target Vol</div>
+                  <div class="font-black text-slate-900">{{activePlanContext.weekData.targetYards}}{{unit}}</div>
               </div>
           </div>
 
@@ -398,7 +398,7 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
                 <h2 class="text-2xl md:text-3xl font-black uppercase tracking-tight text-slate-900 truncate pr-2">{{title || 'Untitled Workout'}}</h2>
                 
                 <div class="flex gap-3">
-                    <button @click="showAiModal = true" class="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 border border-indigo-100 px-4 py-2.5 rounded-xl hover:bg-indigo-100 transition-colors flex items-center gap-1.5 shadow-sm">✨ AI Co-Pilot</button>
+                    <button @click="showAiModal = true" class="text-[10px] font-black uppercase tracking-widest bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl hover:bg-slate-100 transition-colors flex items-center gap-1.5 shadow-sm" :style="{ color: teamColors.primary, borderColor: teamColors.primary + '50' }">✨ AI Co-Pilot</button>
                     <button @click="currentView = 'setup'" class="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl hover:bg-slate-100 hover:text-slate-700 transition-colors">Edit Setup</button>
                 </div>
             </div>
@@ -408,7 +408,7 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
 
         <div class="lg:col-span-4 space-y-6">
           <div class="bg-slate-900 text-white p-8 md:p-10 rounded-[2rem] shadow-2xl text-center relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500 opacity-10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+            <div class="absolute top-0 right-0 w-32 h-32 opacity-20 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" :style="{ backgroundColor: teamColors.primary }"></div>
             
             <div class="flex justify-center items-end gap-6 mb-4 relative z-10">
                 <div class="text-6xl md:text-7xl font-black tracking-tighter">{{totalYards}}<span class="text-3xl text-slate-400 ml-1">{{unit}}</span></div>
@@ -428,18 +428,18 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
             
             <div class="bg-slate-800/50 p-3 rounded-xl mt-6 relative z-10 text-[10px] font-bold text-slate-300 uppercase tracking-widest flex justify-between items-center border border-slate-700/50">
                 <span>Start: <span class="text-white">{{formattedStartTime}}</span></span>
-                <span>Pace: <span class="text-blue-400">{{currentSetPace}}</span></span>
+                <span>Line Pace: <span :style="{ color: teamColors.primary }">{{currentSetPace}}/100{{unit}}</span></span>
             </div>
           </div>
 
           <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 space-y-4">
-            <button @click="save" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-black py-4 rounded-xl shadow-lg shadow-blue-500/20 uppercase tracking-widest hover:scale-[1.02] hover:shadow-xl transition-all duration-300 text-sm">Save to Vault</button>
+            <button @click="save" class="w-full text-white font-black py-4 rounded-xl shadow-lg uppercase tracking-widest hover:scale-[1.02] hover:shadow-xl transition-all duration-300 text-sm" :style="{ background: 'linear-gradient(to right, ' + teamColors.primary + ', ' + teamColors.secondary + ')' }">Save to Vault</button>
             <button onclick="window.print()" class="w-full bg-slate-100 text-slate-700 py-4 rounded-xl font-black uppercase tracking-widest border border-slate-200 hover:bg-slate-200 hover:text-slate-900 transition-colors text-sm">Print Sheet</button>
             
             <div class="border-t border-slate-100 pt-5 mt-2">
               <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex justify-between">
                   <span>Print Font Size</span>
-                  <span class="text-blue-600 bg-blue-50 px-2 rounded">{{fontSize}}px</span>
+                  <span class="px-2 rounded" :style="{ color: teamColors.primary, backgroundColor: teamColors.primary + '20' }">{{fontSize}}px</span>
               </label>
               <input type="range" v-model="fontSize" min="6" max="48" step="1" class="font-slider">
             </div>
@@ -453,14 +453,14 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-slate-200 pb-6">
            <div>
               <h2 class="text-3xl md:text-4xl font-black uppercase tracking-tight text-slate-900">Macrocycles</h2>
-              <p class="text-blue-600 text-sm font-bold uppercase tracking-widest mt-1">Long-term Season Planning</p>
+              <p class="text-sm font-bold uppercase tracking-widest mt-1" :style="{ color: teamColors.primary }">Long-term Season Planning</p>
            </div>
            <button @click="startNewPlan" class="w-full sm:w-auto bg-slate-900 text-white px-8 py-3.5 rounded-xl font-black shadow-lg hover:bg-black hover:-translate-y-0.5 transition-all uppercase tracking-widest text-xs">+ Build Plan</button>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-            <div v-for="plan in seasonPlans" :key="plan.id" @click="editPlan(plan)" class="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-200 hover:border-blue-400 hover:shadow-xl hover:-translate-y-1 cursor-pointer transition-all duration-300 group flex flex-col">
-                <div class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-4 bg-blue-50 self-start px-3 py-1 rounded-md border border-blue-100">{{plan.group_name}}</div>
-                <h3 class="text-2xl font-black uppercase tracking-tight mb-6 group-hover:text-blue-600 transition-colors text-slate-900 flex-1">{{plan.title}}</h3>
+            <div v-for="plan in seasonPlans" :key="plan.id" @click="editPlan(plan)" class="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-200 hover:shadow-xl hover:-translate-y-1 cursor-pointer transition-all duration-300 group flex flex-col">
+                <div class="text-[10px] font-black uppercase tracking-widest mb-4 self-start px-3 py-1 rounded-md border" :style="{ color: teamColors.primary, backgroundColor: teamColors.primary + '10', borderColor: teamColors.primary + '30' }">{{plan.group_name}}</div>
+                <h3 class="text-2xl font-black uppercase tracking-tight mb-6 transition-colors text-slate-900 flex-1">{{plan.title}}</h3>
                 <div class="flex justify-between items-center text-[10px] md:text-xs font-bold text-slate-500 uppercase border-t border-slate-100 pt-5 mt-auto">
                     <span class="bg-slate-50 px-2 py-1 rounded border border-slate-100">Start: {{plan.start_date}}</span>
                     <span class="text-slate-900">{{plan.weeks.length}} Weeks</span>
@@ -481,47 +481,47 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
           <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
               <div class="space-y-1.5">
                   <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Plan Name</label>
-                  <input v-model="planForm.title" placeholder="e.g. LC Champs" class="w-full bg-slate-50 p-4 rounded-xl font-black text-slate-800 uppercase outline-none border border-slate-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all text-sm">
+                  <input v-model="planForm.title" placeholder="e.g. LC Champs" class="w-full bg-slate-50 p-4 rounded-xl font-black text-slate-800 uppercase outline-none border border-slate-200 transition-all text-sm">
               </div>
               <div class="space-y-1.5">
                   <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Target Group</label>
-                  <select v-model="planForm.group_name" class="w-full bg-slate-50 p-4 rounded-xl font-black text-slate-800 uppercase outline-none border border-slate-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all appearance-none text-sm cursor-pointer">
+                  <select v-model="planForm.group_name" class="w-full bg-slate-50 p-4 rounded-xl font-black text-slate-800 uppercase outline-none border border-slate-200 transition-all appearance-none text-sm cursor-pointer">
                       <option value="" disabled>Select Group</option>
                       <option v-for="g in teamGroupsList" :key="g.id" :value="g.name">{{g.name}}</option>
                   </select>
               </div>
               <div class="space-y-1.5">
                   <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Start Date</label>
-                  <input type="date" v-model="planForm.start_date" class="w-full bg-slate-50 p-4 rounded-xl font-black text-slate-800 outline-none border border-slate-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all text-sm cursor-pointer">
+                  <input type="date" v-model="planForm.start_date" class="w-full bg-slate-50 p-4 rounded-xl font-black text-slate-800 outline-none border border-slate-200 transition-all text-sm cursor-pointer">
               </div>
           </div>
 
           <div class="flex justify-between items-end mb-6">
               <h3 class="font-black uppercase tracking-widest text-slate-900">Weekly Architecture</h3>
-              <button @click="addWeek" class="text-[10px] font-black text-blue-600 bg-blue-50 border border-blue-100 px-4 py-2.5 rounded-xl uppercase tracking-widest hover:bg-blue-100 transition-colors shadow-sm">+ Add Week</button>
+              <button @click="addWeek" class="text-[10px] font-black bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl uppercase tracking-widest transition-colors shadow-sm" :style="{ color: teamColors.primary }">+ Add Week</button>
           </div>
 
           <div class="space-y-4 mb-10">
-              <div v-for="(week, index) in planForm.weeks" :key="index" class="flex flex-wrap md:flex-nowrap gap-3 items-center bg-slate-50 p-4 rounded-2xl border border-slate-200 hover:border-blue-300 transition-colors group">
+              <div v-for="(week, index) in planForm.weeks" :key="index" class="flex flex-wrap md:flex-nowrap gap-3 items-center bg-slate-50 p-4 rounded-2xl border border-slate-200 transition-colors group">
                   <div class="w-16 md:w-20 text-center font-black text-slate-400 uppercase flex flex-col justify-center">
-                      <span class="text-lg text-slate-600 group-hover:text-blue-600 transition-colors">W{{index + 1}}</span>
+                      <span class="text-lg text-slate-600 transition-colors" :style="{ color: teamColors.primary }">W{{index + 1}}</span>
                       <span class="text-[9px] mt-0.5 whitespace-nowrap">{{getWeekDateRange(planForm.start_date, index)}}</span>
                   </div>
-                  <input v-model="week.focus" placeholder="Phase / Focus" class="flex-1 w-full min-w-[120px] bg-white p-3.5 rounded-xl font-bold uppercase text-sm outline-none border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all text-slate-800 placeholder-slate-300 shadow-sm">
+                  <input v-model="week.focus" placeholder="Phase / Focus" class="flex-1 w-full min-w-[120px] bg-white p-3.5 rounded-xl font-bold uppercase text-sm outline-none border border-slate-200 transition-all text-slate-800 placeholder-slate-300 shadow-sm">
                   <input v-model="week.meet" placeholder="Meet / Event (Optional)" class="flex-1 w-full min-w-[120px] bg-amber-50 p-3.5 rounded-xl font-bold uppercase text-sm outline-none border border-amber-200 focus:border-amber-400 focus:bg-white focus:ring-2 focus:ring-amber-500/10 transition-all text-amber-700 placeholder-amber-400/70 shadow-sm">
-                  <input v-model="week.targetYards" type="number" placeholder="Vol (y)" class="w-24 md:w-32 bg-white p-3.5 rounded-xl font-bold text-sm outline-none border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all text-slate-800 text-right shadow-sm">
+                  <input v-model="week.targetYards" type="number" placeholder="Vol (y)" class="w-24 md:w-32 bg-white p-3.5 rounded-xl font-bold text-sm outline-none border border-slate-200 transition-all text-slate-800 text-right shadow-sm">
                   <button @click="planForm.weeks.splice(index, 1)" class="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors font-black">X</button>
               </div>
           </div>
 
-          <button @click="savePlan" :disabled="!planForm.group_name" :class="{'opacity-50 cursor-not-allowed': !planForm.group_name, 'hover:-translate-y-0.5 hover:shadow-lg shadow-blue-500/20': planForm.group_name}" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-black py-5 rounded-2xl uppercase tracking-widest transition-all duration-300 text-sm shadow-md">Save Macrocycle</button>
+          <button @click="savePlan" :disabled="!planForm.group_name" :class="{'opacity-50 cursor-not-allowed': !planForm.group_name, 'hover:-translate-y-0.5 hover:shadow-lg shadow-blue-500/20': planForm.group_name}" class="w-full text-white font-black py-5 rounded-2xl uppercase tracking-widest transition-all duration-300 text-sm shadow-md" :style="{ background: 'linear-gradient(to right, ' + teamColors.primary + ', ' + teamColors.secondary + ')' }">Save Macrocycle</button>
       </div>
 
       <div v-if="currentView === 'staff'" class="max-w-4xl mx-auto space-y-6 mt-6">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-slate-200 pb-6 mb-8">
               <div>
                   <h2 class="text-3xl md:text-4xl font-black uppercase tracking-tight text-slate-900">Coaching Staff</h2>
-                  <p class="text-blue-600 text-sm font-bold uppercase tracking-widest mt-1">Vault Access & Security</p>
+                  <p class="text-sm font-bold uppercase tracking-widest mt-1" :style="{ color: teamColors.primary }">Vault Access & Security</p>
               </div>
               <button @click="copyInviteLink" class="w-full sm:w-auto bg-slate-900 text-white px-6 py-3.5 rounded-xl font-black shadow-lg hover:bg-black transition-colors uppercase tracking-widest text-xs flex items-center justify-center gap-2">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
@@ -529,16 +529,31 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
               </button>
           </div>
 
-          <div v-if="myRole === 'owner'" class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 p-8 rounded-[2rem] shadow-sm mb-6">
-              <h3 class="text-xl font-black text-blue-900 uppercase tracking-tight mb-2">Team Branding</h3>
-              <p class="text-blue-700/80 text-sm font-medium mb-6">Upload your team logo. It will be displayed as a secure watermark behind your printed workout sheets.</p>
+          <div v-if="myRole === 'owner'" class="bg-slate-50 border border-slate-200 p-8 rounded-[2rem] shadow-sm mb-6">
+              <h3 class="text-xl font-black text-slate-900 uppercase tracking-tight mb-2">Team Colors</h3>
+              <p class="text-slate-500 text-sm font-medium mb-6">Set your team's primary and secondary colors. This instantly updates your dashboard and the lines on your printed workout sheets.</p>
+              <div class="flex gap-6">
+                  <div class="flex flex-col gap-2">
+                      <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Primary</label>
+                      <input type="color" v-model="teamColors.primary" @change="saveColors" class="w-16 h-16 rounded-xl cursor-pointer p-0 border-0 bg-transparent shadow-sm hover:scale-105 transition-transform">
+                  </div>
+                  <div class="flex flex-col gap-2">
+                      <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Secondary</label>
+                      <input type="color" v-model="teamColors.secondary" @change="saveColors" class="w-16 h-16 rounded-xl cursor-pointer p-0 border-0 bg-transparent shadow-sm hover:scale-105 transition-transform">
+                  </div>
+              </div>
+          </div>
+
+          <div v-if="myRole === 'owner'" class="bg-slate-50 border border-slate-200 p-8 rounded-[2rem] shadow-sm mb-6">
+              <h3 class="text-xl font-black text-slate-900 uppercase tracking-tight mb-2">Team Branding</h3>
+              <p class="text-slate-500 text-sm font-medium mb-6">Upload your team logo. It will be displayed as a secure watermark behind your printed workout sheets.</p>
               <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                  <div class="w-24 h-24 bg-white rounded-2xl border border-blue-200 flex items-center justify-center overflow-hidden shrink-0 z-10 relative shadow-sm">
+                  <div class="w-24 h-24 bg-white rounded-2xl border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 z-10 relative shadow-sm">
                       <img v-if="teamLogoUrl" :src="teamLogoUrl" class="w-full h-full object-contain p-2 relative z-10 bg-white">
-                      <span v-else class="text-blue-300 text-[10px] font-black uppercase text-center leading-tight">No<br>Logo</span>
+                      <span v-else class="text-slate-300 text-[10px] font-black uppercase text-center leading-tight">No<br>Logo</span>
                   </div>
                   <div class="flex-1 w-full">
-                      <input type="file" @change="uploadLogo" accept="image/*" class="block w-full text-sm text-blue-800 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:transition-colors file:cursor-pointer cursor-pointer outline-none file:shadow-md file:uppercase file:tracking-widest">
+                      <input type="file" @change="uploadLogo" accept="image/*" class="block w-full text-sm text-slate-800 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-white file:border file:border-slate-200 file:text-slate-700 hover:file:bg-slate-50 file:transition-colors file:cursor-pointer cursor-pointer outline-none file:shadow-sm file:uppercase file:tracking-widest">
                       <div v-if="isUploadingLogo" class="text-[10px] font-black text-blue-600 mt-3 uppercase tracking-widest animate-pulse flex items-center gap-2">
                           <svg class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                           Encrypting & Uploading...
@@ -558,7 +573,7 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
 
           <div class="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-200 space-y-4">
               <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 pb-4 mb-4">Active Members</h3>
-              <div v-for="member in staffList" :key="member.id" class="flex flex-col sm:flex-row justify-between sm:items-center bg-slate-50 p-5 rounded-2xl border border-slate-200 gap-4 hover:border-blue-200 transition-colors">
+              <div v-for="member in staffList" :key="member.id" class="flex flex-col sm:flex-row justify-between sm:items-center bg-slate-50 p-5 rounded-2xl border border-slate-200 gap-4 hover:border-slate-300 transition-colors">
                   <div>
                       <div class="font-black uppercase text-slate-800 tracking-wide text-sm md:text-base">{{member.name || member.email}}</div>
                       <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 bg-white inline-block px-2 py-0.5 rounded border border-slate-200">{{member.role}}</div>
@@ -568,7 +583,7 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
                       <select v-if="myRole === 'owner'" 
                               @change="changeRole(member.id, member.name || member.email, $event.target.value)" 
                               :value="member.role"
-                              class="bg-white border border-slate-200 text-[10px] font-black uppercase tracking-widest px-3 py-2.5 rounded-xl text-slate-700 outline-none focus:border-blue-500 cursor-pointer shadow-sm">
+                              class="bg-white border border-slate-200 text-[10px] font-black uppercase tracking-widest px-3 py-2.5 rounded-xl text-slate-700 outline-none focus:border-slate-400 cursor-pointer shadow-sm">
                           <option value="coach">Coach</option>
                           <option value="admin">Admin</option>
                           <option value="owner">Owner</option>
@@ -593,11 +608,11 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
       <div v-if="currentView === 'groups'" class="max-w-3xl mx-auto space-y-6 mt-6">
           <div class="border-b border-slate-200 pb-6 mb-8">
               <h2 class="text-3xl md:text-4xl font-black uppercase tracking-tight text-slate-900">Team Groups</h2>
-              <p class="text-blue-600 text-sm font-bold uppercase tracking-widest mt-1">Manage Roster Divisions</p>
+              <p class="text-sm font-bold uppercase tracking-widest mt-1" :style="{ color: teamColors.primary }">Manage Roster Divisions</p>
           </div>
           <div class="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-200">
               <div class="flex gap-3 mb-8">
-                  <input v-model="newGroupName" placeholder="New Group Name" class="flex-1 bg-slate-50 p-4 rounded-xl font-black uppercase outline-none border border-slate-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all text-slate-800">
+                  <input v-model="newGroupName" placeholder="New Group Name" class="flex-1 bg-slate-50 p-4 rounded-xl font-black uppercase outline-none border border-slate-200 transition-all text-slate-800">
                   <button @click="addGroup" class="bg-slate-900 text-white px-8 rounded-xl font-black uppercase tracking-widest hover:bg-black transition-colors shadow-md">Add</button>
               </div>
               <div class="space-y-3">
@@ -631,7 +646,7 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
             </div>
         </div>
 
-        <div class="flex justify-between border-b-[4px] border-black pb-2 mb-4 items-end">
+        <div class="flex justify-between border-b-[4px] pb-2 mb-4 items-end" :style="{ borderColor: teamColors.primary }">
           <div>
             <div class="text-3xl font-black uppercase leading-tight tracking-tighter">{{title || 'Untitled Workout'}}</div>
             <div class="text-xs font-bold tracking-[0.2em] uppercase mt-1">{{myTeam}} — {{group}} — {{poolType}} ({{formatPracticeDate(practiceDate)}} @ {{formattedStartTime}})</div>
@@ -645,7 +660,7 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
         <div :style="{ fontSize: fontSize + 'px' }">
             <div v-for="sec in parsed" :style="{ marginBottom: (fontSize * 1.5) + 'px' }">
               
-              <div class="block-title flex justify-between items-end" :style="{ fontSize: Math.max(12, fontSize * 0.7) + 'px', marginTop: '0', marginBottom: (fontSize * 0.25) + 'px', paddingBottom: '2px', borderBottomWidth: '2px' }">
+              <div class="block-title flex justify-between items-end" :style="{ fontSize: Math.max(12, fontSize * 0.7) + 'px', marginTop: '0', marginBottom: (fontSize * 0.25) + 'px', paddingBottom: '2px', borderBottomWidth: '2px', borderColor: teamColors.primary }">
                 <div>
                     <span>{{sec.title}}</span>
                     <span class="font-normal opacity-40 ml-3 tracking-widest text-[0.8em]" v-if="sec.blocks[0] && sec.blocks[0].sets[0]">
@@ -657,7 +672,7 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
 
               <div v-for="b in sec.blocks" :style="{ marginTop: (fontSize * 0.4) + 'px' }">
                 <div v-if="b.rep > 1" class="font-black uppercase text-slate-500" :style="{ fontSize: Math.max(10, fontSize * 0.5) + 'px', marginBottom: (fontSize * 0.1) + 'px' }">● {{b.rep}}x (ROUND)</div>
-                <div v-for="s in b.sets" class="row items-center border-slate-200" :style="{ padding: (fontSize * 0.15) + 'px 0' }" :class="{'border-l-4 border-black pl-4 ml-2': b.rep > 1}">
+                <div v-for="s in b.sets" class="row items-center border-slate-200" :style="{ padding: (fontSize * 0.15) + 'px 0', borderLeftColor: b.rep > 1 ? teamColors.secondary : 'transparent' }" :class="{'border-l-4 pl-4 ml-2': b.rep > 1}">
                   <div class="font-bold flex-1">
                       <span v-if="!s.rest">{{s.q}}x{{s.d}}</span> 
                       <span class="ml-4 text-slate-600" v-if="!s.rest">@ {{s.p}}</span>
@@ -701,6 +716,7 @@ const newTeamId = ref(""); const newTeamPassword = ref("");
 const newVaultPassword = ref("");
 const teamLogoUrl = ref("");
 const isUploadingLogo = ref(false);
+const teamColors = ref({ primary: '#0ea5e9', secondary: '#0284c7' });
 
 const currentWorkoutId = ref(null); 
 const fontSize = ref(22); 
@@ -869,19 +885,33 @@ async function createTeam() {
   location.reload();
 }
 
-// PRIVATE BUCKET SIGNED URL FIX
+// LOAD TEAM SETTINGS & COLORS
 async function loadTeamSettings() {
     if(!myTeam.value) return;
-    const { data } = await client.from('teams').select('logo_url').eq('id', myTeam.value).single();
+    const { data } = await client.from('teams').select('logo_url, primary_color, secondary_color').eq('id', myTeam.value).single();
     
-    if(data && data.logo_url) {
-        const { data: signedData, error } = await client.storage.from('logos').createSignedUrl(data.logo_url, 86400);
-        if (signedData) {
-            teamLogoUrl.value = signedData.signedUrl;
-        } else {
-            console.error("Could not load private logo:", error);
+    if(data) {
+        if(data.primary_color) teamColors.value.primary = data.primary_color;
+        if(data.secondary_color) teamColors.value.secondary = data.secondary_color;
+        
+        if (data.logo_url) {
+            const { data: signedData, error } = await client.storage.from('logos').createSignedUrl(data.logo_url, 86400);
+            if (signedData) {
+                teamLogoUrl.value = signedData.signedUrl;
+            } else {
+                console.error("Could not load private logo:", error);
+            }
         }
     }
+}
+
+async function saveColors() {
+    const { error } = await client.from('teams').update({ 
+        primary_color: teamColors.value.primary, 
+        secondary_color: teamColors.value.secondary 
+    }).eq('id', myTeam.value);
+    
+    if(error) alert("Error saving colors: " + error.message);
 }
 
 async function uploadLogo(event) {
@@ -1130,8 +1160,13 @@ onMounted(async ()=>{
   }, 10000); 
 });
 
-// TIME FORMATTING ENGINE FIXES
-function timeToSec(t){ let [m,s]=t.split(":").map(Number); return (m*60) + (s || 0); }
+// TIME FORMATTING ENGINE
+function timeToSec(t) { 
+    if (!t || typeof t !== 'string') return 0; 
+    let [m, s] = t.split(":").map(Number); 
+    return (m * 60) + (s || 0); 
+}
+
 function secToTime(s){ let m=Math.floor(s/60); let sec=s%60; return `${m}:${sec.toString().padStart(2,"0")}`; }
 
 function timeOfDayToSec(t) { 
@@ -1187,9 +1222,7 @@ function getCategories(txt) {
 function parseContentBlock(text, baseStr, startTimeStr) {
   if(!text) return [];
   let baseSeconds = timeToSec(baseStr || "1:30");
-  
   let t = timeOfDayToSec(startTimeStr || "00:00"); 
-  
   let out=[]; let secBlock={title:"WARMUP",blocks:[],y:0};
   let lines=text.split("\n").map(x=>x.trim()).filter(Boolean);
   
@@ -1431,6 +1464,7 @@ async function generateWithAI() {
 return {
   user, login, logout, currentView, joinCode, teamPassword, newTeamId, newTeamPassword, newVaultPassword,
   hasPendingInvite, isProcessingInvite, currentWorkoutId, fontSize, teamLogoUrl, isUploadingLogo, uploadLogo,
+  teamColors, saveColors,
   title, group, poolType, defaultStroke, unit, start, base, input, parsed, totalYards, duration, cloudWorkouts, coachName, practiceDate,
   seasonPlans, activePlanContext, teamGroupsList, staffList, planForm, newGroupName, myRole, myTeam,
   filterGroup, filterDate, filteredWorkouts, todaysWorkouts, upcomingWorkouts, pastWorkouts, getWeekDateRange,
