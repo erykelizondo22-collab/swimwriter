@@ -19,11 +19,11 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-[v-cloak]{display:none}
-body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8fafc; -webkit-tap-highlight-color: transparent;}
-@media print{
+[v-cloak] { display:none; }
+body { margin:0; font-family:system-ui, -apple-system, sans-serif; background:#f8fafc; -webkit-tap-highlight-color: transparent; }
+@media print {
   @page { margin: 0.5in; } 
-  .no-print{display:none!important;}
+  .no-print { display:none!important; }
   body { background: white !important; }
   #sheet { box-shadow: none !important; margin: 0 !important; width: 100% !important; padding: 0 !important; display: block !important; }
 }
@@ -119,7 +119,7 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
               </div>
               
               <div class="p-6 space-y-4 bg-slate-50/50">
-                  <p class="text-sm text-slate-600 font-medium">Describe the set you want to generate. The AI will automatically pull the last 10 workouts for <strong>{{group || 'this group'}}</strong> and structure a new set that fits your current season plan.</p>
+                  <p class="text-sm text-slate-600 font-medium">Describe the set you want to generate. The AI will automatically pull the last 100 workouts for <strong>{{group || 'this group'}}</strong> and structure a new set that fits your coaching style.</p>
                   <textarea v-model="aiPrompt" rows="4" placeholder="e.g., Give me a 1200y threshold set using 100s and 200s..." class="w-full bg-white border border-slate-200 p-4 rounded-2xl outline-none focus:ring-4 transition-all text-sm font-medium resize-none shadow-sm" :style="{ outlineColor: teamColors.primary }"></textarea>
                   
                   <button @click="generateWithAI" :disabled="isAiLoading || !aiPrompt.trim()" :class="{'opacity-50 cursor-not-allowed': isAiLoading || !aiPrompt.trim()}" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl hover:bg-black hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 uppercase tracking-widest text-xs">
@@ -402,7 +402,8 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
                     <button @click="currentView = 'setup'" class="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl hover:bg-slate-100 hover:text-slate-700 transition-colors">Edit Setup</button>
                 </div>
             </div>
-            <textarea v-model="input" @keyup="updateCursor" @click="updateCursor" class="w-full flex-1 border-0 p-2 font-mono text-base md:text-lg text-slate-800 bg-transparent outline-none resize-none leading-relaxed" placeholder="Warmup:&#10;1x400 @ 6:00 Swim&#10;&#10;Main Set:&#10;..."></textarea>
+            
+            <textarea v-model="input" @keyup="updateCursor" @click="updateCursor" class="w-full flex-1 border-0 px-2 py-4 md:px-6 md:py-6 font-sans text-lg md:text-xl font-medium text-slate-700 bg-transparent outline-none resize-none leading-[2.5] tracking-wide placeholder-slate-300 selection:bg-blue-200 focus:ring-0" placeholder="Warmup:&#10;1x400 @ 6:00 Swim&#10;&#10;Main Set:&#10;..."></textarea>
           </div>
         </div>
 
@@ -558,7 +559,7 @@ body{margin:0;font-family:system-ui, -apple-system, sans-serif;background:#f8faf
                       <div class="flex items-center gap-4 mt-3">
                           <button v-if="teamLogoUrl" @click="deleteLogo" class="text-[10px] font-black text-red-500 bg-red-50 border border-red-100 hover:bg-red-100 px-3 py-1.5 rounded-lg uppercase tracking-widest transition-colors">Delete Logo</button>
                           
-                          <div v-if="isUploadingLogo" class="text-[10px] font-black text-blue-600 mt-3 uppercase tracking-widest animate-pulse flex items-center gap-2">
+                          <div v-if="isUploadingLogo" class="text-[10px] font-black text-blue-600 uppercase tracking-widest animate-pulse flex items-center gap-2">
                               <svg class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                               Encrypting & Uploading...
                           </div>
@@ -715,9 +716,12 @@ const getLocalTodayStr = () => {
 };
 const todayStr = ref(getLocalTodayStr());
 
-const filterGroup = ref(''); const filterDate = ref('');
-const joinCode = ref(""); const teamPassword = ref(""); 
-const newTeamId = ref(""); const newTeamPassword = ref("");
+const filterGroup = ref(''); 
+const filterDate = ref('');
+const joinCode = ref(""); 
+const teamPassword = ref(""); 
+const newTeamId = ref(""); 
+const newTeamPassword = ref("");
 const newVaultPassword = ref("");
 const teamLogoUrl = ref("");
 const isUploadingLogo = ref(false);
@@ -911,23 +915,21 @@ async function loadTeamSettings() {
 }
 
 async function saveColors() {
-    const { error } = await client.from('teams').update({ 
-        primary_color: teamColors.value.primary, 
-        secondary_color: teamColors.value.secondary 
-    }).eq('id', myTeam.value);
-    
+    const { error } = await client.rpc('update_team_colors', { 
+        p_team_id: myTeam.value, 
+        p_primary: teamColors.value.primary, 
+        p_secondary: teamColors.value.secondary 
+    });
     if(error) alert("Error saving colors: " + error.message);
 }
 
-// BULLETPROOF LOGO UPLOAD
+// BULLETPROOF LOGO UPLOAD VIA RPC BYPASS
 async function uploadLogo(event) {
     const file = event.target.files[0];
     if(!file) return;
     isUploadingLogo.value = true;
     
     const fileExt = file.name.split('.').pop();
-    
-    // FORCE UNIQUE FILENAME TO AVOID BROWSER CACHING AND OVERWRITE BLOCKS
     const timestamp = new Date().getTime();
     const filePath = `${myTeam.value}-logo-${timestamp}.${fileExt}`;
 
@@ -938,7 +940,7 @@ async function uploadLogo(event) {
         return; 
     }
 
-    const { error: dbError } = await client.from('teams').update({ logo_url: filePath }).eq('id', myTeam.value);
+    const { error: dbError } = await client.rpc('update_team_logo', { p_team_id: myTeam.value, p_logo_url: filePath });
     
     if(dbError) {
         alert("Error saving logo to database: " + dbError.message);
@@ -950,7 +952,6 @@ async function uploadLogo(event) {
     isUploadingLogo.value = false;
 }
 
-// NEW FUNCTION: DELETE LOGO
 async function deleteLogo() {
     if(!confirm("Are you sure you want to remove the team logo?")) return;
     
@@ -959,7 +960,7 @@ async function deleteLogo() {
         await client.storage.from('logos').remove([data.logo_url]);
     }
     
-    await client.from('teams').update({ logo_url: null }).eq('id', myTeam.value);
+    await client.rpc('update_team_logo', { p_team_id: myTeam.value, p_logo_url: null });
     teamLogoUrl.value = "";
 }
 
@@ -1438,14 +1439,14 @@ async function generateWithAI() {
     
     try {
         const meetInstruction = activePlanContext.value?.weekData?.meet ? `CRITICAL CONTEXT: The team has a meet this week: "${activePlanContext.value.weekData.meet}". Adjust the intensity, provide race-pace work, or taper accordingly.` : '';
-        const contextStr = `Target Group: ${group.value || 'None'}, Pool Type: ${poolType.value}, Focus: ${activePlanContext.value?.weekData?.focus || 'General Conditioning'}, Default Stroke: ${defaultStroke.value}. ${meetInstruction}`;
+        const contextStr = `Target Group: ${group.value || 'None'}, Pool Type: ${poolType.value}, Focus: ${activePlanContext.value?.weekData?.focus || 'General Conditioning'}, Default Stroke: ${defaultStroke.value}. ${meetInstruction} CRITICAL INSTRUCTION: Analyze the provided history of past workouts. You MUST adopt the exact coaching terminology, abbreviation style, and set structures used in this history.`;
         
         let historyStr = "No previous workouts found.";
         if (group.value) {
             const recent = cloudWorkouts.value
                 .filter(w => w.group === group.value)
                 .sort((a,b) => b.practice_date.localeCompare(a.practice_date))
-                .slice(0, 10);
+                .slice(0, 100);
 
             if (recent.length > 0) {
                 historyStr = recent.map((w, i) => `Workout ${i + 1} (${w.practice_date} - ${w.title}):\n${w.content}`).join("\n\n");
