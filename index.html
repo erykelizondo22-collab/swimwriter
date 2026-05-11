@@ -13,6 +13,7 @@
 <meta name="apple-mobile-web-app-title" content="SwimOps" />
 <meta name="theme-color" content="#0ea5e9" />
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -159,8 +160,13 @@ body { margin:0; font-family:system-ui, -apple-system, sans-serif; background:#f
           </div>
           
           <div class="relative z-10 flex flex-col sm:flex-row w-full md:w-auto gap-4">
+              <input type="file" id="pdfUpload" accept="application/pdf" @change="importPdf" class="hidden">
+              <button @click="triggerPdfUpload" :disabled="isImportingPdf" class="w-full sm:w-auto bg-slate-900 text-white px-8 py-4 rounded-2xl font-black shadow-lg hover:bg-black hover:shadow-xl hover:-translate-y-1 transition-all duration-300 uppercase tracking-widest text-xs flex items-center justify-center gap-2">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                  Import PDF
+              </button>
+
               <button v-if="hasDraft" @click="resumeDraft" class="w-full sm:w-auto bg-amber-400 text-slate-900 px-8 py-4 rounded-2xl font-black shadow-lg hover:bg-amber-300 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 uppercase tracking-widest text-xs flex items-center justify-center gap-2">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                   Resume Draft
               </button>
               <button @click="startNewWorkout" class="w-full sm:w-auto bg-white px-8 py-4 rounded-2xl font-black shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 uppercase tracking-widest text-xs flex items-center justify-center gap-2" :style="{ color: teamColors.primary }">
@@ -168,6 +174,14 @@ body { margin:0; font-family:system-ui, -apple-system, sans-serif; background:#f
                   Create Workout
               </button>
           </div>
+        </div>
+
+        <div v-if="isImportingPdf || pdfImportProgress" class="bg-indigo-50 border border-indigo-200 text-indigo-700 p-4 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-between shadow-sm animate-pulse">
+            <div class="flex items-center gap-3">
+                <svg v-if="isImportingPdf" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <span v-else>✅</span>
+                {{ pdfImportProgress }}
+            </div>
         </div>
 
         <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200/60 flex flex-wrap gap-5 items-center">
@@ -747,6 +761,10 @@ const showAiModal = ref(false);
 const aiPrompt = ref("");
 const isAiLoading = ref(false);
 
+// AI PDF IMPORTER STATE
+const isImportingPdf = ref(false);
+const pdfImportProgress = ref("");
+
 // ANALYTICS STATE
 const analyticsGroup = ref('');
 const analyticsStartDate = ref('');
@@ -894,7 +912,7 @@ async function createTeam() {
   location.reload();
 }
 
-// LOAD TEAM SETTINGS & COLORS
+// LOAD TEAM SETTINGS & COLORS (PUBLIC BUCKET UPGRADE)
 async function loadTeamSettings() {
     if(!myTeam.value) return;
     const { data } = await client.from('teams').select('logo_url, primary_color, secondary_color').eq('id', myTeam.value).single();
@@ -903,13 +921,9 @@ async function loadTeamSettings() {
         if(data.primary_color) teamColors.value.primary = data.primary_color;
         if(data.secondary_color) teamColors.value.secondary = data.secondary_color;
         
+        // NOW USING PUBLIC URLS SO IT NEVER EXPIRES
         if (data.logo_url) {
-            const { data: signedData, error } = await client.storage.from('logos').createSignedUrl(data.logo_url, 86400);
-            if (signedData) {
-                teamLogoUrl.value = signedData.signedUrl;
-            } else {
-                console.error("Could not load private logo:", error);
-            }
+            teamLogoUrl.value = data.logo_url;
         }
     }
 }
@@ -923,7 +937,7 @@ async function saveColors() {
     if(error) alert("Error saving colors: " + error.message);
 }
 
-// BULLETPROOF LOGO UPLOAD VIA RPC BYPASS
+// PUBLIC BUCKET UPLOAD LOGIC
 async function uploadLogo(event) {
     const file = event.target.files[0];
     if(!file) return;
@@ -934,19 +948,23 @@ async function uploadLogo(event) {
     const filePath = `${myTeam.value}-logo-${timestamp}.${fileExt}`;
 
     const { error: uploadError } = await client.storage.from('logos').upload(filePath, file, { upsert: false });
+    
     if(uploadError) { 
-        alert("Upload failed: " + uploadError.message + " (Check if your bucket is named 'logos')"); 
+        alert("Upload failed: " + uploadError.message); 
         isUploadingLogo.value = false; 
         return; 
     }
 
-    const { error: dbError } = await client.rpc('update_team_logo', { p_team_id: myTeam.value, p_logo_url: filePath });
+    // Generate the permanent public URL
+    const { data: publicData } = client.storage.from('logos').getPublicUrl(filePath);
+    const publicUrl = publicData.publicUrl;
+
+    const { error: dbError } = await client.rpc('update_team_logo', { p_team_id: myTeam.value, p_logo_url: publicUrl });
     
     if(dbError) {
         alert("Error saving logo to database: " + dbError.message);
     } else {
-        const { data: signedData } = await client.storage.from('logos').createSignedUrl(filePath, 86400);
-        if (signedData) teamLogoUrl.value = signedData.signedUrl;
+        teamLogoUrl.value = publicUrl;
     }
 
     isUploadingLogo.value = false;
@@ -957,11 +975,109 @@ async function deleteLogo() {
     
     const { data } = await client.from('teams').select('logo_url').eq('id', myTeam.value).single();
     if(data && data.logo_url) {
-        await client.storage.from('logos').remove([data.logo_url]);
+        // Extract just the filename from the public URL to delete it from the bucket
+        const urlParts = data.logo_url.split('/');
+        const filename = urlParts[urlParts.length - 1];
+        await client.storage.from('logos').remove([filename]);
     }
     
     await client.rpc('update_team_logo', { p_team_id: myTeam.value, p_logo_url: null });
     teamLogoUrl.value = "";
+}
+
+// AI PDF IMPORTER LOGIC
+function triggerPdfUpload() {
+    document.getElementById('pdfUpload').click();
+}
+
+async function importPdf(event) {
+    const file = event.target.files[0];
+    if(!file) return;
+    isImportingPdf.value = true;
+    pdfImportProgress.value = "Reading PDF...";
+
+    try {
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        
+        let fullText = "";
+        for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items.map(item => item.str).join(" ");
+            fullText += `\n--- PAGE ${i} ---\n` + pageText;
+        }
+
+        // Chunk text safely
+        const chunkSize = 10000;
+        const chunks = [];
+        for (let i = 0; i < fullText.length; i += chunkSize) {
+            chunks.push(fullText.substring(i, i + chunkSize));
+        }
+
+        let totalImported = 0;
+        const { data: { session } } = await client.auth.getSession();
+
+        for (let i = 0; i < chunks.length; i++) {
+            pdfImportProgress.value = `Analyzing chunk ${i + 1} of ${chunks.length}...`;
+            
+            const response = await fetch("https://nzrzcbxxqxwktocrmplg.supabase.co/functions/v1/generate-workout", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${session?.access_token || ''}`,
+                    "apikey": "sb_publishable_IENWSv_n2kZ1yR2-VmV8ew_pljwvLdt"
+                },
+                body: JSON.stringify({
+                    prompt: "Extract all workouts from the provided text into a JSON array. Use exactly these keys: 'title', 'group', 'practice_date' (YYYY-MM-DD), 'pool_type', 'total_yards' (number), 'content' (the actual workout text with line breaks). RETURN EXACTLY AND ONLY A VALID JSON ARRAY. No markdown, no backticks, no intro text.", 
+                    context: "You are a rigid data extractor. Return JSON only.", 
+                    history: chunks[i]
+                })
+            });
+
+            if (!response.ok) throw new Error("AI request failed.");
+            const data = await response.json();
+            
+            let cleanJsonStr = data.result.replace(/```json/g, '').replace(/```/g, '').trim();
+            let extractedWorkouts = [];
+            
+            try {
+                extractedWorkouts = JSON.parse(cleanJsonStr);
+            } catch(e) {
+                console.log("Chunk didn't return perfect JSON. Skipping chunk.");
+                continue;
+            }
+
+            if(Array.isArray(extractedWorkouts) && extractedWorkouts.length > 0) {
+                const payloads = extractedWorkouts.map(w => ({
+                    team_id: myTeam.value,
+                    title: w.title || 'Imported Workout',
+                    group: w.group || '',
+                    practice_date: w.practice_date || getLocalTodayStr(),
+                    pool_type: w.pool_type || 'SCY',
+                    total_yards: w.total_yards || 0,
+                    content: w.content || '',
+                    default_stroke: 'free',
+                    start: '15:30',
+                    base: '1:30'
+                }));
+                
+                const { error } = await client.from("workouts").insert(payloads);
+                if(!error) totalImported += payloads.length;
+            }
+        }
+
+        pdfImportProgress.value = `Success! Imported ${totalImported} workouts.`;
+        setTimeout(() => { isImportingPdf.value = false; pdfImportProgress.value = ""; loadWorkouts(); }, 3000);
+
+    } catch (err) {
+        alert("Error importing PDF: " + err.message);
+        isImportingPdf.value = false;
+        pdfImportProgress.value = "";
+    }
 }
 
 async function updateVaultPassword() {
@@ -1501,7 +1617,8 @@ return {
   addGroup, deleteGroup, removeStaff, changeRole, copyInviteLink, joinTeam, createTeam, updateVaultPassword, discardDraft, loadStaff,
   hasDraft, resumeDraft, currentSetPace, updateCursor, stressScore, stressColor,
   analyticsGroup, analyticsStartDate, analyticsEndDate, analyticsStats, resetAnalyticsDates,
-  showAiModal, aiPrompt, isAiLoading, generateWithAI
+  showAiModal, aiPrompt, isAiLoading, generateWithAI,
+  isImportingPdf, pdfImportProgress, triggerPdfUpload, importPdf
 };
 }
 }).mount("#app");
