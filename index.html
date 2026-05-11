@@ -56,7 +56,14 @@
         .block-title { font-weight: 800; border-bottom: 2px solid black; text-transform: uppercase; }
         .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-weight: 700; }
         
-        .font-slider { -webkit-appearance: none; width: 100%; height: 6px; background: #e2e8f0; border-radius: 5px; outline: none; }
+        .font-slider { 
+            -webkit-appearance: none; 
+            width: 100%; 
+            height: 6px; 
+            background: #e2e8f0; 
+            border-radius: 5px; 
+            outline: none; 
+        }
         .font-slider::-webkit-slider-thumb { 
             -webkit-appearance: none; 
             appearance: none; 
@@ -125,7 +132,7 @@
                         <button @click="currentView = 'dashboard'" :class="{'bg-slate-900 text-white shadow-md': currentView === 'dashboard', 'text-slate-500 hover:bg-slate-100 hover:text-slate-900': currentView !== 'dashboard'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-all duration-300 px-4 py-2 rounded-full">Vault</button>
                         <button @click="currentView = 'analytics'" :class="{'bg-slate-900 text-white shadow-md': currentView === 'analytics', 'text-slate-500 hover:bg-slate-100 hover:text-slate-900': currentView !== 'analytics'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-all duration-300 px-4 py-2 rounded-full">Analytics</button>
                         <button @click="currentView = 'season-planning'" :class="{'bg-slate-900 text-white shadow-md': currentView === 'season-planning' || currentView === 'plan-builder', 'text-slate-500 hover:bg-slate-100 hover:text-slate-900': currentView !== 'season-planning' && currentView !== 'plan-builder'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-all duration-300 px-4 py-2 rounded-full">Season</button>
-                        <button @click="currentView = 'groups'" :class="{'bg-slate-900 text-white shadow-md': currentView === 'groups', 'text-slate-500 hover:bg-slate-100 hover:text-slate-900': currentView !== 'groups'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-all duration-300 px-4 py-2 rounded-full">Groups</button>
+                        <button @click="currentView = 'groups'; selectedGroupForEdit = null;" :class="{'bg-slate-900 text-white shadow-md': currentView === 'groups' || currentView === 'group-details', 'text-slate-500 hover:bg-slate-100 hover:text-slate-900': currentView !== 'groups' && currentView !== 'group-details'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-all duration-300 px-4 py-2 rounded-full">Groups</button>
                         <button @click="currentView = 'staff'; loadStaff();" :class="{'bg-slate-900 text-white shadow-md': currentView === 'staff', 'text-slate-500 hover:bg-slate-100 hover:text-slate-900': currentView !== 'staff'}" class="text-xs md:text-sm font-black uppercase tracking-widest whitespace-nowrap transition-all duration-300 px-4 py-2 rounded-full">Staff</button>
                     </nav>
                     <div class="flex items-center gap-3 pl-3 md:pl-6 border-l border-slate-200">
@@ -733,10 +740,10 @@
                 </div>
             </div>
 
-            <div v-if="currentView === 'groups'" class="max-w-4xl mx-auto space-y-6 mt-6">
+            <div v-if="currentView === 'groups'" class="max-w-3xl mx-auto space-y-6 mt-6">
                 <div class="border-b border-slate-200 pb-6 mb-8">
                     <h2 class="text-3xl md:text-4xl font-black uppercase tracking-tight text-slate-900">Team Groups</h2>
-                    <p class="text-sm font-bold uppercase tracking-widest mt-1" :style="{ color: teamColors.primary }">Manage Roster Divisions & Physiology</p>
+                    <p class="text-sm font-bold uppercase tracking-widest mt-1" :style="{ color: teamColors.primary }">Manage Roster Divisions</p>
                 </div>
                 
                 <div class="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-200">
@@ -745,36 +752,51 @@
                         <button @click="addGroup" class="bg-slate-900 text-white px-8 rounded-xl font-black uppercase tracking-widest hover:bg-black transition-colors shadow-md">Add</button>
                     </div>
                     
-                    <div class="space-y-6">
-                        <div v-for="g in teamGroupsList" :key="g.id" class="bg-slate-50 p-6 rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors">
-                            <div class="flex justify-between items-center mb-4 border-b border-slate-200 pb-4">
-                                <span class="font-black uppercase text-slate-800 text-lg">{{g.name}}</span>
-                                <button @click="deleteGroup(g.id)" class="text-red-500 bg-red-50 hover:bg-red-100 font-black text-[10px] uppercase tracking-widest px-3 py-2 rounded-lg transition-colors border border-red-100">Delete Group</button>
+                    <div class="space-y-3">
+                        <div v-for="g in teamGroupsList" :key="g.id" @click="openGroupDetails(g)" class="flex justify-between items-center bg-slate-50 p-5 rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-md cursor-pointer transition-all group">
+                            <span class="font-black uppercase text-slate-800 text-sm flex items-center gap-3">
+                                {{g.name}}
+                                <span class="bg-white border border-slate-200 text-slate-400 text-[9px] px-2 py-1 rounded-md">{{ g.energy_systems?.length || 0 }} Zones</span>
+                            </span>
+                            <button @click.stop="deleteGroup(g.id)" class="text-red-400 bg-red-50 hover:bg-red-100 hover:text-red-600 font-black text-[10px] uppercase tracking-widest px-3 py-2 rounded-lg transition-colors border border-red-100">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="currentView === 'group-details' && selectedGroupForEdit" class="max-w-4xl mx-auto space-y-6 mt-6">
+                <div class="flex justify-between items-center border-b border-slate-200 pb-6 mb-8">
+                    <div>
+                        <h2 class="text-3xl md:text-4xl font-black uppercase tracking-tight text-slate-900">{{selectedGroupForEdit.name}} Settings</h2>
+                        <p class="text-sm font-bold uppercase tracking-widest mt-1" :style="{ color: teamColors.primary }">Energy Systems & Nicknames</p>
+                    </div>
+                    <button @click="currentView = 'groups'; selectedGroupForEdit = null" class="text-[10px] font-black text-slate-500 bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl uppercase tracking-widest hover:bg-slate-100 transition-colors shadow-sm">
+                        Back to Groups
+                    </button>
+                </div>
+                
+                <div class="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-200">
+                    <div class="space-y-4">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Energy Systems & Aliases (Nicknames)</label>
+                        
+                        <div v-for="(sys, idx) in selectedGroupForEdit.energy_systems" :key="idx" class="bg-slate-50 border border-slate-200 p-5 rounded-2xl">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="font-black text-lg text-slate-800 uppercase">{{ sys }}</span>
+                                <button @click="removeEnergySystem(selectedGroupForEdit, idx)" class="text-[10px] text-red-400 border border-red-100 uppercase font-black hover:bg-red-50 hover:text-red-600 px-3 py-1.5 rounded-lg transition-colors">Delete System</button>
                             </div>
                             
-                            <div class="space-y-4">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Energy Systems & Aliases (Nicknames)</label>
-                                
-                                <div v-for="(sys, idx) in g.energy_systems" :key="idx" class="bg-white border border-slate-200 p-4 rounded-xl">
-                                    <div class="flex justify-between items-center mb-3">
-                                        <span class="font-black text-sm text-slate-800 uppercase">{{ sys }}</span>
-                                        <button @click="removeEnergySystem(g, idx)" class="text-[10px] text-red-400 uppercase font-black hover:bg-red-50 px-2 py-1 rounded transition-colors">Delete System</button>
-                                    </div>
-                                    
-                                    <div class="pl-4 border-l-2 border-slate-100">
-                                        <div class="flex flex-wrap gap-2">
-                                            <span v-for="(alias, aIdx) in (g.system_aliases ? g.system_aliases[sys] : [])" :key="aIdx" class="bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2">
-                                                {{ alias }}
-                                                <button @click="removeAlias(g, sys, aIdx)" class="text-slate-400 hover:text-red-500 font-black">x</button>
-                                            </span>
-                                            <input @keyup.enter="addAlias(g, sys, $event)" placeholder="+ Add nickname (Enter)" class="bg-transparent border border-dashed border-slate-300 px-3 py-1.5 rounded-lg text-xs font-bold outline-none focus:border-blue-400 text-slate-700 w-48 transition-colors placeholder-slate-400">
-                                        </div>
-                                    </div>
+                            <div class="pl-4 border-l-[3px] border-slate-200">
+                                <div class="flex flex-wrap gap-2">
+                                    <span v-for="(alias, aIdx) in (selectedGroupForEdit.system_aliases ? selectedGroupForEdit.system_aliases[sys] : [])" :key="aIdx" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 shadow-sm">
+                                        {{ alias }}
+                                        <button @click="removeAlias(selectedGroupForEdit, sys, aIdx)" class="text-slate-300 hover:text-red-500 font-black ml-1">X</button>
+                                    </span>
+                                    <input @keyup.enter="addAlias(selectedGroupForEdit, sys, $event)" placeholder="+ Add nickname (Press Enter)" class="bg-transparent border border-dashed border-slate-300 px-3 py-1.5 rounded-lg text-xs font-bold outline-none focus:border-blue-400 text-slate-700 w-56 transition-colors placeholder-slate-400">
                                 </div>
-
-                                <input @keyup.enter="addEnergySystem(g, $event)" placeholder="+ Create New Energy System (Press Enter)" class="w-full bg-white border border-dashed border-slate-300 p-4 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-colors placeholder-slate-400 mt-2">
                             </div>
                         </div>
+
+                        <input @keyup.enter="addEnergySystem(selectedGroupForEdit, $event)" placeholder="+ Create New Energy System (Press Enter)" class="w-full bg-slate-50 border border-dashed border-slate-300 p-5 rounded-2xl text-sm font-bold outline-none focus:border-blue-400 transition-colors placeholder-slate-400 mt-4">
                     </div>
                 </div>
             </div>
@@ -842,7 +864,7 @@
 </div>
 
 <script>
-const {createApp, ref, computed, onMounted, watch} = Vue;
+const { createApp, ref, computed, onMounted, watch } = Vue;
 
 const client = window.supabase.createClient(
     "https://nzrzcbxxqxwktocrmplg.supabase.co",
@@ -889,6 +911,8 @@ createApp({
         const teamGroupsList = ref([]);
         const staffList = ref([]);
         const newGroupName = ref("");
+        const selectedGroupForEdit = ref(null);
+        
         const hasPendingInvite = ref(false);
         const isProcessingInvite = ref(false);
 
@@ -1360,6 +1384,11 @@ createApp({
                 loadGroups();
             }
         }
+        
+        function openGroupDetails(g) {
+            selectedGroupForEdit.value = g;
+            currentView.value = 'group-details';
+        }
 
         // GROUP ENERGY SYSTEM MANAGEMENT
         async function addEnergySystem(group, event) {
@@ -1385,7 +1414,7 @@ createApp({
             if(error) alert("Error saving systems: " + error.message);
         }
 
-        // --- NEW ALIAS ENGINE (NICKNAMES) ---
+        // ALIAS ENGINE (NICKNAMES)
         async function addAlias(group, sys, event) {
             const newAlias = event.target.value.trim();
             if(newAlias) {
@@ -1425,10 +1454,8 @@ createApp({
             let t = txt.toLowerCase().replace(/[^a-z0-9]/g, ''); 
 
             for (let sys of g.energy_systems) {
-                // Check exact system name match
                 if (t.includes(sys.toLowerCase().replace(/[^a-z0-9]/g, ''))) return sys;
 
-                // Check aliases
                 let aliases = g.system_aliases ? g.system_aliases[sys] : [];
                 if (aliases) {
                     for (let alias of aliases) {
@@ -1646,6 +1673,7 @@ createApp({
             else if(t.includes('breast')) stroke = 'breast';
             else if(t.match(/\bim\b/) || t.includes('medley') || t.includes('i.m.')) stroke = 'im';
             else if(t.includes('free')) stroke = 'free';
+            else if(t.includes('stroke')) stroke = 'stroke';
 
             return { type, stroke };
         }
@@ -1744,7 +1772,7 @@ createApp({
             return 'text-red-500';
         });
 
-        // REAL-TIME EDITOR ENERGY SYSTEM TRACKER (ALIASES INCLUDED)
+        // REAL-TIME EDITOR ENERGY SYSTEM TRACKER
         const editorSystemTotals = computed(() => {
             let totals = {};
             if(!group.value) return totals;
@@ -1758,7 +1786,6 @@ createApp({
                 sec.blocks.forEach(b => {
                     b.sets.forEach(s => {
                         if (!s.rest && s.d > 0) {
-                            // Match against aliases
                             let sys = getEnergySystem(s.label || sec.title, group.value);
                             if (sys && totals[sys] !== undefined) {
                                 totals[sys] += s.q * s.d * (b.rep || 1);
@@ -1775,7 +1802,7 @@ createApp({
                 workouts: 0,
                 totalYards: 0,
                 type: { swim: 0, pull: 0, kick: 0, drill: 0 },
-                stroke: { free: 0, back: 0, breast: 0, fly: 0, im: 0 },
+                stroke: { free: 0, back: 0, breast: 0, fly: 0, im: 0, stroke: 0 },
                 systems: {}
             };
 
@@ -1806,7 +1833,6 @@ createApp({
                                     if(stats.type[finalType] !== undefined) stats.type[finalType] += y;
                                     if(stats.stroke[finalStroke] !== undefined) stats.stroke[finalStroke] += y;
 
-                                    // Energy System Parsing with Aliases
                                     let sys = getEnergySystem(s.label || sec.title, w.group);
                                     if(sys) {
                                         if(!stats.systems[sys]) stats.systems[sys] = 0;
@@ -1857,17 +1883,16 @@ createApp({
             strokeChartInst = new Chart(sCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Free', 'Back', 'Breast', 'Fly', 'IM'],
+                    labels: ['Free', 'Back', 'Breast', 'Fly', 'IM', 'Stroke'],
                     datasets: [{
-                        data: [data.stroke.free, data.stroke.back, data.stroke.breast, data.stroke.fly, data.stroke.im],
-                        backgroundColor: ['#94a3b8', '#f59e0b', '#ec4899', '#ef4444', '#10b981'],
+                        data: [data.stroke.free, data.stroke.back, data.stroke.breast, data.stroke.fly, data.stroke.im, data.stroke.stroke],
+                        backgroundColor: ['#94a3b8', '#f59e0b', '#ec4899', '#ef4444', '#10b981', '#a855f7'],
                         borderWidth: 0
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             });
 
-            // Energy Systems Chart
             const sysLabels = Object.keys(data.systems);
             const sysData = Object.values(data.systems);
             
@@ -1899,7 +1924,6 @@ createApp({
         function renderSeasonCharts() {
             if (seasonPlanTab.value !== 'analytics' || currentView.value !== 'plan-builder') return;
             
-            // 1. Stacked Bar Chart for Energy Systems
             const pCtx = document.getElementById('energyPlanChart');
             if (pCtx) {
                 if (energyPlanChartInst) energyPlanChartInst.destroy();
@@ -1921,7 +1945,6 @@ createApp({
                 });
             }
 
-            // 2. Actuals Chart (Type & Stroke for Season Dates)
             const tCtx = document.getElementById('seasonTypeChartCanvas'); 
             const sCtx = document.getElementById('seasonStrokeChartCanvas');
             
@@ -1934,7 +1957,7 @@ createApp({
                 const endD = new Date(startD.getTime() + (planForm.value.weeks.length * 7 * 24 * 60 * 60 * 1000));
                 const endStr = endD.toISOString().split('T')[0];
                 
-                let stats = { type: { swim: 0, pull: 0, kick: 0, drill: 0 }, stroke: { free: 0, back: 0, breast: 0, fly: 0, im: 0 } };
+                let stats = { type: { swim: 0, pull: 0, kick: 0, drill: 0 }, stroke: { free: 0, back: 0, breast: 0, fly: 0, im: 0, stroke: 0 } };
 
                 cloudWorkouts.value.forEach(w => {
                     if(w.group === planForm.value.group_name && w.practice_date >= startDate && w.practice_date <= endStr) {
@@ -1971,8 +1994,8 @@ createApp({
                 sStrokeChartInst = new Chart(sCtx, { 
                     type: 'doughnut', 
                     data: { 
-                        labels: ['Free', 'Back', 'Breast', 'Fly', 'IM'], 
-                        datasets: [{ data: [stats.stroke.free, stats.stroke.back, stats.stroke.breast, stats.stroke.fly, stats.stroke.im], backgroundColor: ['#94a3b8', '#f59e0b', '#ec4899', '#ef4444', '#10b981'], borderWidth: 0 }] 
+                        labels: ['Free', 'Back', 'Breast', 'Fly', 'IM', 'Stroke'], 
+                        datasets: [{ data: [stats.stroke.free, stats.stroke.back, stats.stroke.breast, stats.stroke.fly, stats.stroke.im, stats.stroke.stroke], backgroundColor: ['#94a3b8', '#f59e0b', '#ec4899', '#ef4444', '#10b981', '#a855f7'], borderWidth: 0 }] 
                     }, 
                     options: { plugins: { legend: { position: 'bottom' } } } 
                 });
@@ -2052,7 +2075,8 @@ createApp({
             showAiModal, aiPrompt, isAiLoading, generateWithAI,
             isImportingPdf, pdfImportProgress, triggerPdfUpload, importPdf,
             selectedGroupSystems, addEnergySystem, removeEnergySystem, saveGroupSystems, calculateWeekTotal, seasonPlanTab,
-            addAlias, removeAlias, saveGroupAliases, editorSystemTotals
+            addAlias, removeAlias, saveGroupAliases, editorSystemTotals,
+            selectedGroupForEdit, openGroupDetails
         };
     }
 }).mount("#app");
