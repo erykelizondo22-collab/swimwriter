@@ -81,8 +81,6 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .glass-nav { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-        
-        .dragging { opacity: 0.5; }
     </style>
 </head>
 
@@ -793,6 +791,21 @@
                 </div>
                 
                 <div class="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-200">
+                    
+                    <div class="bg-blue-50 border border-blue-200 p-4 rounded-2xl mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between shadow-sm gap-4">
+                        <div>
+                            <h4 class="text-sm font-black text-blue-900 uppercase tracking-tight">Quick Import</h4>
+                            <p class="text-[10px] text-blue-700 font-bold uppercase tracking-widest mt-0.5">Copy all zones & nicknames from another group</p>
+                        </div>
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <select v-model="importSourceGroup" class="flex-1 sm:flex-none bg-white border border-blue-200 text-xs font-bold text-slate-700 px-3 py-2.5 rounded-xl outline-none cursor-pointer shadow-sm">
+                                <option value="" disabled>Select Group...</option>
+                                <option v-for="g in teamGroupsList.filter(x => x.id !== selectedGroupForEdit.id)" :key="g.id" :value="g.id">{{g.name}}</option>
+                            </select>
+                            <button @click="importSystemsAndAliases(selectedGroupForEdit)" class="bg-blue-600 hover:bg-blue-700 text-white font-black text-[10px] uppercase tracking-widest px-4 py-2.5 rounded-xl transition-colors shadow-sm">Copy</button>
+                        </div>
+                    </div>
+
                     <div class="space-y-4">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Energy Systems & Aliases (Nicknames)</label>
                         
@@ -929,6 +942,7 @@ createApp({
         const staffList = ref([]);
         const newGroupName = ref("");
         const selectedGroupForEdit = ref(null);
+        const importSourceGroup = ref("");
         
         // DRAG AND DROP STATE
         const draggedGroupIndex = ref(null);
@@ -1424,12 +1438,10 @@ createApp({
             teamGroupsList.value.splice(draggedGroupIndex.value, 1);
             teamGroupsList.value.splice(index, 0, draggedItem);
             
-            // Re-index array for database
             teamGroupsList.value.forEach((g, i) => {
                 g.sort_order = i;
             });
 
-            // Auto-save the new layout
             const payload = teamGroupsList.value.map(g => ({ id: g.id, sort_order: g.sort_order }));
             const { error } = await client.rpc('update_group_orders', { p_orders: payload });
             if(error) console.error("Error saving new group order:", error);
@@ -1491,13 +1503,31 @@ createApp({
             if(error) alert("Error saving aliases: " + error.message);
         }
 
+        // QUICK IMPORT ENGINE FOR ALIASES
+        async function importSystemsAndAliases(targetGroup) {
+            if (!importSourceGroup.value) return alert("Select a group to copy from.");
+            
+            const source = teamGroupsList.value.find(g => g.id === importSourceGroup.value);
+            if (!source) return;
+
+            if (confirm(`Overwrite ${targetGroup.name}'s systems and nicknames with ${source.name}'s?`)) {
+                targetGroup.energy_systems = source.energy_systems ? [...source.energy_systems] : ["EN1", "EN2", "EN3", "SP1", "SP2"];
+                targetGroup.system_aliases = source.system_aliases ? JSON.parse(JSON.stringify(source.system_aliases)) : {};
+                
+                await saveGroupSystems(targetGroup);
+                await saveGroupAliases(targetGroup);
+                
+                alert("Systems and Nicknames imported successfully!");
+                importSourceGroup.value = ""; 
+            }
+        }
+
         // HELPER TO IDENTIFY ENERGY SYSTEM FROM TEXT USING ALIASES
         function getEnergySystem(txt, groupName) {
             if(!txt || !groupName) return null;
             const g = teamGroupsList.value.find(x => x.name === groupName);
             if(!g || !g.energy_systems) return null;
 
-            // Strip spaces and punctuation for loose matching
             let t = txt.toLowerCase().replace(/[^a-z0-9]/g, ''); 
 
             for (let sys of g.energy_systems) {
@@ -1720,7 +1750,7 @@ createApp({
             else if(t.includes('breast')) stroke = 'breast';
             else if(t.match(/\bim\b/) || t.includes('medley') || t.includes('i.m.')) stroke = 'im';
             else if(t.includes('free')) stroke = 'free';
-            else if(t.includes('stroke')) stroke = 'stroke';
+            else if(t.includes('stroke') || t.includes('choice')) stroke = 'stroke';
 
             return { type, stroke };
         }
@@ -1833,7 +1863,6 @@ createApp({
                 sec.blocks.forEach(b => {
                     b.sets.forEach(s => {
                         if (!s.rest && s.d > 0) {
-                            // Match against aliases
                             let sys = getEnergySystem(s.label || sec.title, group.value);
                             if (sys && totals[sys] !== undefined) {
                                 totals[sys] += s.q * s.d * (b.rep || 1);
@@ -1881,7 +1910,6 @@ createApp({
                                     if(stats.type[finalType] !== undefined) stats.type[finalType] += y;
                                     if(stats.stroke[finalStroke] !== undefined) stats.stroke[finalStroke] += y;
 
-                                    // Energy System Parsing with Aliases
                                     let sys = getEnergySystem(s.label || sec.title, w.group);
                                     if(sys) {
                                         if(!stats.systems[sys]) stats.systems[sys] = 0;
@@ -1942,7 +1970,6 @@ createApp({
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             });
 
-            // Energy Systems Chart
             const sysLabels = Object.keys(data.systems);
             const sysData = Object.values(data.systems);
             
@@ -1974,7 +2001,6 @@ createApp({
         function renderSeasonCharts() {
             if (seasonPlanTab.value !== 'analytics' || currentView.value !== 'plan-builder') return;
             
-            // 1. Stacked Bar Chart for Energy Systems
             const pCtx = document.getElementById('energyPlanChart');
             if (pCtx) {
                 if (energyPlanChartInst) energyPlanChartInst.destroy();
@@ -1996,7 +2022,6 @@ createApp({
                 });
             }
 
-            // 2. Actuals Chart (Type & Stroke for Season Dates)
             const tCtx = document.getElementById('seasonTypeChartCanvas'); 
             const sCtx = document.getElementById('seasonStrokeChartCanvas');
             
@@ -2128,7 +2153,7 @@ createApp({
             isImportingPdf, pdfImportProgress, triggerPdfUpload, importPdf,
             selectedGroupSystems, addEnergySystem, removeEnergySystem, saveGroupSystems, calculateWeekTotal, seasonPlanTab,
             addAlias, removeAlias, saveGroupAliases, editorSystemTotals,
-            selectedGroupForEdit, openGroupDetails, dragStart, drop, draggedGroupIndex
+            selectedGroupForEdit, openGroupDetails, dragStart, drop, draggedGroupIndex, importSourceGroup, importSystemsAndAliases
         };
     }
 }).mount("#app");
