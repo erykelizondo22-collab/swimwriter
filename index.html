@@ -231,7 +231,7 @@ body { margin:0; font-family:system-ui, -apple-system, sans-serif; background:#f
                     <div class="h-1 flex-1 bg-gradient-to-r from-amber-400 to-transparent rounded-full opacity-20"></div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-                    <div v-for="w in upcomingWorkouts" :key="w.id" @click="loadWorkout(w)" class="p-6 bg-white border border-slate-200 rounded-[2rem] hover:border-amber-400 hover:shadow-xl hover:shadow-amber-900/5 hover:-translate-y-1 cursor-pointer transition-all duration-300 group relative flex flex-col">
+                    <div v-for="w in upcomingWorkouts" :key="w.id" @click="loadWorkout(w)" class="p-6 bg-white border border-slate-200 rounded-[2rem] hover:border-amber-400 hover:shadow-xl hover:-translate-y-1 cursor-pointer transition-all duration-300 group relative flex flex-col">
                       <button @click.stop="deleteWorkout(w.id)" class="absolute top-5 right-5 text-slate-300 hover:text-red-500 hover:bg-red-50 z-10 bg-slate-50 p-2.5 rounded-xl transition-all duration-200 opacity-0 group-hover:opacity-100">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                       </button>
@@ -484,7 +484,7 @@ body { margin:0; font-family:system-ui, -apple-system, sans-serif; background:#f
         </div>
       </div>
 
-      <div v-if="currentView === 'plan-builder'" class="max-w-4xl mx-auto bg-white p-8 md:p-12 rounded-[2.5rem] shadow-xl border border-slate-100 mt-6">
+      <div v-if="currentView === 'plan-builder'" class="max-w-[1200px] mx-auto bg-white p-8 md:p-12 rounded-[2.5rem] shadow-xl border border-slate-100 mt-6">
           <div class="flex justify-between items-center mb-8 border-b border-slate-100 pb-6">
               <h2 class="text-2xl md:text-3xl font-black uppercase tracking-tight text-slate-900">Plan Builder</h2>
               <div class="flex gap-3">
@@ -512,20 +512,45 @@ body { margin:0; font-family:system-ui, -apple-system, sans-serif; background:#f
           </div>
 
           <div class="flex justify-between items-end mb-6">
-              <h3 class="font-black uppercase tracking-widest text-slate-900">Weekly Architecture</h3>
-              <button @click="addWeek" class="text-[10px] font-black bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl uppercase tracking-widest transition-colors shadow-sm" :style="{ color: teamColors.primary }">+ Add Week</button>
+              <div>
+                  <h3 class="font-black uppercase tracking-widest text-slate-900">Weekly Architecture</h3>
+                  <p v-if="planForm.group_name" class="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-widest">Tracking physiological load for: <span :style="{ color: teamColors.primary }">{{ planForm.group_name }}</span></p>
+              </div>
+              <button @click="addWeek" :disabled="!planForm.group_name" class="text-[10px] font-black bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl uppercase tracking-widest transition-colors shadow-sm disabled:opacity-50" :style="{ color: teamColors.primary }">+ Add Week</button>
           </div>
 
-          <div class="space-y-4 mb-10">
-              <div v-for="(week, index) in planForm.weeks" :key="index" class="flex flex-wrap md:flex-nowrap gap-3 items-center bg-slate-50 p-4 rounded-2xl border border-slate-200 transition-colors group">
-                  <div class="w-16 md:w-20 text-center font-black text-slate-400 uppercase flex flex-col justify-center">
-                      <span class="text-lg text-slate-600 transition-colors" :style="{ color: teamColors.primary }">W{{index + 1}}</span>
-                      <span class="text-[9px] mt-0.5 whitespace-nowrap">{{getWeekDateRange(planForm.start_date, index)}}</span>
+          <div v-if="!planForm.group_name" class="text-center py-12 border-2 border-dashed border-slate-200 rounded-[2rem] text-sm font-black text-slate-400 uppercase tracking-widest">
+              Select a Target Group to build your macrocycle
+          </div>
+          
+          <div v-else class="overflow-x-auto pb-6 no-scrollbar mb-10">
+              <div class="min-w-max space-y-4">
+                  <div class="flex gap-3 px-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      <div class="w-20">Week</div>
+                      <div class="w-48">Focus</div>
+                      <div class="w-40">Event / Meet</div>
+                      <div v-for="sys in selectedGroupSystems" :key="sys" class="w-20 text-center text-slate-600" :title="sys">{{sys}}</div>
+                      <div class="w-24 text-right ml-auto" :style="{ color: teamColors.primary }">Total Vol</div>
+                      <div class="w-10"></div>
                   </div>
-                  <input v-model="week.focus" placeholder="Phase / Focus" class="flex-1 w-full min-w-[120px] bg-white p-3.5 rounded-xl font-bold uppercase text-sm outline-none border border-slate-200 transition-all text-slate-800 placeholder-slate-300 shadow-sm">
-                  <input v-model="week.meet" placeholder="Meet / Event (Optional)" class="flex-1 w-full min-w-[120px] bg-amber-50 p-3.5 rounded-xl font-bold uppercase text-sm outline-none border border-amber-200 focus:border-amber-400 focus:bg-white focus:ring-2 focus:ring-amber-500/10 transition-all text-amber-700 placeholder-amber-400/70 shadow-sm">
-                  <input v-model="week.targetYards" type="number" placeholder="Vol (y)" class="w-24 md:w-32 bg-white p-3.5 rounded-xl font-bold text-sm outline-none border border-slate-200 transition-all text-slate-800 text-right shadow-sm">
-                  <button @click="planForm.weeks.splice(index, 1)" class="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors font-black">X</button>
+
+                  <div v-for="(week, index) in planForm.weeks" :key="index" class="flex gap-3 items-center bg-slate-50 p-4 rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors group">
+                      <div class="w-20 text-left font-black text-slate-400 uppercase flex flex-col justify-center">
+                          <span class="text-lg transition-colors" :style="{ color: teamColors.primary }">W{{index + 1}}</span>
+                          <span class="text-[9px] mt-0.5 whitespace-nowrap">{{getWeekDateRange(planForm.start_date, index)}}</span>
+                      </div>
+                      
+                      <input v-model="week.focus" placeholder="Phase" class="w-48 bg-white p-3 rounded-xl font-bold uppercase text-xs outline-none border border-slate-200 transition-all text-slate-800 placeholder-slate-300 shadow-sm">
+                      <input v-model="week.meet" placeholder="Meet" class="w-40 bg-amber-50 p-3 rounded-xl font-bold uppercase text-xs outline-none border border-amber-200 focus:border-amber-400 focus:bg-white focus:ring-2 focus:ring-amber-500/10 transition-all text-amber-700 placeholder-amber-400/70 shadow-sm">
+                      
+                      <input v-for="sys in selectedGroupSystems" :key="sys" v-model="week.systems[sys]" type="number" placeholder="0" class="w-20 bg-white p-3 rounded-xl font-bold text-xs outline-none border border-slate-200 transition-all text-slate-800 text-center shadow-sm placeholder-slate-200">
+                      
+                      <div class="w-24 text-right font-black text-sm ml-auto bg-slate-100 px-3 py-2 rounded-xl" :style="{ color: teamColors.primary }">
+                          {{ calculateWeekTotal(week) }}
+                      </div>
+                      
+                      <button @click="planForm.weeks.splice(index, 1)" class="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors font-black shrink-0">X</button>
+                  </div>
               </div>
           </div>
 
@@ -546,7 +571,7 @@ body { margin:0; font-family:system-ui, -apple-system, sans-serif; background:#f
 
           <div v-if="myRole === 'owner'" class="bg-slate-50 border border-slate-200 p-8 rounded-[2rem] shadow-sm mb-6">
               <h3 class="text-xl font-black text-slate-900 uppercase tracking-tight mb-2">Team Colors</h3>
-              <p class="text-slate-500 text-sm font-medium mb-6">Set your team's primary and secondary colors. This instantly updates your dashboard and the lines on your printed workout sheets.</p>
+              <p class="text-slate-500 text-sm font-medium mb-6">Set your team's primary and secondary colors.</p>
               <div class="flex gap-6">
                   <div class="flex flex-col gap-2">
                       <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Primary</label>
@@ -561,7 +586,7 @@ body { margin:0; font-family:system-ui, -apple-system, sans-serif; background:#f
 
           <div v-if="myRole === 'owner'" class="bg-slate-50 border border-slate-200 p-8 rounded-[2rem] shadow-sm mb-6">
               <h3 class="text-xl font-black text-slate-900 uppercase tracking-tight mb-2">Team Branding</h3>
-              <p class="text-slate-500 text-sm font-medium mb-6">Upload your team logo. It will be displayed as a secure watermark behind your printed workout sheets.</p>
+              <p class="text-slate-500 text-sm font-medium mb-6">Upload your team logo. It will be displayed as a secure watermark.</p>
               <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                   <div class="w-24 h-24 bg-white rounded-2xl border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 z-10 relative shadow-sm">
                       <img v-if="teamLogoUrl" :src="teamLogoUrl" class="w-full h-full object-contain p-2 relative z-10 bg-white">
@@ -574,8 +599,7 @@ body { margin:0; font-family:system-ui, -apple-system, sans-serif; background:#f
                           <button v-if="teamLogoUrl" @click="deleteLogo" class="text-[10px] font-black text-red-500 bg-red-50 border border-red-100 hover:bg-red-100 px-3 py-1.5 rounded-lg uppercase tracking-widest transition-colors">Delete Logo</button>
                           
                           <div v-if="isUploadingLogo" class="text-[10px] font-black text-blue-600 uppercase tracking-widest animate-pulse flex items-center gap-2">
-                              <svg class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                              Encrypting & Uploading...
+                              Uploading...
                           </div>
                       </div>
                   </div>
@@ -625,20 +649,35 @@ body { margin:0; font-family:system-ui, -apple-system, sans-serif; background:#f
           </div>
       </div>
 
-      <div v-if="currentView === 'groups'" class="max-w-3xl mx-auto space-y-6 mt-6">
+      <div v-if="currentView === 'groups'" class="max-w-4xl mx-auto space-y-6 mt-6">
           <div class="border-b border-slate-200 pb-6 mb-8">
               <h2 class="text-3xl md:text-4xl font-black uppercase tracking-tight text-slate-900">Team Groups</h2>
-              <p class="text-sm font-bold uppercase tracking-widest mt-1" :style="{ color: teamColors.primary }">Manage Roster Divisions</p>
+              <p class="text-sm font-bold uppercase tracking-widest mt-1" :style="{ color: teamColors.primary }">Manage Roster Divisions & Physiology</p>
           </div>
+          
           <div class="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-200">
               <div class="flex gap-3 mb-8">
                   <input v-model="newGroupName" placeholder="New Group Name" class="flex-1 bg-slate-50 p-4 rounded-xl font-black uppercase outline-none border border-slate-200 transition-all text-slate-800">
                   <button @click="addGroup" class="bg-slate-900 text-white px-8 rounded-xl font-black uppercase tracking-widest hover:bg-black transition-colors shadow-md">Add</button>
               </div>
-              <div class="space-y-3">
-                  <div v-for="g in teamGroupsList" :key="g.id" class="flex justify-between items-center bg-slate-50 p-5 rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors">
-                      <span class="font-black uppercase text-slate-800 text-sm">{{g.name}}</span>
-                      <button @click="deleteGroup(g.id)" class="text-red-400 bg-red-50 hover:bg-red-100 hover:text-red-600 font-black text-[10px] uppercase tracking-widest px-3 py-2 rounded-lg transition-colors border border-red-100">Delete</button>
+              
+              <div class="space-y-6">
+                  <div v-for="g in teamGroupsList" :key="g.id" class="bg-slate-50 p-6 rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors">
+                      <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-4">
+                          <span class="font-black uppercase text-slate-800 text-lg">{{g.name}}</span>
+                          <button @click="deleteGroup(g.id)" class="text-red-400 bg-red-50 hover:bg-red-100 hover:text-red-600 font-black text-[10px] uppercase tracking-widest px-3 py-2 rounded-lg transition-colors border border-red-100">Delete Group</button>
+                      </div>
+                      
+                      <div>
+                          <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Custom Energy Systems</label>
+                          <div class="flex flex-wrap gap-2">
+                              <span v-for="(sys, idx) in g.energy_systems" :key="idx" class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 shadow-sm flex items-center gap-2 group">
+                                  {{ sys }}
+                                  <button @click="removeEnergySystem(g, idx)" class="text-slate-300 hover:text-red-500 font-black">X</button>
+                              </span>
+                              <input @keyup.enter="addEnergySystem(g, $event)" placeholder="+ Add System (Press Enter)" class="bg-white border border-dashed border-slate-300 px-3 py-1.5 rounded-lg text-xs font-bold outline-none focus:border-blue-400 transition-colors w-48 placeholder-slate-400">
+                          </div>
+                      </div>
                   </div>
               </div>
           </div>
@@ -802,6 +841,34 @@ const coachName = computed(() => {
 });
 const myTeam = computed(() => user.value?.user_metadata?.team_id || null);
 
+// MACROCYCLE DYNAMIC ENERGY SYSTEMS
+const selectedGroupSystems = computed(() => {
+    if(!planForm.value.group_name) return [];
+    const g = teamGroupsList.value.find(x => x.name === planForm.value.group_name);
+    return g ? (g.energy_systems || ['EN1', 'EN2', 'EN3', 'SP1', 'SP2']) : [];
+});
+
+watch(() => planForm.value.group_name, (newGroup) => {
+    const sysList = selectedGroupSystems.value;
+    planForm.value.weeks.forEach(w => {
+        if (!w.systems) w.systems = {};
+        sysList.forEach(s => {
+            if(w.systems[s] === undefined) w.systems[s] = null;
+        });
+    });
+});
+
+function calculateWeekTotal(week) {
+    let total = 0;
+    if (week.systems) {
+        Object.values(week.systems).forEach(val => {
+            if(val && !isNaN(val)) total += parseInt(val);
+        });
+    }
+    week.targetYards = total; // Auto-update for DB saving
+    return total;
+}
+
 const activePlanContext = computed(() => {
     if (!group.value || !seasonPlans.value.length || !practiceDate.value) return null;
     const plan = seasonPlans.value.find(p => (p.group_name || "").toUpperCase() === (group.value || "").toUpperCase());
@@ -840,7 +907,6 @@ function getWeekDateRange(startDateStr, weekIndex) {
     return `${format(start)} - ${format(end)}`;
 }
 
-// AUTO-SAVE DRAFT ENGINE
 function checkDraft() {
     const draftStr = localStorage.getItem('swimops_draft');
     if (draftStr) {
@@ -912,7 +978,6 @@ async function createTeam() {
   location.reload();
 }
 
-// LOAD TEAM SETTINGS & COLORS (PUBLIC BUCKET UPGRADE)
 async function loadTeamSettings() {
     if(!myTeam.value) return;
     const { data } = await client.from('teams').select('logo_url, primary_color, secondary_color').eq('id', myTeam.value).single();
@@ -920,11 +985,7 @@ async function loadTeamSettings() {
     if(data) {
         if(data.primary_color) teamColors.value.primary = data.primary_color;
         if(data.secondary_color) teamColors.value.secondary = data.secondary_color;
-        
-        // NOW USING PUBLIC URLS SO IT NEVER EXPIRES
-        if (data.logo_url) {
-            teamLogoUrl.value = data.logo_url;
-        }
+        if (data.logo_url) { teamLogoUrl.value = data.logo_url; }
     }
 }
 
@@ -937,7 +998,6 @@ async function saveColors() {
     if(error) alert("Error saving colors: " + error.message);
 }
 
-// PUBLIC BUCKET UPLOAD LOGIC
 async function uploadLogo(event) {
     const file = event.target.files[0];
     if(!file) return;
@@ -955,7 +1015,6 @@ async function uploadLogo(event) {
         return; 
     }
 
-    // Generate the permanent public URL
     const { data: publicData } = client.storage.from('logos').getPublicUrl(filePath);
     const publicUrl = publicData.publicUrl;
 
@@ -975,7 +1034,6 @@ async function deleteLogo() {
     
     const { data } = await client.from('teams').select('logo_url').eq('id', myTeam.value).single();
     if(data && data.logo_url) {
-        // Extract just the filename from the public URL to delete it from the bucket
         const urlParts = data.logo_url.split('/');
         const filename = urlParts[urlParts.length - 1];
         await client.storage.from('logos').remove([filename]);
@@ -985,10 +1043,7 @@ async function deleteLogo() {
     teamLogoUrl.value = "";
 }
 
-// AI PDF IMPORTER LOGIC
-function triggerPdfUpload() {
-    document.getElementById('pdfUpload').click();
-}
+function triggerPdfUpload() { document.getElementById('pdfUpload').click(); }
 
 async function importPdf(event) {
     const file = event.target.files[0];
@@ -1011,7 +1066,6 @@ async function importPdf(event) {
             fullText += `\n--- PAGE ${i} ---\n` + pageText;
         }
 
-        // Chunk text safely
         const chunkSize = 10000;
         const chunks = [];
         for (let i = 0; i < fullText.length; i += chunkSize) {
@@ -1156,7 +1210,8 @@ async function loadGroups() {
 async function addGroup() {
     if(!newGroupName.value.trim()) return;
     const nameStr = newGroupName.value.trim().toUpperCase();
-    const { error } = await client.from("team_groups").insert({ team_id: myTeam.value, name: nameStr });
+    const defaultSystems = ["EN1", "EN2", "EN3", "SP1", "SP2"];
+    const { error } = await client.from("team_groups").insert({ team_id: myTeam.value, name: nameStr, energy_systems: defaultSystems });
     if(error) {
         if(error.code === '23505') alert("This group already exists.");
         else alert("Error adding group: " + error.message);
@@ -1169,15 +1224,33 @@ async function deleteGroup(id) {
     }
 }
 
+// GROUP ENERGY SYSTEM MANAGEMENT
+async function addEnergySystem(group, event) {
+    const newSys = event.target.value.trim().toUpperCase();
+    if(newSys && !group.energy_systems.includes(newSys)) {
+        group.energy_systems.push(newSys);
+        await saveGroupSystems(group);
+        event.target.value = "";
+    }
+}
+
+async function removeEnergySystem(group, idx) {
+    group.energy_systems.splice(idx, 1);
+    await saveGroupSystems(group);
+}
+
+async function saveGroupSystems(group) {
+    const { error } = await client.rpc('update_group_systems', { p_group_id: group.id, p_systems: group.energy_systems });
+    if(error) alert("Error saving systems: " + error.message);
+}
+
 async function loadSeasonPlans() {
     const { data } = await client.from("season_plans").select("*").eq('team_id', myTeam.value).order('start_date', {ascending: false});
     seasonPlans.value = data || [];
 }
 
 function startNewPlan() {
-    let defaultWeeks = [];
-    for(let i=1; i<=12; i++) defaultWeeks.push({ weekNum: i, focus: '', meet: '', targetYards: null });
-    planForm.value = { id: null, title: '', group_name: '', start_date: getLocalTodayStr(), weeks: defaultWeeks };
+    planForm.value = { id: null, title: '', group_name: '', start_date: getLocalTodayStr(), weeks: [] };
     currentView.value = 'plan-builder';
 }
 
@@ -1194,11 +1267,20 @@ async function deletePlan(id) {
     }
 }
 
-function addWeek() { planForm.value.weeks.push({ weekNum: planForm.value.weeks.length + 1, focus: '', meet: '', targetYards: null }); }
+function addWeek() { 
+    let sysObj = {};
+    selectedGroupSystems.value.forEach(s => sysObj[s] = null);
+    planForm.value.weeks.push({ weekNum: planForm.value.weeks.length + 1, focus: '', meet: '', systems: sysObj, targetYards: 0 }); 
+}
 
 async function savePlan() {
     if(!planForm.value.title || !planForm.value.group_name || !planForm.value.start_date) return alert("Fill out Title, Group, and Start Date.");
-    planForm.value.weeks.forEach((w, index) => w.weekNum = index + 1);
+    
+    // Ensure all totals are up to date and clean up empty rows
+    planForm.value.weeks.forEach((w, index) => {
+        w.weekNum = index + 1;
+        w.targetYards = calculateWeekTotal(w);
+    });
 
     const payload = { title: planForm.value.title, team_id: myTeam.value, group_name: planForm.value.group_name.toUpperCase(), start_date: planForm.value.start_date, weeks: planForm.value.weeks };
     if(planForm.value.id) await client.from("season_plans").update(payload).eq('id', planForm.value.id);
@@ -1618,7 +1700,8 @@ return {
   hasDraft, resumeDraft, currentSetPace, updateCursor, stressScore, stressColor,
   analyticsGroup, analyticsStartDate, analyticsEndDate, analyticsStats, resetAnalyticsDates,
   showAiModal, aiPrompt, isAiLoading, generateWithAI,
-  isImportingPdf, pdfImportProgress, triggerPdfUpload, importPdf
+  isImportingPdf, pdfImportProgress, triggerPdfUpload, importPdf,
+  selectedGroupSystems, addEnergySystem, removeEnergySystem, saveGroupSystems, calculateWeekTotal
 };
 }
 }).mount("#app");
